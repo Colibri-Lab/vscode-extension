@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.5",
+  "version": "0.0.11",
   "categories": ["Programming Languages"],
   "repository": "https://gitlab.repeatme.online/colibrilab/colibriuiextension/",
   "icon": "images/colibri-ui.png",

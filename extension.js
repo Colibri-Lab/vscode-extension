@@ -7,6 +7,7 @@ const { CodelenceProvider } = require('./CodeLenseProvider');
 const {
     __languageMarkerRegularExpression,
 	__langTextDecorationType,
+	__log,
 	cleanVariables,
     replaceAll,
     saveYamlLangFile,
@@ -14,12 +15,21 @@ const {
     getModuleName,
 	checkForColibriProject,
 	checkIfEditorIsClosed,
-	__langFilter
+	__langFilter,
+	enumerateColibriUIComponents,
+	__colibriUIComponents,
+	getBundlePaths,
+	getComponentName,
+	extractNames,
+	__componentRegularExpression,
+	getComponentAttributes,
+	getComponentNames
 } = require('./utils');
 const {
 	createNamespace,
     createComponent
 } = require('./component');
+const { formatWithOptions } = require('util');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -73,11 +83,15 @@ function triggerUpdateDecorations(activeEditor) {
  */
 function onActiveEditorTextChanged(document) {
 
+	__log.appendLine('Active editor changed');
+
 	let content = document.getText();
 	let langsFileContent = loadYamlLangFile(document); 
 	if(!langsFileContent) {
 		return;
 	}
+
+	__log.appendLine('Working...');
 
 	let moduleName = getModuleName(document);
 
@@ -122,7 +136,11 @@ function onActivateEditorTextChangedEventHandler(event) {
 }
 
 function onChangeActiveTextEditor(editor) {
+	__log.appendLine('Active editor text changed');
+
 	if (editor && __langFilter.indexOf(editor.document.languageId) !== -1 && checkForColibriProject(editor.document)) {
+		__log.appendLine('Working...');
+
 		onActiveEditorTextChanged(editor.document);
 		triggerUpdateDecorations(editor);
 		checkIfEditorIsClosed();
@@ -163,30 +181,116 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 }
 
 /**
+ * 
+ * @param {vscode.TextDocument} document 
+ * @param {vscode.Position} position 
+ * @param {vscode.CancellationToken} token 
+ * @param {vscode.CompletionContext} context 
+ * @return ProviderResult<CompletionItem[] | CompletionList<...>>
+ */
+function provideHtmlCompletionItems(document, position, token, context) {
+	__log.appendLine('Code completetion...');
+
+	// position.character
+	// position.line
+
+	const range = document.getWordRangeAtPosition(position);
+	const line = document.lineAt(position.line);
+
+	const text = line.text;
+	const character = position.character;
+
+	let tagName = '';
+	let matches1;
+	while( matches1 = __componentRegularExpression.exec(text) ) {
+		if(character > matches1.index && character < matches1.index + matches1[0].length) {
+			const foundTag = matches1[0];
+			tagName = new RegExp('<([A-z\.]+)', 'i').exec(foundTag)[1];
+		}
+	}
+
+	let currentComponentName = getComponentName(document);
+
+	const classesAndFiles = getComponentNames(currentComponentName)
+
+	__log.appendLine('Got components: ' + classesAndFiles.size);
+
+	let componentAttrs = new Map();
+	
+	for( let [componentName, value] of classesAndFiles) {
+		if(componentName === tagName || value.fullName === tagName) {
+			// считаем что каждый класс в отдельном файле
+			componentAttrs = getComponentAttributes(value.file, classesAndFiles);
+			break;
+		}
+	}
+
+	const comps = [];
+
+	if(componentAttrs.size > 0) {
+		for(const [attr, value] of componentAttrs) {
+			const simpleCompletion = new vscode.CompletionItem(attr + '=""');
+			simpleCompletion.insertText = new vscode.SnippetString(attr + '="${1}"');
+			const docs = new vscode.MarkdownString('Insert the attribute ' + attr + ' for component ' + value.fullName + ' [link](' + value.file + ').');
+			docs.baseUri = vscode.Uri.parse(value.file);
+			simpleCompletion.documentation = docs;
+			comps.push(simpleCompletion);
+		}
+	}
+
+	if(comps.length > 0) {
+		return comps;
+	}
+
+	for( let [componentName, value] of classesAndFiles) {
+		const simpleCompletion = new vscode.CompletionItem(componentName);
+		simpleCompletion.insertText = new vscode.SnippetString('<' + componentName + ' shown="${1|true,false|}" name="${2}"></' + componentName + '>');
+		const docs = new vscode.MarkdownString('Insert the component ' + value.fullName + ' [link](' + value.file + ').');
+		docs.baseUri = vscode.Uri.parse(value);
+		simpleCompletion.documentation = docs;
+		comps.push(simpleCompletion);
+	}
+
+	return comps;
+}
+
+/**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
+	try {
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable1 = vscode.commands.registerCommand('colibri-ui.create-component', () => createComponent(context));
-	const disposable2 = vscode.commands.registerCommand('colibri-ui.create-namespace', () => createNamespace());
-	const disposable3 = vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue));
-	context.subscriptions.push(disposable1);
-	context.subscriptions.push(disposable2);
-	context.subscriptions.push(disposable3);
+		__log.appendLine('Activating...');
 
-	const disposable4 = vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event));
-	context.subscriptions.push(disposable4);
+		// The command has been defined in the package.json file
+		// Now provide the implementation of the command with  registerCommand
+		// The commandId parameter must match the command field in package.json
+		const disposable1 = vscode.commands.registerCommand('colibri-ui.create-component', () => createComponent(context));
+		const disposable2 = vscode.commands.registerCommand('colibri-ui.create-namespace', () => createNamespace());
+		const disposable3 = vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue));
+		context.subscriptions.push(disposable1);
+		context.subscriptions.push(disposable2);
+		context.subscriptions.push(disposable3);
 
-	vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
-	onChangeActiveTextEditor(vscode.window.activeTextEditor);
+		const disposable4 = vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event));
+		context.subscriptions.push(disposable4);
 
-	const lenseProvider = new CodelenceProvider();
-	vscode.languages.registerCodeLensProvider("html", lenseProvider);
-	vscode.languages.registerCodeLensProvider("javascript", lenseProvider);
-	vscode.languages.registerCodeLensProvider("php", lenseProvider);
+		vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
+		onChangeActiveTextEditor(vscode.window.activeTextEditor);
+
+		const lenseProvider = new CodelenceProvider();
+		vscode.languages.registerCodeLensProvider("html", lenseProvider);
+		vscode.languages.registerCodeLensProvider("javascript", lenseProvider);
+		vscode.languages.registerCodeLensProvider("php", lenseProvider);
+
+		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
+
+		__log.appendLine('Success...');
+	}
+	catch(e) {
+		console.log(e);
+		__log.appendLine(e);		
+	}
 	
 }
 

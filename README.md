@@ -52,6 +52,7 @@ CodeLence for each of the keys displays the translation function as a list of la
 # Open the component html template
 
 Component code completion
+
 Component attributes code completion
 
 ## License

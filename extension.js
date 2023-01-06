@@ -14,22 +14,18 @@ const {
     loadYamlLangFile,
     getModuleName,
 	checkForColibriProject,
-	checkIfEditorIsClosed,
 	__langFilter,
-	enumerateColibriUIComponents,
-	__colibriUIComponents,
-	getBundlePaths,
-	getComponentName,
-	extractNames,
-	__componentRegularExpression,
-	getComponentAttributes,
-	getComponentNames
+	checkWorkspace,
+	reloadCompletionItems,
+	getColibriUIFolder,
+	getBundlePaths
 } = require('./utils');
 const {
 	createNamespace,
     createComponent
 } = require('./component');
-const { formatWithOptions } = require('util');
+
+const { provideHtmlCompletionItems } = require('./Completion');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -84,6 +80,9 @@ function triggerUpdateDecorations(activeEditor) {
 function onActiveEditorTextChanged(document) {
 
 	__log.appendLine('Active editor changed');
+
+	__log.appendLine('Reloading completion items');
+	reloadCompletionItems();
 
 	let content = document.getText();
 	let langsFileContent = loadYamlLangFile(document); 
@@ -143,8 +142,10 @@ function onChangeActiveTextEditor(editor) {
 
 		onActiveEditorTextChanged(editor.document);
 		triggerUpdateDecorations(editor);
-		checkIfEditorIsClosed();
+		reloadCompletionItems();
+		
 	}
+
 }
 
 /**
@@ -180,79 +181,6 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 	});
 }
 
-/**
- * 
- * @param {vscode.TextDocument} document 
- * @param {vscode.Position} position 
- * @param {vscode.CancellationToken} token 
- * @param {vscode.CompletionContext} context 
- * @return ProviderResult<CompletionItem[] | CompletionList<...>>
- */
-function provideHtmlCompletionItems(document, position, token, context) {
-	__log.appendLine('Code completetion...');
-
-	// position.character
-	// position.line
-
-	const range = document.getWordRangeAtPosition(position);
-	const line = document.lineAt(position.line);
-
-	const text = line.text;
-	const character = position.character;
-
-	let tagName = '';
-	let matches1;
-	while( matches1 = __componentRegularExpression.exec(text) ) {
-		if(character > matches1.index && character < matches1.index + matches1[0].length) {
-			const foundTag = matches1[0];
-			tagName = new RegExp('<([A-z\.]+)', 'i').exec(foundTag)[1];
-		}
-	}
-
-	let currentComponentName = getComponentName(document);
-
-	const classesAndFiles = getComponentNames(currentComponentName)
-
-	__log.appendLine('Got components: ' + classesAndFiles.size);
-
-	let componentAttrs = new Map();
-	
-	for( let [componentName, value] of classesAndFiles) {
-		if(componentName === tagName || value.fullName === tagName) {
-			// считаем что каждый класс в отдельном файле
-			componentAttrs = getComponentAttributes(value.file, classesAndFiles);
-			break;
-		}
-	}
-
-	const comps = [];
-
-	if(componentAttrs.size > 0) {
-		for(const [attr, value] of componentAttrs) {
-			const simpleCompletion = new vscode.CompletionItem(attr + '=""');
-			simpleCompletion.insertText = new vscode.SnippetString(attr + '="${1}"');
-			const docs = new vscode.MarkdownString('Insert the attribute ' + attr + ' for component ' + value.fullName + ' [link](' + value.file + ').');
-			docs.baseUri = vscode.Uri.parse(value.file);
-			simpleCompletion.documentation = docs;
-			comps.push(simpleCompletion);
-		}
-	}
-
-	if(comps.length > 0) {
-		return comps;
-	}
-
-	for( let [componentName, value] of classesAndFiles) {
-		const simpleCompletion = new vscode.CompletionItem(componentName);
-		simpleCompletion.insertText = new vscode.SnippetString('<' + componentName + ' shown="${1|true,false|}" name="${2}"></' + componentName + '>');
-		const docs = new vscode.MarkdownString('Insert the component ' + value.fullName + ' [link](' + value.file + ').');
-		docs.baseUri = vscode.Uri.parse(value);
-		simpleCompletion.documentation = docs;
-		comps.push(simpleCompletion);
-	}
-
-	return comps;
-}
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -260,8 +188,14 @@ function provideHtmlCompletionItems(document, position, token, context) {
 function activate(context) {
 	try {
 
+		if(!checkWorkspace()) {
+			return;
+		}
+
 		__log.appendLine('Activating...');
 
+
+		__log.appendLine('Registering events');
 		// The command has been defined in the package.json file
 		// Now provide the implementation of the command with  registerCommand
 		// The commandId parameter must match the command field in package.json
@@ -278,11 +212,17 @@ function activate(context) {
 		vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
 		onChangeActiveTextEditor(vscode.window.activeTextEditor);
 
+
+		__log.appendLine('Loading class names...');
+		reloadCompletionItems();
+		
+		__log.appendLine('Registering codelence items...');
 		const lenseProvider = new CodelenceProvider();
 		vscode.languages.registerCodeLensProvider("html", lenseProvider);
 		vscode.languages.registerCodeLensProvider("javascript", lenseProvider);
 		vscode.languages.registerCodeLensProvider("php", lenseProvider);
 
+		__log.appendLine('Registering completion...');
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
 
 		__log.appendLine('Success...');

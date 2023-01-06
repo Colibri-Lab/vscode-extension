@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "categories": ["Programming Languages"],
   "repository": "https://gitlab.repeatme.online/colibrilab/colibriuiextension/",
   "icon": "images/colibri-ui.png",
@@ -20,6 +20,22 @@
   ],
   "main": "./extension.js",
   "contributes": {
+    "configuration": [
+      {
+				"id": "colibrilab",
+				"title": "Colibri UI Settings",
+				"order": 2,
+				"properties": {
+					"colibrilab.langs-config-path": {
+						"type": "string",
+						"order": 2,
+						"description": "Languages config file path in Lang module",
+            "default": "vendor/colibri/lang/src/Lang/config-template/lang-langs.yaml",
+						"additionalProperties": false
+					}
+				}
+			}
+    ],
     "commands": [
       {
         "command": "colibri-ui.create-component",

@@ -5,9 +5,15 @@ const yaml = require('yaml');
 const __langFilter = ['html', 'javascript', 'php'];
 const __log = vscode.window.createOutputChannel("Colibri UI");
 const __openedLangDocuments = new Map();
-let __colibriUIComponents = new Map();
+const __colibriUIComponents = new Map();
+
+
 const __languageMarkerRegularExpression = new RegExp('#\{(.*?)\}', 'gmi');
 const __componentRegularExpression = new RegExp('<[^>\/]+/?>', 'ig');
+const __completionItemsRegexp = new RegExp('<([A-z\.]+)', 'i');
+const __componentNameRegExp = new RegExp('componentname="([^"]+)"', 'i');
+const __attributesRegExp = new RegExp('([\\w\\.]+)\\s+?=\\s+?class extends\\s+?([\\w\\.]+)\\s+?{?', 'gim');
+const __setAttributeRegExp = new RegExp('set ([^\(]+)[\s+]?\\(.*\\)\\s+?{?', 'i');
 const __langTextDecorationType = vscode.window.createTextEditorDecorationType({
 	borderWidth: '1px',
 	borderStyle: 'solid',
@@ -22,6 +28,7 @@ const __langTextDecorationType = vscode.window.createTextEditorDecorationType({
 		borderColor: '#aaaaaa'
 	}
 });
+
 
 function cleanVariables() {
     // __openedLangDocuments.clear();
@@ -155,16 +162,31 @@ function saveYamlLangFile(document, yamlObject) {
 	return false;
 }
 
+/**
+ * Получает список языков
+ * @returns object
+ */
 function getLanguages() {
+	const workbenchConfig = vscode.workspace.getConfiguration();
+	let languageModulePath = workbenchConfig.get('colibrilab.langs-config-path');
+	if(!languageModulePath) {
+		languageModulePath = 'vendor/colibri/lang/src/Lang/config-template/lang-langs.yaml';
+	}
+
     const projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath + '/';
-    const langModulePath = projectPath + 'vendor/colibri/lang/src/Lang/config-template/lang-langs.yaml';
+    const langModulePath = projectPath + languageModulePath;
     const langConfigContent = fs.readFileSync(langModulePath, {encoding:'utf8', flag:'r'});
     return yaml.parse(langConfigContent);
 }
 
+/**
+ * Воврашает список путей содержащих .Bundle
+ * @param {string} workspacePath 
+ * @returns 
+ */
 function getBundlePaths(workspacePath = null) {
 	try {
-
+		
 		workspacePath = workspacePath ? workspacePath : getWorkspacePath();
 		// ищем папки .Bundle 
 		let items = [];
@@ -186,10 +208,15 @@ function getBundlePaths(workspacePath = null) {
 			
 			if(item.isDirectory() || item.isSymbolicLink()) {
 				if(item.name === '.Bundle') {
-					return [workspacePath + '/' + item.name];
+					return [replaceAll(workspacePath + '/' + item.name, '//', '/')];
 				}
 				else {
-					items = [	...items, ...getBundlePaths(workspacePath + '/' + item.name)];
+					// if(item.isSymbolicLink()) {
+					// 	items = [	...items, ...getBundlePaths(fs.readlinkSync(workspacePath + '/' + item.name))];
+					// }
+					// else {
+						items = [	...items, ...getBundlePaths(workspacePath + '/' + item.name)];
+					//}
 				}
 			}
 		}
@@ -210,12 +237,17 @@ function extractNames(componentName, currentComponentName) {
 	return componentName;
 }
 
+/**
+ * 
+ * @param {vscode.TextDocument|string} document 
+ * @returns 
+ */
 function getComponentName(document) {
 	let currentComponentName = '';
 	const path = typeof document === 'string' ? document : document.uri.fsPath;
 	const content = fs.readFileSync(path).toString().split('\n');
 	for(const line of content) {
-		const matches = new RegExp('componentname="([^"]+)"', 'i').exec(line);
+		const matches = __componentNameRegExp.exec(line);
 		if(matches.length > 0) {
 			currentComponentName = replaceAll(replaceAll(matches[1], 'Colibri.UI.', ''), 'App.Modules.', '');
 			break;
@@ -228,14 +260,13 @@ function getComponentAttributes(document, classesAndFiles) {
 	const path = typeof document === 'string' ? document : document.uri.fsPath;
 	const fullContent = fs.readFileSync(path).toString();
 	const content = fullContent.split('\n');
-	const classRex = new RegExp('([\\w\\.]+)\\s+?=\\s+?class extends\\s+?([\\w\\.]+)\\s+?{?', 'gim');
 
 	let attrs = new Map();
 	let classMatch;
 	let className;
 	let parentClassName;
-	while( (classMatch = classRex.exec(fullContent)) ) {
-
+	const classMatches = fullContent.matchAll(__attributesRegExp);
+	for(const classMatch of classMatches) {
 		className = classMatch[1]
 		parentClassName = classMatch[2];
 
@@ -253,9 +284,9 @@ function getComponentAttributes(document, classesAndFiles) {
 		}
 
 	}
-
+	
 	for(const line of content) {
-		const matches = new RegExp('set ([^\(]+)[\s+]?\\(.*\\)\\s+?{?', 'i').exec(line);
+		const matches = __setAttributeRegExp.exec(line);
 		if(matches && matches.length > 0) {
 			attrs.set(matches[1], {
 				file: path,
@@ -281,9 +312,6 @@ function checkForColibriProject(document) {
         projectPath = path.split('/vendor/')[0] + '/';
     } else if(path && path.indexOf('/App/') !== -1) {
         projectPath = path.split('/App/')[0] + '/';
-	} else {
-		__log.appendLine('Check complete: error');
-		return false;
 	}
 
 	const isColibri = !!(fs.existsSync(projectPath + 'App') && 
@@ -315,42 +343,34 @@ function checkWorkspace() {
     return true;
 }
 
-function checkIfEditorIsClosed() {
-	return;
-	// const keys = [];
-	// vscode.window.tabGroups.all.flatMap(({ tabs }) => tabs.map(tab => {
-	// 	keys.push(getLangFilePath(tab.input.uri.fsPath));
-	// }));
 
-	// __openedLangDocuments.forEach((value, key) => {
-	// 	if(keys.indexOf(key) === -1) {
-	// 		__openedLangDocuments.delete(key);
-	// 	}
-	// });
-}
-
+/**
+ * Возвращает путь проекта
+ * @returns {string|null}
+ */
 function getWorkspacePath() {
 
 	for(const folder of vscode.workspace.workspaceFolders) {
-        if(!checkForColibriProject(folder.uri.fsPath)) {
+        if(checkForColibriProject(folder.uri.fsPath)) {
             return folder.uri.fsPath;
         }
     }   
-    return true;
+    return null;
 
 }
 
+/**
+ * Возвращает путь к основному списку компонентов
+ * @param {string|null} workspacePath 
+ * @returns {string}
+ */
 function getColibriUIFolder(workspacePath = null) {
 	workspacePath = workspacePath ? workspacePath : getWorkspacePath();
 	return workspacePath + '/vendor/colibri/ui/src/06.UI/';
 }
 
 function enumerateColibriUIComponents(path = null) {
-
-	__log.appendLine('Collecting components in ' + path);
-
 	path = path ? path : getColibriUIFolder(path);
-
 	let items = new Map();
 	const files = fs.readdirSync(path, {encoding: 'utf-8', withFileTypes: true});
 	for(const file of files) {
@@ -377,11 +397,22 @@ function enumerateColibriUIComponents(path = null) {
 }
 
 function getComponentNames(currentComponentName) {
-	const classesAndFiles = new Map();
+	const classesAndFiles = new Map(__colibriUIComponents);
+	for(const [key, value] of classesAndFiles) {
+		const componentName = extractNames(key, currentComponentName);
+		classesAndFiles.set(componentName, value);
+	}
+	return classesAndFiles;
+}
+
+function reloadCompletionItems() {
+
+	__colibriUIComponents.clear();
+
 	const uiItems = enumerateColibriUIComponents();
 	uiItems.forEach((value, key) => {
 		const componentName = replaceAll(key, 'Colibri.UI.', '');
-		classesAndFiles.set(componentName, {
+		__colibriUIComponents.set(componentName, {
 			file: value,
 			fullName: key
 		});
@@ -392,15 +423,14 @@ function getComponentNames(currentComponentName) {
 		const itemClasses = enumerateColibriUIComponents(item);
 		itemClasses.forEach((value, key) => {
 			let componentName = replaceAll(replaceAll(key, 'Colibri.UI.', ''), 'App.Modules.', '');
-			componentName = extractNames(componentName, currentComponentName);
-			classesAndFiles.set(componentName, {
+			__colibriUIComponents.set(componentName, {
 				file: value,
 				fullName: key
 			});
 		});
 	}
-	return classesAndFiles;
-}
+	}
+
 
 module.exports = {
 	__langFilter,
@@ -408,8 +438,10 @@ module.exports = {
 	__componentRegularExpression,
     __openedLangDocuments,
     __langTextDecorationType,
+	__completionItemsRegexp,
 	__log,
 	__colibriUIComponents,
+	reloadCompletionItems,
     replaceAll,
     expand,
     saveYamlLangFile,
@@ -420,11 +452,11 @@ module.exports = {
     checkForColibriProject,
     checkWorkspace,
     getLanguages,
-	checkIfEditorIsClosed,
 	enumerateColibriUIComponents,
 	getBundlePaths,
 	getComponentName,
 	extractNames,
 	getComponentAttributes,
 	getComponentNames,
+	getColibriUIFolder,
 };

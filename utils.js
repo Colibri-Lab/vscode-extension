@@ -256,6 +256,20 @@ function getComponentName(document) {
 	return currentComponentName;
 }
 
+/**
+ * 
+ * @param {vscode.TextDocument|string} document 
+ * @returns 
+ */
+function getNamespaceName(document) {
+	const path = typeof document === 'string' ? document : document.uri.fsPath;
+	const parts = path.split('/');
+	parts.pop();
+	const choosedPath = parts.join('/');
+	let currentNamespace = fs.readFileSync(choosedPath + '/.js', {encoding:'utf8', flag:'r'});
+	return currentNamespace.split(' = class ')[0];
+}
+
 function getComponentAttributes(document, classesAndFiles) {
 	const path = typeof document === 'string' ? document : document.uri.fsPath;
 	const fullContent = fs.readFileSync(path).toString();
@@ -455,6 +469,7 @@ module.exports = {
 	enumerateColibriUIComponents,
 	getBundlePaths,
 	getComponentName,
+	getNamespaceName,
 	extractNames,
 	getComponentAttributes,
 	getComponentNames,

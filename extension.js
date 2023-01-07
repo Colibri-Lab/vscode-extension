@@ -1,7 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
-const fs = require('fs');
+const l10n = require('@vscode/l10n');
 
 const { CodelenceProvider } = require('./CodeLenseProvider');
 const {
@@ -16,9 +16,7 @@ const {
 	checkForColibriProject,
 	__langFilter,
 	checkWorkspace,
-	reloadCompletionItems,
-	getColibriUIFolder,
-	getBundlePaths
+	reloadCompletionItems
 } = require('./utils');
 const {
 	createNamespace,
@@ -26,6 +24,7 @@ const {
 } = require('./component');
 
 const { provideHtmlCompletionItems } = require('./Completion');
+const { getL10nPseudoLocalized } = require('@vscode/l10n-dev');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -193,7 +192,8 @@ function activate(context) {
 		}
 
 		__log.appendLine('Activating...');
-
+		const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path
+		l10n.config({ fsPath: extensionPath + '/l10n/bundle.l10n' + (vscode.env.language !== 'en' ? '.' + vscode.env.language : '') + '.json'});
 
 		__log.appendLine('Registering events');
 		// The command has been defined in the package.json file

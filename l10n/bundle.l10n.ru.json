@@ -1,0 +1,7 @@
+{
+  "Enter namespace name in current parent": "Введите наименование области (без наименования текущей области)",
+  "Namespace created!": "Область создана успешно!",
+  "Input the class name with namespace": "Введите наименование класса (должно содержать наименование области)",
+  "Input the parent class name with namespace": "Введите наименование класса родителя (должно содержать наименование области)",
+  "Input the new component object name": "Введите наименование обьекта"
+}

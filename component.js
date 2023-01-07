@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const l10n = require('@vscode/l10n');
 const fs = require('fs');
 const {
     replaceAll,
@@ -8,35 +9,21 @@ const {
 	__languageMarkerRegularExpression,
 	loadYamlLangFile,
 	saveYamlLangFile,
+	getNamespaceName,
 } = require('./utils');
 
 /**
+ * 
+ * @param {string} choosedPath путь к папке где нужно создать компоненту
+ * @param {vscode.ExtensionContext} context
  */
-function createNamespace(context, e) {
-	// The code you place here will be executed every time your command is executed
-	
-    if(!checkWorkspace()) {
-        return;
-    }
-
-	let choosedPath = '';
+function createNamespaceProcess(choosedPath, context) {
 	let namespaceName = '';
 	
-	vscode.window.showOpenDialog({
-		canSelectMany: false,
-		openLabel: 'Select',
-		canSelectFiles: false,
-		canSelectFolders: true
-	}).then(fileUri => {
-		if (fileUri && fileUri[0]) {
-			choosedPath = fileUri[0].path;
-			choosedPath = fs.realpathSync(choosedPath + '/');
-			return vscode.window.showInputBox({
-				password: false,
-				placeHolder: 'Enter namespace',
-				value: ''
-			});
-		}
+	vscode.window.showInputBox({
+		password: false,
+		placeHolder: l10n.t('Enter namespace name in current parent'),
+		value: ''
 	}).then((input) => {
 		namespaceName = input;
 		const dirName = namespaceName.split('.').pop();
@@ -47,10 +34,39 @@ function createNamespace(context, e) {
 
 		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', {encoding:'utf8', flag:'w+'});
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-		vscode.window.showInformationMessage('Namespace created!');
+		vscode.window.showInformationMessage(l10n.t('Namespace created!'));
 
 	});
 }
+
+/**
+ */
+function createNamespace(context, e) {
+	// The code you place here will be executed every time your command is executed
+	
+    if(!checkWorkspace()) {
+        return;
+    }
+
+	if(!e) {
+		vscode.window.showOpenDialog({
+			canSelectMany: false,
+			openLabel: 'Select',
+			canSelectFiles: false,
+			canSelectFolders: true
+		}).then(fileUri => {
+			if (fileUri && fileUri[0]) {
+				createNamespaceProcess(fileUri[0].path, context);
+			}
+		});
+	}
+	else {
+		createNamespaceProcess(e.fsPath, context);
+	}
+
+	
+}
+
 
 /**
  * 
@@ -104,13 +120,13 @@ function createCompnentProcess(choosedPath, context) {
 
 	return vscode.window.showInputBox({
 		password: false,
-		placeHolder: 'Input the class name with namespace',
+		placeHolder: l10n.t('Input the class name with namespace'),
 		value: className + '.'
 	}).then((input) => {
 		className = input;
 		return vscode.window.showInputBox({
 			password: false,
-			placeHolder: 'Input the parent class name with namespace',
+			placeHolder: l10n.t('Input the parent class name with namespace'),
 			value: 'Colibri.UI.'
 		});
 	}).then(input => {
@@ -130,7 +146,7 @@ function createCompnentProcess(choosedPath, context) {
 			selection = vscode.window.activeTextEditor.selection;
 			range = new vscode.Range(selection.start, selection.end);
 			textContent = vscode.window.activeTextEditor.document.getText(range);
-			newTextContent = '<' + className + ' shown="true" name="{new-component-object-name}" />';
+			newTextContent = '<{class-name} shown="true" name="{new-component-object-name}" />';
 		}
 		
 		let jsContent = fs.readFileSync(templatesPath + 'template.js') + '';
@@ -167,7 +183,7 @@ function createCompnentProcess(choosedPath, context) {
 		vscode.window.showInformationMessage('Component created!');
 		
 		if(isFile) {
-			return Promise.resolve({selection: selection, text: newTextContent, componentFiles: {
+			return Promise.resolve({selection: selection, text: newTextContent, className: className, componentFiles: {
 				js: componentFileName + '.js',
 				html: componentFileName + '.html',
 				scss: componentFileName + '.scss',
@@ -215,6 +231,7 @@ function createComponent(context, e) {
 			let text = creationContext.text;
 			let componentFiles = creationContext.componentFiles;
 			let languageTextPrefix = creationContext.textPrefix;
+			let className = creationContext.className;
 
 			const textEditor = vscode.window.activeTextEditor;
 			const document = textEditor.document;
@@ -224,7 +241,7 @@ function createComponent(context, e) {
 
 			vscode.window.showInputBox({
 				password: false,
-				placeHolder: 'Input the new component object name',
+				placeHolder: l10n.t('Input the new component object name'),
 				value: ''
 			}).then((input) => {
 
@@ -232,6 +249,7 @@ function createComponent(context, e) {
 				// надо забрать языковые тексты
 				const langFile = getLangFilePath(document);
 				const yamlObject = loadYamlLangFile(langFile);
+				const currentNamespace = getNamespaceName(document);
 				const newLangContent = {};
 				let match;
 				while ((match = __languageMarkerRegularExpression.exec(oldText))) {
@@ -251,7 +269,9 @@ function createComponent(context, e) {
 					saveYamlLangFile(langFile, yamlObject);
 				}
 
+				className = replaceAll(className, currentNamespace + '.', '');
 				text = replaceAll(text, '{new-component-object-name}', input);
+				text = replaceAll(text, '{class-name}', className);
 				textEditor.edit((builder) => builder.replace(selection, text));
 			});
 

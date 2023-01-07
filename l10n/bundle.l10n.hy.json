@@ -1,0 +1,11 @@
+{
+  "Insert the attribute {0} for component {1} [link]({2}).": "Մուտքագրել {0} հատկանիշը {1} կոմպոնենտի համար [link]({2}).",
+  "Insert the component {0} [link]({1}).": "Մուտքագրել {0} կոմպոնենտը [link]({1}).",
+  "Enter namespace name in current parent": "Մուտքագրեք տարածքի անվանումը (առանց ընթացիկ տարածքի անվանման)",
+  "Namespace created!": "Տարածքը հաջողությամբ ստեղծվեց:",
+  "Input the class name with namespace": "Մուտքագրեք դասի անվանումը (պետք է պարունակի տարածքի անվանումը)",
+  "Input the parent class name with namespace": "Մուտքագրեք ծնողի դասի անվանումը (պետք է պարունակի տարածքի անվանումը)",
+  "Input the new component object name": "Մուտքագրեք օբյեկտի անվանումը",
+  "Insert the text for «{0}» in «{1}»": "Մուտքագրեք «{0}» թարգմանության տեքստը «{1}»-ի համար",
+  "Enter the translation text": "Մուտքագրեք թարգմանության տեքստը"
+}

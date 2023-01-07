@@ -199,8 +199,8 @@ function activate(context) {
 		// The command has been defined in the package.json file
 		// Now provide the implementation of the command with  registerCommand
 		// The commandId parameter must match the command field in package.json
-		const disposable1 = vscode.commands.registerCommand('colibri-ui.create-component', () => createComponent(context));
-		const disposable2 = vscode.commands.registerCommand('colibri-ui.create-namespace', () => createNamespace());
+		const disposable1 = vscode.commands.registerCommand('colibri-ui.create-component', (e) => createComponent(context, e));
+		const disposable2 = vscode.commands.registerCommand('colibri-ui.create-namespace', (e) => createNamespace(context, e));
 		const disposable3 = vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue));
 		context.subscriptions.push(disposable1);
 		context.subscriptions.push(disposable2);

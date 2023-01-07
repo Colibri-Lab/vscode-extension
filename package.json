@@ -36,6 +36,24 @@
 				}
 			}
     ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "colibri-ui.create-component",
+          "when": "resourceLangId == html"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "colibri-ui.create-component",
+          "when": "explorerResourceIsFolder && resourceDirname =~ /[\\.Bundle|ui\/src]/"
+        },
+        {
+          "command": "colibri-ui.create-namespace",
+          "when": "explorerResourceIsFolder && resourceDirname =~ /[\\.Bundle|ui\/src]/"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "colibri-ui.create-component",

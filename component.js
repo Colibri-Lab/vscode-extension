@@ -22,7 +22,7 @@ function createNamespaceProcess(choosedPath, context) {
 	
 	vscode.window.showInputBox({
 		password: false,
-		placeHolder: l10n.t('Enter namespace name in current parent'),
+		title: l10n.t('Enter namespace name in current parent'),
 		value: ''
 	}).then((input) => {
 		namespaceName = input;
@@ -120,13 +120,13 @@ function createCompnentProcess(choosedPath, context) {
 
 	return vscode.window.showInputBox({
 		password: false,
-		placeHolder: l10n.t('Input the class name with namespace'),
+		title: l10n.t('Input the class name with namespace'),
 		value: className + '.'
 	}).then((input) => {
 		className = input;
 		return vscode.window.showInputBox({
 			password: false,
-			placeHolder: l10n.t('Input the parent class name with namespace'),
+			title: l10n.t('Input the parent class name with namespace'),
 			value: 'Colibri.UI.'
 		});
 	}).then(input => {
@@ -241,7 +241,7 @@ function createComponent(context, e) {
 
 			vscode.window.showInputBox({
 				password: false,
-				placeHolder: l10n.t('Input the new component object name'),
+				title: l10n.t('Input the new component object name'),
 				value: ''
 			}).then((input) => {
 

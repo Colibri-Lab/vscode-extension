@@ -1,7 +1,11 @@
 {
+  "Insert the attribute {0} for component {1} [link]({2}).": "Ввести атрибут {0} для компоненты {1} [link]({2}).",
+  "Insert the component {0} [link]({1}).": "Ввести компоненту {0} [link]({1}).",
   "Enter namespace name in current parent": "Введите наименование области (без наименования текущей области)",
   "Namespace created!": "Область создана успешно!",
   "Input the class name with namespace": "Введите наименование класса (должно содержать наименование области)",
   "Input the parent class name with namespace": "Введите наименование класса родителя (должно содержать наименование области)",
-  "Input the new component object name": "Введите наименование обьекта"
+  "Input the new component object name": "Введите наименование обьекта",
+  "Insert the text for «{0}» in «{1}»": "Введите текст перевода «{0}» для «{1}»",
+  "Enter the translation text": "Введите текст перевода"
 }

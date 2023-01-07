@@ -163,8 +163,8 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 	
 	vscode.window.showInputBox({
 		password: false,
-		title: 'Insert the text for «' + textKey + '» in «' + langKey + '»',
-		placeHolder: 'Input the class name with namespace',
+		title: l10n.t('Insert the text for «{0}» in «{1}»', [textKey, langKey]),
+		placeHolder: l10n.t('Enter the translation text'),
 		value: textValue
 	}).then(input => {
 		if(!input) {

@@ -1,7 +1,11 @@
 {
+  "Insert the attribute {0} for component {1} [link]({2}).": "Insert the attribute {0} for component {1} [link]({2}).",
+  "Insert the component {0} [link]({1}).": "Insert the component {0} [link]({1}).",
   "Enter namespace name in current parent": "Enter namespace name in current parent",
   "Namespace created!": "Namespace created!",
   "Input the class name with namespace": "Input the class name with namespace",
   "Input the parent class name with namespace": "Input the parent class name with namespace",
-  "Input the new component object name": "Input the new component object name"
+  "Input the new component object name": "Input the new component object name",
+  "Insert the text for «{0}» in «{1}»": "Insert the text for «{0}» in «{1}»",
+  "Enter the translation text": "Enter the translation text"
 }

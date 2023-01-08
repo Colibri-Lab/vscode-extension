@@ -223,7 +223,6 @@ function getBundlePaths(workspacePath = null) {
 		return items;
 	}
 	catch(e) {
-		// __log.appendLine(e.toString());
 		return [];		
 	}
 }
@@ -319,7 +318,6 @@ function getComponentAttributes(document, classesAndFiles) {
 function checkForColibriProject(document) {
 
 	const path = typeof document === 'string' ? document : document.uri.fsPath;
-	__log.appendLine('Checking for document directory: ' + path);
 
 	let projectPath = path + '/';    
     if(path && path.indexOf('/vendor/') !== -1) {
@@ -328,7 +326,7 @@ function checkForColibriProject(document) {
         projectPath = path.split('/App/')[0] + '/';
 	}
 
-	const isColibri = !!(fs.existsSync(projectPath + 'App') && 
+	return !!(fs.existsSync(projectPath + 'App') && 
 		fs.existsSync(projectPath + 'config') && 
 		fs.existsSync(projectPath + 'bin') && 
 		fs.existsSync(projectPath + 'config/app.yaml') && 
@@ -336,9 +334,6 @@ function checkForColibriProject(document) {
 		fs.existsSync(projectPath + 'vendor/colibri/core') && 
 		fs.existsSync(projectPath + 'vendor/colibri/lang'));
 
-	__log.appendLine('Check complete: ' + (isColibri ? 'ok' : 'error'));
-
-	return isColibri;
 
 }
 
@@ -346,6 +341,7 @@ function checkForColibriProject(document) {
  * 
  */
 function checkWorkspace() {
+	__log.appendLine('Checking for Colibri UI project');
     for(const folder of vscode.workspace.workspaceFolders) {
 		__log.appendLine('Checking for project directory: ' + folder.uri.fsPath);
         if(!checkForColibriProject(folder.uri.fsPath)) {

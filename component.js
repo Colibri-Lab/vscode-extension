@@ -4,7 +4,6 @@ const fs = require('fs');
 const {
     replaceAll,
     expand,
-    checkWorkspace,
 	getLangFilePath,
 	__languageMarkerRegularExpression,
 	loadYamlLangFile,
@@ -43,10 +42,6 @@ function createNamespaceProcess(choosedPath, context) {
  */
 function createNamespace(context, e) {
 	// The code you place here will be executed every time your command is executed
-	
-    if(!checkWorkspace()) {
-        return;
-    }
 
 	if(!e) {
 		vscode.window.showOpenDialog({
@@ -206,9 +201,6 @@ function createCompnentProcess(choosedPath, context) {
 function createComponent(context, e) {
 	// The code you place here will be executed every time your command is executed
    
-    if(!checkWorkspace()) {
-        return;
-    }
 
 	if(!e) {
 		vscode.window.showOpenDialog({

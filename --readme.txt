@@ -9,3 +9,13 @@ vsce package
 ```
 code --install-extension myextension.vsix
 ```
+
+
+activationEvents
+    "onLanguage:html",
+    "onLanguage:javascript",
+    "onLanguage:php",
+    "onCommand:colibri-ui.create-component",
+    "onCommand:colibri-ui.create-namespace",
+    "onCommand:colibri-ui.migrate",
+    "onCommand:colibri-ui.models-generate"

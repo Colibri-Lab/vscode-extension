@@ -1,10 +1,6 @@
 const cp = require('child_process');
-const { fstat } = require('fs');
 const vscode = require('vscode');
-const fs = require('fs');
-const yaml = require('yaml');
 const { __log, getWorkspacePath, replaceAll, readYaml } = require('./utils');
-const { updateIf } = require('typescript');
 
 function runMigrationScript(context, e) {
     const path = getWorkspacePath();

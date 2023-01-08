@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "categories": [
     "Programming Languages"
   ],
@@ -14,13 +14,7 @@
     "vscode": "^1.73.0"
   },
   "activationEvents": [
-    "onLanguage:html",
-    "onLanguage:javascript",
-    "onLanguage:php",
-    "onCommand:colibri-ui.create-component",
-    "onCommand:colibri-ui.create-namespace",
-    "onCommand:colibri-ui.migrate",
-    "onCommand:colibri-ui.models-generate"
+    "*"
   ],
   "main": "./extension.js",
   "l10n": "./l10n",

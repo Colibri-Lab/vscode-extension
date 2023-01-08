@@ -2,7 +2,9 @@
     "extension.createNamespace.title": "Создать область Colibri.UI",
 	"extension.createComponent.title": "Создать компоненту Colibri.UI",
     "extension.settings.title": "Настройки Colibri UI",
-    "extension.settings.description": "Путь к файлу конфигурации языков в модуле Lang",
+    "extension.settings.langs-config-path-description": "Путь к файлу конфигурации языков в модуле Lang",
+    "extension.settings-migrate-command.description": "Команда для выполнения миграции",
+    "extension.settings-models-generate-command.description": "Команда для выполнения генерации модели",    
 	"extension.migrate.title": "Запустить миграцию хранилищ",
 	"extension.models-generate.title": "Пересоздать модели для хранилищ"
 }

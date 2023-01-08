@@ -2,7 +2,9 @@
 	"extension.createNamespace.title": "Create Colibri.UI Namespace",
 	"extension.createComponent.title": "Create Colibri.UI Component",
 	"extension.settings.title": "Colibri UI Settings",
-    "extension.settings.description": "Path to configuration file in Lang module",
+    "extension.settings.langs-config-path-description": "Path to configuration file in Lang module",
+    "extension.settings-migrate-command.description": "Command to execute for migrate",
+    "extension.settings-models-generate-command.description": "Command to execute for models generate",
 	"extension.migrate.title": "Migrate storages",
 	"extension.models-generate.title": "Generate models for storage"
 }

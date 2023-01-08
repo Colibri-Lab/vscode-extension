@@ -25,6 +25,7 @@ const {
 
 const { provideHtmlCompletionItems } = require('./Completion');
 const { getL10nPseudoLocalized } = require('@vscode/l10n-dev');
+const { runModelsGenerator, runMigrationScript } = require('./php-tools');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -191,6 +192,8 @@ function activate(context) {
 			return;
 		}
 
+		vscode.commands.executeCommand('setContext', 'colibrilab.isColibriWorkspace', true);
+
 		__log.appendLine('Activating...');
 		const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path
 		l10n.config({ fsPath: extensionPath + '/l10n/bundle.l10n' + (vscode.env.language !== 'en' ? '.' + vscode.env.language : '') + '.json'});
@@ -208,6 +211,11 @@ function activate(context) {
 
 		const disposable4 = vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event));
 		context.subscriptions.push(disposable4);
+
+		const disposable5 = vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e));
+		const disposable6 = vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e));
+		context.subscriptions.push(disposable5);
+		context.subscriptions.push(disposable6);
 
 		vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
 		onChangeActiveTextEditor(vscode.window.activeTextEditor);

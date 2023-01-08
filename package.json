@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "categories": [
     "Programming Languages"
   ],
@@ -33,9 +33,23 @@
         "properties": {
           "colibrilab.langs-config-path": {
             "type": "string",
-            "order": 2,
-            "description": "%extension.settings.description%",
+            "order": 1,
+            "description": "%extension.settings.langs-config-path-description%",
             "default": "vendor/colibri/lang/src/Lang/config-template/lang-langs.yaml",
+            "additionalProperties": false
+          },
+          "colibrilab.migrate-command": {
+            "type": "string",
+            "order": 2,
+            "description": "%extension.settings-migrate-command.description%",
+            "default": "cd {app-root}/web && /usr/bin/php index.php localhost / command=migrate log=yes",
+            "additionalProperties": false
+          },
+          "colibrilab.models-generate-command": {
+            "type": "string",
+            "order": 3,
+            "description": "%extension.settings-models-generate-command.description%",
+            "default": "cd {app-root}/web && /usr/bin/php index.php localhost / command=models-generate storage={storage-name} log=no",
             "additionalProperties": false
           }
         }
@@ -51,11 +65,19 @@
       "explorer/context": [
         {
           "command": "colibri-ui.create-component",
-          "when": "explorerResourceIsFolder && resourceDirname =~ /[\\.Bundle|ui/src]/"
+          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourceDirname =~ /(\\.Bundle|06\\.UI)/"
         },
         {
           "command": "colibri-ui.create-namespace",
-          "when": "explorerResourceIsFolder && resourceDirname =~ /[\\.Bundle|ui/src]/"
+          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourceDirname =~ /(\\.Bundle|06\\.UI)/"
+        },
+        {
+          "command": "colibri-ui.migrate",
+          "when": "colibrilab.isColibriWorkspace"
+        },
+        {
+          "command": "colibri-ui.models-generate",
+          "when": "colibrilab.isColibriWorkspace"
         }
       ]
     },

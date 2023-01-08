@@ -223,7 +223,7 @@ function getBundlePaths(workspacePath = null) {
 		return items;
 	}
 	catch(e) {
-		__log.appendLine(e.toString());
+		// __log.appendLine(e.toString());
 		return [];		
 	}
 }
@@ -443,8 +443,12 @@ function reloadCompletionItems() {
 			});
 		});
 	}
-	}
+}
 
+function readYaml(path) {
+	const content = fs.readFileSync(path).toString();
+    return yaml.parse(content);
+}
 
 module.exports = {
 	__langFilter,
@@ -455,6 +459,7 @@ module.exports = {
 	__completionItemsRegexp,
 	__log,
 	__colibriUIComponents,
+	readYaml,
 	reloadCompletionItems,
     replaceAll,
     expand,
@@ -474,4 +479,5 @@ module.exports = {
 	getComponentAttributes,
 	getComponentNames,
 	getColibriUIFolder,
+	getWorkspacePath
 };

@@ -7,5 +7,6 @@
   "Input the parent class name with namespace": "Input the parent class name with namespace",
   "Input the new component object name": "Input the new component object name",
   "Insert the text for «{0}» in «{1}»": "Insert the text for «{0}» in «{1}»",
-  "Enter the translation text": "Enter the translation text"
+  "Enter the translation text": "Enter the translation text",
+  "Select the folder to create project": "Select the folder to create project"
 }

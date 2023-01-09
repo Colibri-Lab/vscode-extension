@@ -1,5 +1,4 @@
 const vscode = require('vscode');
-const l10n = require('@vscode/l10n');
 const { 
     __log, 
     __componentRegularExpression, 
@@ -60,7 +59,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
         for (const [attr, value] of componentAttrs) {
             const simpleCompletion = new vscode.CompletionItem(attr + '=""');
             simpleCompletion.insertText = new vscode.SnippetString(attr + '="${1}"');
-            const docs = new vscode.MarkdownString(l10n.t('Insert the attribute {0} for component {1} [link]({2}).', [attr, value.fullName, value.file]));
+            const docs = new vscode.MarkdownString(vscode.l10n.t('Insert the attribute {0} for component {1} [link]({2}).', [attr, value.fullName, value.file]));
             docs.baseUri = vscode.Uri.parse(value.file);
             simpleCompletion.documentation = docs;
             comps.push(simpleCompletion);
@@ -74,7 +73,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
     for (let [componentName, value] of classesAndFiles) {
         const simpleCompletion = new vscode.CompletionItem(componentName);
         simpleCompletion.insertText = new vscode.SnippetString('<' + componentName + ' shown="${1|true,false|}" name="${2}"></' + componentName + '>');
-        const docs = new vscode.MarkdownString(l10n.t('Insert the component {0} [link]({1}).', [value.fullName, value.file]));
+        const docs = new vscode.MarkdownString(vscode.l10n.t('Insert the component {0} [link]({1}).', [value.fullName, value.file]));
         docs.baseUri = vscode.Uri.parse(value.file);
         simpleCompletion.documentation = docs;
         comps.push(simpleCompletion);

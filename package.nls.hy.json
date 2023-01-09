@@ -1,10 +1,12 @@
 {
-    "extension.createNamespace.title": "Ստեղծեք Colibri.UI տարածք",
-	"extension.createComponent.title": "Ստեղծեք Colibri.UI կոմպոնենտ",
+    "extension.createNamespace.title": "Ստեղծել Colibri.UI տարածք",
+	"extension.createComponent.title": "Ստեղծել Colibri.UI կոմպոնենտ",
     "extension.settings.title": "Colibri․UI կարգավորումներ",
     "extension.settings.langs-config-path-description": "Լեզվի կազմաձևման ֆայլի ուղին Lang մոդուլում",
     "extension.settings-migrate-command.description": "Միգրացիաի հրաման",
     "extension.settings-models-generate-command.description": "Մոդելների գենեռացման հրաման",     
 	"extension.migrate.title": "Գործարկել պահեստների միգրացիան",
-	"extension.models-generate.title": "Ստեղծեք պահեստների մոդելները"
+	"extension.models-generate.title": "Ստեղծել պահեստների մոդելները",
+	"extension.create-project.title": "Ստեղծել դատարկ Colibri պրոեկտ",
+	"extension.settings-create-project-command.description": "Նախագծի ստեղծման համար կատարման հրաման"
 }

@@ -1,5 +1,4 @@
 const vscode = require('vscode');
-const l10n = require('@vscode/l10n');
 const fs = require('fs');
 const {
     replaceAll,
@@ -21,7 +20,7 @@ function createNamespaceProcess(choosedPath, context) {
 	
 	vscode.window.showInputBox({
 		password: false,
-		title: l10n.t('Enter namespace name in current parent'),
+		title: vscode.l10n.t('Enter namespace name in current parent'),
 		value: ''
 	}).then((input) => {
 		namespaceName = input;
@@ -33,7 +32,7 @@ function createNamespaceProcess(choosedPath, context) {
 
 		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', {encoding:'utf8', flag:'w+'});
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-		vscode.window.showInformationMessage(l10n.t('Namespace created!'));
+		vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
 
 	});
 }
@@ -115,13 +114,13 @@ function createCompnentProcess(choosedPath, context) {
 
 	return vscode.window.showInputBox({
 		password: false,
-		title: l10n.t('Input the class name with namespace'),
+		title: vscode.l10n.t('Input the class name with namespace'),
 		value: className + '.'
 	}).then((input) => {
 		className = input;
 		return vscode.window.showInputBox({
 			password: false,
-			title: l10n.t('Input the parent class name with namespace'),
+			title: vscode.l10n.t('Input the parent class name with namespace'),
 			value: 'Colibri.UI.'
 		});
 	}).then(input => {
@@ -233,7 +232,7 @@ function createComponent(context, e) {
 
 			vscode.window.showInputBox({
 				password: false,
-				title: l10n.t('Input the new component object name'),
+				title: vscode.l10n.t('Input the new component object name'),
 				value: ''
 			}).then((input) => {
 

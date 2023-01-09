@@ -6,5 +6,7 @@
     "extension.settings-migrate-command.description": "Command to execute for migrate",
     "extension.settings-models-generate-command.description": "Command to execute for models generate",
 	"extension.migrate.title": "Migrate storages",
-	"extension.models-generate.title": "Generate models for storage"
+	"extension.models-generate.title": "Generate models for storage",
+	"extension.create-project.title": "Create the blank Colibri project",
+	"extension.settings-create-project-command.description": "Command to execute for create project"
 }

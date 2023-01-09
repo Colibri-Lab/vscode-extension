@@ -8,12 +8,12 @@ const __openedLangDocuments = new Map();
 const __colibriUIComponents = new Map();
 
 
-const __languageMarkerRegularExpression = new RegExp('#\{(.*?)\}', 'gmi');
-const __componentRegularExpression = new RegExp('<[^>\/]+/?>', 'ig');
-const __completionItemsRegexp = new RegExp('<([A-z\.]+)', 'i');
-const __componentNameRegExp = new RegExp('componentname="([^"]+)"', 'i');
-const __attributesRegExp = new RegExp('([\\w\\.]+)\\s+?=\\s+?class extends\\s+?([\\w\\.]+)\\s+?{?', 'gim');
-const __setAttributeRegExp = new RegExp('set ([^\(]+)[\s+]?\\(.*\\)\\s+?{?', 'i');
+const __languageMarkerRegularExpression = /#{(.*?)}/gmi;
+const __componentRegularExpression = /<[^>\/]+\/?>/ig;
+const __completionItemsRegexp = /<([A-z.]+)/i;
+const __componentNameRegExp = /componentname="([^"]+)"/i;
+const __attributesRegExp = /([\w\.]+)\s+?=\s+?class extends\s+?([\w\.]+)\s*{?/gim;
+const __setAttributeRegExp = /set ([^(]+)[s+]?\(.*\)\s*{?/i;
 const __langTextDecorationType = vscode.window.createTextEditorDecorationType({
 	borderWidth: '1px',
 	borderStyle: 'solid',
@@ -341,16 +341,17 @@ function checkForColibriProject(document) {
  * 
  */
 function checkWorkspace() {
-	__log.appendLine('Checking for Colibri UI project');
-    for(const folder of vscode.workspace.workspaceFolders) {
-		__log.appendLine('Checking for project directory: ' + folder.uri.fsPath);
-        if(!checkForColibriProject(folder.uri.fsPath)) {
-			__log.appendLine('Not a Colibri Project');
-            return false;
-        }
-    }   
-	__log.appendLine('Check complete');
-    return true;
+	try {
+		for(const folder of vscode.workspace.workspaceFolders) {
+			if(!checkForColibriProject(folder.uri.fsPath)) {
+				return false;
+			}
+		}   
+		return true;	
+	}
+	catch(e) {
+		return false;
+	}
 }
 
 

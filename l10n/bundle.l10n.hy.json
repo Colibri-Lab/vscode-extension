@@ -7,5 +7,6 @@
   "Input the parent class name with namespace": "Մուտքագրեք ծնողի դասի անվանումը (պետք է պարունակի տարածքի անվանումը)",
   "Input the new component object name": "Մուտքագրեք օբյեկտի անվանումը",
   "Insert the text for «{0}» in «{1}»": "Մուտքագրեք «{0}» թարգմանության տեքստը «{1}»-ի համար",
-  "Enter the translation text": "Մուտքագրեք թարգմանության տեքստը"
+  "Enter the translation text": "Մուտքագրեք թարգմանության տեքստը",
+  "Select the folder to create project": "Ընտրեք այն թղթապանակը, որտեղ ցանկանում եք ստեղծել նախագիծը"
 }

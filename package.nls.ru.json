@@ -6,5 +6,7 @@
     "extension.settings-migrate-command.description": "Команда для выполнения миграции",
     "extension.settings-models-generate-command.description": "Команда для выполнения генерации модели",    
 	"extension.migrate.title": "Запустить миграцию хранилищ",
-	"extension.models-generate.title": "Пересоздать модели для хранилищ"
+	"extension.models-generate.title": "Пересоздать модели для хранилищ",
+	"extension.create-project.title": "Создать пустой проект Colibri",
+	"extension.settings-create-project-command.description": "Команда для выполнения создание пустого проекта"
 }

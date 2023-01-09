@@ -7,5 +7,6 @@
   "Input the parent class name with namespace": "Введите наименование класса родителя (должно содержать наименование области)",
   "Input the new component object name": "Введите наименование обьекта",
   "Insert the text for «{0}» in «{1}»": "Введите текст перевода «{0}» для «{1}»",
-  "Enter the translation text": "Введите текст перевода"
+  "Enter the translation text": "Введите текст перевода",
+  "Select the folder to create project": "Выберите папку где хотите создать проект"
 }

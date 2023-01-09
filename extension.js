@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
-const l10n = require('@vscode/l10n');
 
 const { CodelenceProvider } = require('./CodeLenseProvider');
 const {
@@ -24,8 +23,7 @@ const {
 } = require('./component');
 
 const { provideHtmlCompletionItems } = require('./Completion');
-const { getL10nPseudoLocalized } = require('@vscode/l10n-dev');
-const { runModelsGenerator, runMigrationScript } = require('./php-tools');
+const { runModelsGenerator, runMigrationScript, runCreateProject } = require('./php-tools');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -79,9 +77,6 @@ function triggerUpdateDecorations(activeEditor) {
  */
 function onActiveEditorTextChanged(document) {
 
-	__log.appendLine('Active editor changed');
-
-	__log.appendLine('Reloading completion items');
 	reloadCompletionItems();
 
 	let content = document.getText();
@@ -89,8 +84,6 @@ function onActiveEditorTextChanged(document) {
 	if(!langsFileContent) {
 		return;
 	}
-
-	__log.appendLine('Working...');
 
 	let moduleName = getModuleName(document);
 
@@ -135,17 +128,11 @@ function onActivateEditorTextChangedEventHandler(event) {
 }
 
 function onChangeActiveTextEditor(editor) {
-	__log.appendLine('Active editor text changed');
-
 	if (editor && __langFilter.indexOf(editor.document.languageId) !== -1 && checkForColibriProject(editor.document)) {
-		__log.appendLine('Working...');
-
 		onActiveEditorTextChanged(editor.document);
 		triggerUpdateDecorations(editor);
 		reloadCompletionItems();
-		
 	}
-
 }
 
 /**
@@ -164,8 +151,8 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 	
 	vscode.window.showInputBox({
 		password: false,
-		title: l10n.t('Insert the text for «{0}» in «{1}»', [textKey, langKey]),
-		placeHolder: l10n.t('Enter the translation text'),
+		title: vscode.l10n.t('Insert the text for «{0}» in «{1}»', [textKey, langKey]),
+		placeHolder: vscode.l10n.t('Enter the translation text'),
 		value: textValue
 	}).then(input => {
 		if(!input) {
@@ -188,38 +175,32 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 function activate(context) {
 	try {
 
+		__log.appendLine('Activating...');
+		__log.appendLine('Checking workspace...');
 		if(!checkWorkspace()) {
+			__log.appendLine('This is not a Colibri.UI Project');
+			__log.appendLine('Please, refer to the [dumentation](https://gitlab.repeatme.online/colibrilab/blank) for creating a project');
+
+			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-project', (e) => runCreateProject(context, e)));
+
+
 			return;
 		}
 
 		vscode.commands.executeCommand('setContext', 'colibrilab.isColibriWorkspace', true);
 
-		__log.appendLine('Activating...');
-		const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path
-		l10n.config({ fsPath: extensionPath + '/l10n/bundle.l10n' + (vscode.env.language !== 'en' ? '.' + vscode.env.language : '') + '.json'});
-
 		__log.appendLine('Registering events');
-		// The command has been defined in the package.json file
-		// Now provide the implementation of the command with  registerCommand
-		// The commandId parameter must match the command field in package.json
-		const disposable1 = vscode.commands.registerCommand('colibri-ui.create-component', (e) => createComponent(context, e));
-		const disposable2 = vscode.commands.registerCommand('colibri-ui.create-namespace', (e) => createNamespace(context, e));
-		const disposable3 = vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue));
-		context.subscriptions.push(disposable1);
-		context.subscriptions.push(disposable2);
-		context.subscriptions.push(disposable3);
 
-		const disposable4 = vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event));
-		context.subscriptions.push(disposable4);
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-component', (e) => createComponent(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-namespace', (e) => createNamespace(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue)));
+		context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event)));
 
-		const disposable5 = vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e));
-		const disposable6 = vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e));
-		context.subscriptions.push(disposable5);
-		context.subscriptions.push(disposable6);
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
 
 		vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
 		onChangeActiveTextEditor(vscode.window.activeTextEditor);
-
 
 		__log.appendLine('Loading class names...');
 		reloadCompletionItems();
@@ -232,6 +213,27 @@ function activate(context) {
 
 		__log.appendLine('Registering completion...');
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
+
+		
+		// vscode.debug.onDidStartDebugSession(event => {
+		// 	console.log(event);
+		// });
+		// vscode.debug.onDidChangeBreakpoints(event => {
+		// 	/** @var {BreakpointsChangeEvent} event */
+		// 	console.log(vscode.debug.registerDebugAdapterTrackerFactory);
+		// });
+		// vscode.debug.onDidReceiveDebugSessionCustomEvent(event => {
+		// 	console.log(event);
+		// 	if(event.event == 'stopped') {
+		// 		// ...
+		// 	}
+		// });
+		// vscode.debug.registerDebugAdapterTrackerFactory('*', {
+		// 	createDebugAdapterTracker(session) {
+		// 	  return new DebugAdapter(session);
+		// 	}
+		// });
+		
 
 		__log.appendLine('Success...');
 	}

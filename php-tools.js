@@ -144,7 +144,7 @@ function runDownloadModule(context, e) {
         __log.appendLine('Choosed: ' + libName);
         __log.appendLine('Downloading...');
 
-        if(libName === 'Create new') {
+        if(libName === vscode.l10n.t('Create new')) {
             createNewModule();
         }
         else {

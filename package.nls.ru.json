@@ -8,5 +8,7 @@
 	"extension.migrate.title": "Запустить миграцию хранилищ",
 	"extension.models-generate.title": "Пересоздать модели для хранилищ",
 	"extension.create-project.title": "Создать пустой проект Colibri",
-	"extension.settings-create-project-command.description": "Команда для выполнения создание пустого проекта"
+	"extension.settings-create-project-command.description": "Команда для выполнения создание пустого проекта",
+	"extension.settings-download-module-command.description": "Команда для загрузки модуля",
+	"extension.download-module.title": "Загрузить модуль"
 }

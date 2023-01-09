@@ -15,7 +15,8 @@ const {
 	checkForColibriProject,
 	__langFilter,
 	checkWorkspace,
-	reloadCompletionItems
+	reloadCompletionItems,
+	hasLanguageModule
 } = require('./utils');
 const {
 	createNamespace,
@@ -23,7 +24,7 @@ const {
 } = require('./component');
 
 const { provideHtmlCompletionItems } = require('./Completion');
-const { runModelsGenerator, runMigrationScript, runCreateProject } = require('./php-tools');
+const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule } = require('./php-tools');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -183,7 +184,6 @@ function activate(context) {
 
 			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-project', (e) => runCreateProject(context, e)));
 
-
 			return;
 		}
 
@@ -193,24 +193,32 @@ function activate(context) {
 
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-component', (e) => createComponent(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-namespace', (e) => createNamespace(context, e)));
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue)));
-		context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event)));
-
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
 
-		vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
-		onChangeActiveTextEditor(vscode.window.activeTextEditor);
+		if(hasLanguageModule()) {
+			
+			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue)));
+			context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event)));
+			vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
+			onChangeActiveTextEditor(vscode.window.activeTextEditor);	
+				
+			__log.appendLine('Registering codelence items...');
+			const lenseProvider = new CodelenceProvider();
+			vscode.languages.registerCodeLensProvider("html", lenseProvider);
+			vscode.languages.registerCodeLensProvider("javascript", lenseProvider);
+			vscode.languages.registerCodeLensProvider("php", lenseProvider);
+
+		}
+		else {
+			__log.appendLine('Module Lang not found, please install to use multilangual abilities');
+		}
+
 
 		__log.appendLine('Loading class names...');
 		reloadCompletionItems();
 		
-		__log.appendLine('Registering codelence items...');
-		const lenseProvider = new CodelenceProvider();
-		vscode.languages.registerCodeLensProvider("html", lenseProvider);
-		vscode.languages.registerCodeLensProvider("javascript", lenseProvider);
-		vscode.languages.registerCodeLensProvider("php", lenseProvider);
-
 		__log.appendLine('Registering completion...');
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
 

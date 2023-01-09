@@ -52,6 +52,13 @@
             "description": "%extension.settings-create-project-command.description%",
             "default": "export COLIBRI_MODE=\"local\" && composer create-project colibri/blank-project:dev-master {project-dir} --repository=\"{\\\"url\\\": \\\"https://gitlab.repeatme.online/api/v4/group/7/-/packages/composer/packages.json\\\", \\\"type\\\": \\\"composer\\\"}\" --stability=dev --remove-vcs",
             "additionalProperties": false
+          },
+          "colibrilab.download-module-command": {
+            "type": "string",
+            "order": 3,
+            "description": "%extension.settings-download-module-command.description%",
+            "default": "composer require {module-vendor-and-name}",
+            "additionalProperties": false
           }
         }
       }
@@ -102,6 +109,10 @@
       {
         "command": "colibri-ui.create-project",
         "title": "%extension.create-project.title%"
+      },
+      {
+        "command": "colibri-ui.download-module",
+        "title": "%extension.download-module.title%"
       }
     ]
   },

@@ -8,5 +8,7 @@
 	"extension.migrate.title": "Գործարկել պահեստների միգրացիան",
 	"extension.models-generate.title": "Ստեղծել պահեստների մոդելները",
 	"extension.create-project.title": "Ստեղծել դատարկ Colibri պրոեկտ",
-	"extension.settings-create-project-command.description": "Նախագծի ստեղծման համար կատարման հրաման"
+	"extension.settings-create-project-command.description": "Նախագծի ստեղծման համար կատարման հրաման",
+	"extension.settings-download-module-command.description": "Մոդուլը բեռնելու հրաման",
+	"extension.download-module.title": "Ներբեռնել մոդուլ"
 }

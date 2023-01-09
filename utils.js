@@ -331,10 +331,30 @@ function checkForColibriProject(document) {
 		fs.existsSync(projectPath + 'bin') && 
 		fs.existsSync(projectPath + 'config/app.yaml') && 
 		fs.existsSync(projectPath + 'vendor/colibri/ui') && 
-		fs.existsSync(projectPath + 'vendor/colibri/core') && 
-		fs.existsSync(projectPath + 'vendor/colibri/lang'));
+		fs.existsSync(projectPath + 'vendor/colibri/core'));
+	
+	//  &&  fs.existsSync(projectPath + 'vendor/colibri/lang'))
 
+}
 
+function hasLanguageModule() {
+
+	for(const folder of vscode.workspace.workspaceFolders) {
+		
+		const path = folder.uri.fsPath;
+
+		let projectPath = path + '/'; 
+		if(path && path.indexOf('/vendor/') !== -1) {
+			projectPath = path.split('/vendor/')[0] + '/';
+		} else if(path && path.indexOf('/App/') !== -1) {
+			projectPath = path.split('/App/')[0] + '/';
+		}
+
+		return fs.existsSync(projectPath + 'vendor/colibri/lang');
+
+	} 
+
+	return false;
 }
 
 /**
@@ -458,6 +478,7 @@ module.exports = {
 	__colibriUIComponents,
 	readYaml,
 	reloadCompletionItems,
+	hasLanguageModule,
     replaceAll,
     expand,
     saveYamlLangFile,

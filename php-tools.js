@@ -322,7 +322,7 @@ async function createNewModule(context) {
                 '{database-user}': {type: 'text', title: vscode.l10n.t('Local database user'), default: 'root'},
                 '{database-password}': {type: 'text', title: vscode.l10n.t('Local database password'), default: ''},
                 '{use-vault}': {type: 'yesno', title: vscode.l10n.t('Use Colibri vault to save passwords')},
-                '{prod-vault-database-password}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Valut key for PROD stage (database password)')},
+                '{prod-vault-database-password}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Vault key for PROD stage (database password)')},
                 '{test-vault-database-password}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Vault key for TEST stage (database password)')},
                 '{prod-database-password}': {type: 'text', condition: '!data[\'{use-vault}\']', title: vscode.l10n.t('Production database password')},
                 '{test-database-password}': {type: 'text', condition: '!data[\'{use-vault}\']', title: vscode.l10n.t('Test database password')},

@@ -55,6 +55,18 @@ Component code completion
 
 Component attributes code completion
 
+# Creating an Colibri Blank project
+
+- Ctrl+P -> Create the blank Colibri project
+
+# Download existing modules
+
+- Ctrl+P -> Download module
+
+# Or create your own
+
+- Ctrl+P -> Download module -> Create new
+
 ## License
 
 Copyright (c) Microsoft Corporation. All rights reserved.

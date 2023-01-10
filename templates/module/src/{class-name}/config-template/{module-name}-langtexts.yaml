@@ -1,0 +1,9 @@
+---
+# {module-name}-language-key:
+#  ru: {russian text}
+#  en: {english text}
+#  hy: {armenian for example}
+{module-name}-permissions:
+  ru: Доступ к модулю {class-name}
+  en: Access to module {class-name}
+...

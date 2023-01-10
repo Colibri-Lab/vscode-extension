@@ -1,0 +1,9 @@
+# шлак 
+.idea
+.vscode
+
+# временные файлы
+/temp
+
+# Vendor
+/vendor

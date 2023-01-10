@@ -1,8 +1,8 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const {
-    replaceAll,
-    expand,
+	replaceAll,
+	expand,
 	getLangFilePath,
 	__languageMarkerRegularExpression,
 	loadYamlLangFile,
@@ -17,7 +17,7 @@ const {
  */
 function createNamespaceProcess(choosedPath, context) {
 	let namespaceName = '';
-	
+
 	vscode.window.showInputBox({
 		password: false,
 		title: vscode.l10n.t('Enter namespace name in current parent'),
@@ -27,10 +27,10 @@ function createNamespaceProcess(choosedPath, context) {
 		const dirName = namespaceName.split('.').pop();
 		fs.mkdirSync(choosedPath + '/' + dirName);
 
-		let currentNamespace = fs.readFileSync(choosedPath + '/.js', {encoding:'utf8', flag:'r'});
+		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
 		currentNamespace = currentNamespace.split(' = class ')[0];
 
-		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', {encoding:'utf8', flag:'w+'});
+		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 		vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
 
@@ -42,7 +42,7 @@ function createNamespaceProcess(choosedPath, context) {
 function createNamespace(context, e) {
 	// The code you place here will be executed every time your command is executed
 
-	if(!e) {
+	if (!e) {
 		vscode.window.showOpenDialog({
 			canSelectMany: false,
 			openLabel: 'Select',
@@ -58,7 +58,7 @@ function createNamespace(context, e) {
 		createNamespaceProcess(e.fsPath, context);
 	}
 
-	
+
 }
 
 
@@ -77,7 +77,7 @@ function createCompnentProcess(choosedPath, context) {
 
 	choosedPath = fs.realpathSync(choosedPath + '/');
 	const stat = fs.statSync(choosedPath);
-	if(!stat.isDirectory()) {
+	if (!stat.isDirectory()) {
 		const parts = choosedPath.split('/');
 		parts.pop();
 		choosedPath = parts.join('/');
@@ -85,28 +85,28 @@ function createCompnentProcess(choosedPath, context) {
 	}
 
 	let jsFiles = [];
-	const list = fs.readdirSync(choosedPath + '/');					
-	list.forEach(uri => {             
-		if(uri.indexOf('.js') !== -1) {
+	const list = fs.readdirSync(choosedPath + '/');
+	list.forEach(uri => {
+		if (uri.indexOf('.js') !== -1) {
 			jsFiles.push(uri);
 		}
 	});
 	let lastFile = jsFiles.pop();
 
-	if(lastFile === '.js') {
+	if (lastFile === '.js') {
 		// модуль, значит номер 1
 	}
 	else {
 		const parts = lastFile.split('.');
-		if(isFinite(parts[0])) {
+		if (isFinite(parts[0])) {
 			fileIndex = parseInt(parts[0]);
 		}
 	}
 
-	let lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, {encoding:'utf8', flag:'r'});
+	let lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, { encoding: 'utf8', flag: 'r' });
 	lastFileData = lastFileData.split(' = class extends ')[0];
 	lastFileData = lastFileData.trim();
-	if(lastFileData) {
+	if (lastFileData) {
 		let lastFileDataParts = lastFileData.split('.');
 		lastFileDataParts.pop();
 		className = lastFileDataParts.join('.');
@@ -127,22 +127,22 @@ function createCompnentProcess(choosedPath, context) {
 		parentClass = input;
 		fileIndex++;
 
-	
+
 		const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
-		const templatesPath = extensionPath + '/templates/';
+		const templatesPath = extensionPath + '/templates/component/';
 		let cssClassName = replaceAll(className, /\./, '-').toLowerCase();
 		let languageTextPrefix = replaceAll(cssClassName, /app.modules./, '').toLowerCase();
 
 		let textContent = '';
 		let newTextContent = '';
 		let range, selection;
-		if(isFile) {			
+		if (isFile) {
 			selection = vscode.window.activeTextEditor.selection;
 			range = new vscode.Range(selection.start, selection.end);
 			textContent = vscode.window.activeTextEditor.document.getText(range);
 			newTextContent = '<{class-name} shown="true" name="{new-component-object-name}" />';
 		}
-		
+
 		let jsContent = fs.readFileSync(templatesPath + 'template.js') + '';
 		let htmlContent = fs.readFileSync(templatesPath + 'template.html') + '';
 		let scssContent = fs.readFileSync(templatesPath + 'template.scss') + '';
@@ -167,22 +167,24 @@ function createCompnentProcess(choosedPath, context) {
 		const fileName = className.split('.').pop();
 		const fileIndexText = expand(fileIndex.toFixed(0), '0', 2);
 		const componentFileName = choosedPath + '/' + fileIndexText + '.' + fileName;
-		fs.writeFileSync(componentFileName + '.js', jsContent, {encoding:'utf8', flag:'w+'});
-		fs.writeFileSync(componentFileName + '.html', htmlContent, {encoding:'utf8', flag:'w+'});
-		fs.writeFileSync(componentFileName + '.scss', scssContent, {encoding:'utf8', flag:'w+'});
-		fs.writeFileSync(componentFileName + '.lang', langContent, {encoding:'utf8', flag:'w+'});
+		fs.writeFileSync(componentFileName + '.js', jsContent, { encoding: 'utf8', flag: 'w+' });
+		fs.writeFileSync(componentFileName + '.html', htmlContent, { encoding: 'utf8', flag: 'w+' });
+		fs.writeFileSync(componentFileName + '.scss', scssContent, { encoding: 'utf8', flag: 'w+' });
+		fs.writeFileSync(componentFileName + '.lang', langContent, { encoding: 'utf8', flag: 'w+' });
 
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 
 		vscode.window.showInformationMessage('Component created!');
-		
-		if(isFile) {
-			return Promise.resolve({selection: selection, text: newTextContent, className: className, componentFiles: {
-				js: componentFileName + '.js',
-				html: componentFileName + '.html',
-				scss: componentFileName + '.scss',
-				lang: componentFileName + '.lang'
-			}, textPrefix: languageTextPrefix});
+
+		if (isFile) {
+			return Promise.resolve({
+				selection: selection, text: newTextContent, className: className, componentFiles: {
+					js: componentFileName + '.js',
+					html: componentFileName + '.html',
+					scss: componentFileName + '.scss',
+					lang: componentFileName + '.lang'
+				}, textPrefix: languageTextPrefix
+			});
 		}
 		else {
 			return null;
@@ -199,9 +201,9 @@ function createCompnentProcess(choosedPath, context) {
  */
 function createComponent(context, e) {
 	// The code you place here will be executed every time your command is executed
-   
 
-	if(!e) {
+
+	if (!e) {
 		vscode.window.showOpenDialog({
 			canSelectMany: false,
 			openLabel: 'Select',
@@ -211,11 +213,11 @@ function createComponent(context, e) {
 			if (fileUri && fileUri[0]) {
 				createCompnentProcess(fileUri[0].path, context);
 			}
-		});	
+		});
 	}
 	else {
 		createCompnentProcess(e.fsPath, context).then((creationContext) => {
-			if(!creationContext) {
+			if (!creationContext) {
 				return;
 			}
 			const selection = creationContext.selection;
@@ -248,14 +250,14 @@ function createComponent(context, e) {
 					let parts = replaceAll(replaceAll(langText, '#{', ''), '}', '').split(';');
 					let textKey = parts[0];
 
-					if(yamlObject[textKey]) {
+					if (yamlObject[textKey]) {
 						newLangContent[textKey] = Object.assign({}, yamlObject[textKey]);
 						delete yamlObject[textKey];
 					}
 
 				}
 
-				if(Object.keys(newLangContent).length > 0) {
+				if (Object.keys(newLangContent).length > 0) {
 					saveYamlLangFile(componentFiles.lang, newLangContent);
 					saveYamlLangFile(langFile, yamlObject);
 				}
@@ -267,13 +269,13 @@ function createComponent(context, e) {
 			});
 
 		});
-	
+
 	}
 
 }
 
 
 module.exports = {
-    createNamespace,
-    createComponent
+	createNamespace,
+	createComponent
 }

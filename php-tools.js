@@ -2,6 +2,7 @@ const cp = require('child_process');
 const vscode = require('vscode');
 const fs = require('fs');
 const { __log, getWorkspacePath, replaceAll, readYaml } = require('./utils');
+const glob = require('glob');
 
 function runMigrationScript(context, e) {
     const path = getWorkspacePath();
@@ -140,102 +141,235 @@ function runDownloadModule(context, e) {
 
     list.push(vscode.l10n.t('Create new'));
 
-    vscode.window.showQuickPick(list).then(function(libName) {
-        __log.appendLine('Choosed: ' + libName);
-        __log.appendLine('Downloading...');
+    vscode.window.showQuickPick(list)
+        .then(function(libName) {
+            __log.appendLine('Choosed: ' + libName);
+            __log.appendLine('Downloading...');
 
-        if(libName === vscode.l10n.t('Create new')) {
-            createNewModule();
-        }
-        else {
+            if(libName === vscode.l10n.t('Create new')) {
+                createNewModule(context);
+            }
+            else {
 
-            libName = libName.split(' (')[0];
-            command = 'cd ' + path + ' && ' + replaceAll(command, '{module-vendor-and-name}', libName)
-            const process = cp.exec(command, (err, stdout, stderr) => {
-                
-                if (stdout.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
-                    stdout = replaceAll(stdout, '\033[0m\n', '');
-                    stdout = replaceAll(stdout, '\033[31m', '');
-                    stdout = replaceAll(stdout, '\033[32m', '');
-                    stdout = replaceAll(stdout, '\033[36m', '');
-                    stdout = replaceAll(stdout, '\n\n', '\n');
-                    __log.appendLine(stdout);
-                }
-                if (stderr.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
-                    __log.appendLine(stderr);
-                }
-                if (err) {
-                    __log.appendLine('error: ' + err);
-                }
-            });
-    
-            process.addListener('close', (code, signal) => {
-                __log.appendLine('Complete with code ' + code + '...');
-            });
-    
-        }
-
+                libName = libName.split(' (')[0];
+                command = 'cd ' + path + ' && ' + replaceAll(command, '{module-vendor-and-name}', libName)
+                const process = cp.exec(command, (err, stdout, stderr) => {
+                    
+                    if (stdout.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
+                        stdout = replaceAll(stdout, '\033[0m\n', '');
+                        stdout = replaceAll(stdout, '\033[31m', '');
+                        stdout = replaceAll(stdout, '\033[32m', '');
+                        stdout = replaceAll(stdout, '\033[36m', '');
+                        stdout = replaceAll(stdout, '\n\n', '\n');
+                        __log.appendLine(stdout);
+                    }
+                    if (stderr.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
+                        __log.appendLine(stderr);
+                    }
+                    if (err) {
+                        __log.appendLine('error: ' + err);
+                    }
+                });
         
-    });
+                process.addListener('close', (code, signal) => {
+                    __log.appendLine('Complete with code ' + code + '...');
+                });
+        
+            }
+
+            
+        });
 
 }
 
-function createNewModule() {
+function replaceInPaths(startPath, replacements) {
 
-    vscode.window.showInformationMessage('This feature is not implemented yet!');
-    return;
+    const result = fs.readdirSync(startPath, { withFileTypes: true });
+    for(let r of result) {
 
-    let moduleVendorAndName = '';
-    let moduleDescription = '';
-    let moduleClassName = '';
-    let moduleRepo = '';
-    let modulePath = '';
-
-    vscode.window.showInputBox({
-        title: vscode.l10n.t('Enter the module name:'),
-        placeHolder: vscode.l10n.t('«vendor»/«module»'), 
-    }).then((input) => {
-        moduleVendorAndName = input;
-        return vscode.window.showInputBox({
-            title: vscode.l10n.t('Enter the module description:'),
-            placeHolder: vscode.l10n.t('Full description for your module'), 
-        });
-    }).then((input) => {
-        moduleDescription = input
-        return vscode.window.showInputBox({
-            title: vscode.l10n.t('Enter the module class Name:'),
-            placeHolder: vscode.l10n.t('Without namespace, for example: MyClass, or Example. Please dont use the word «Module» in name...'), 
-        });
-    }).then((input) => {
-        moduleClassName = input;
-        return vscode.window.showInputBox({
-            title: vscode.l10n.t('Enter the gitlab.colibrilab.pro repo url:'),
-            placeHolder: vscode.l10n.t('Just the pathname, dont enter the domain name'), 
-        });
-    }).then((input) => {
-        moduleRepo = input;
-        return vscode.window.showOpenDialog({
-            canSelectFolders: true,
-            canSelectFiles: false,
-            canSelectMany: false,
-            openLabel: vscode.l10n.t('Choose the path where to place the module'),
-        });
-    }).then((value) => {
-        /** @var {Array} value */
-        let path = value.pop();
-        modulePath = path.fsPath;
-        return Promise.resolve();
-    }).then(() => {
-
-        if(!moduleVendorAndName || !moduleDescription || !moduleRepo || !moduleClassName || !modulePath) {
-            vscode.window.showInformationMessage('Please enter the all properties');
-        } else {
-
-            // создаем модуль
-
+        if(r.name === '.git') {
+            continue;
         }
 
+        let rr = r.name;
+        const keys = Object.keys(replacements);
+        for(const key of keys) {
+            const value = replacements[key];
+            rr = replaceAll(rr, key, value);
+        }
+
+        if(rr != r.name) {
+            cp.execSync('mv "' + startPath + '/' + r.name + '" "' + startPath + '/' + rr + '"');
+        }
+
+        if(r.isDirectory()) {
+            replaceInPaths(startPath + '/' + rr, replacements);
+        }        
+
+    }
+
+}
+
+function replaceInFiles(startPath, replacements) {
+    const res = glob.sync(startPath + '/**/*', {
+        dot: true,
+        nodir: true
     });
+    for(let r of res) {
+        
+        if(r.indexOf('.git') !== -1) {
+            continue;
+        }
+
+        let content = fs.readFileSync(r).toString();
+
+        const keys = Object.keys(replacements);
+        for(const key of keys) {
+            const value = replacements[key];
+            content = replaceAll(content, key, value);
+        }
+
+        fs.writeFileSync(r, content);
+
+    }
+}
+
+async function createNewModule(context) {
+
+    const workspacePath = getWorkspacePath();
+    const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
+
+    let moduleVendorAndName = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the module name:'), placeHolder: vscode.l10n.t('«vendor-name»/«module-name»'), ignoreFocusOut: true});
+    let [moduleVendorName, moduleName] = moduleVendorAndName.split('/');    
+    let moduleDescription = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the module description:'),placeHolder: vscode.l10n.t('Full description for your module'), ignoreFocusOut: true});
+    let moduleClassName = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the module class Name:'), placeHolder: vscode.l10n.t('Without namespace, for example: MyClass, or Example. Please dont use the word «Module» in name...'), ignoreFocusOut: true});
+    let moduleRepo = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the gitlab.colibrilab.pro repo url:'), placeHolder: vscode.l10n.t('Just the pathname, dont enter the domain name'), ignoreFocusOut: true});
+    const result = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {title: vscode.l10n.t('Is your module represents a website/application?'), placeHolder: vscode.l10n.t('Choose Yes if you plan to use module as startup for the application or website, No if your module will provide some functionality'), ignoreFocusOut: true});
+    let projectStartsUp = result === vscode.l10n.t('Yes');
+
+    let projectProdDomain = '';
+    let projectTestDomain = '';
+    let projectLocalDomain = '';
+    if(projectStartsUp) {
+        projectLocalDomain = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the project local domain:'), placeHolder: vscode.l10n.t('Enter the local domain if the module must be startable'), ignoreFocusOut: true});
+        projectProdDomain = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the project production domain:'), placeHolder: vscode.l10n.t('Enter the production domain if the module must be startable'), ignoreFocusOut: true});
+        projectTestDomain = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the project test domain:'), placeHolder: vscode.l10n.t('Enter the test domain if the module must be startable'), ignoreFocusOut: true});
+    }
+
+    let path = await vscode.window.showOpenDialog({
+        canSelectFolders: true,
+        canSelectFiles: false,
+        canSelectMany: false,
+        openLabel: vscode.l10n.t('Choose the path where to place the module'),
+    });
+    let modulePath = path.pop().fsPath;
+
+    if(!moduleVendorName || !moduleName || !moduleDescription || !moduleRepo || !moduleClassName || !modulePath) {
+        vscode.window.showInformationMessage('Please enter the all properties');
+    } else {
+        
+        moduleRepo = 'git@gitlab.colibrilab.pro:' + moduleRepo;
+        let templatesPath = extensionPath + '/templates/module';
+        
+        let commandClone = 'cd ' + modulePath + ' && git clone ' + moduleRepo + ' ./';
+        let commandCopy = 'cp -r -i ' + templatesPath + '/* ' + modulePath;
+        let commandComposerConfig = 'cd ' + workspacePath + ' && composer config repositories.' + moduleName + ' path ' + modulePath;
+        let commandComposerRequire = 'cd ' + workspacePath + ' && composer require ' + moduleVendorName + '/' + moduleName;
+        let commandCommit = 'cd ' + workspacePath + ' && git commit -am \'Init commit\'';
+
+        __log.appendLine('Module vendor name: ' + moduleVendorName);
+        __log.appendLine('Module name: ' + moduleName);
+        __log.appendLine('Module description: ' + moduleDescription);
+        __log.appendLine('Module repo: ' + moduleRepo);
+        __log.appendLine('Module class name: ' + moduleClassName);
+        __log.appendLine('Module path: ' + modulePath);
+        __log.appendLine('Project is starting up: ' + (projectStartsUp ? 'true' : 'false'));
+        __log.appendLine('Project local domain: ' + projectLocalDomain);
+        __log.appendLine('Project production domain: ' + projectProdDomain);
+        __log.appendLine('Project testing domain: ' + projectTestDomain);
+
+        __log.appendLine(cp.execSync(commandClone).toString());
+        __log.appendLine(cp.execSync(commandCopy).toString());
+
+        const replacements = {
+            '{vendor-name}': moduleVendorName,
+            '{module-name}': moduleName,
+            '{module-description}': moduleDescription,
+            '{class-name}': moduleClassName,
+            '{project-starts-up}': (projectStartsUp ? 'true' : 'false'),
+            '{project-local-domain}': projectLocalDomain,
+            '{project-prod-domain}': projectProdDomain,
+            '{project-test-domain}': projectTestDomain,
+        };
+
+        __log.appendLine('Replaceing variables...');
+        replaceInPaths(modulePath, replacements);
+        replaceInFiles(modulePath, replacements);
+
+        __log.appendLine(cp.execSync(commandComposerConfig).toString());
+        __log.appendLine(cp.execSync(commandComposerRequire).toString());
+
+        __log.appendLine('Module successfuly created and attached to project...');
+        __log.appendLine('See /vendor/' + moduleVendorName + '/' + moduleName + '/');
+
+        const result = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {title: vscode.l10n.t('Let\'s continue?'), placeHolder: vscode.l10n.t('There are a few variables left that can be adjusted'), ignoreFocusOut: true});
+        let continueToVars = result === vscode.l10n.t('Yes');
+        if(continueToVars) {
+
+            let vars = {
+                '{use-s3-fs}': {type: 'yesno', title: vscode.l10n.t('Use S3 file storage (i.e. Remote Media Library)')},
+                '{s3-fs-test-domain}': {type: 'text', condition: 'data[\'{use-s3-fs}\']', title: vscode.l10n.t('S3 server domain for TEST stage')},
+                '{s3-fs-prod-domain}': {type: 'text', condition: 'data[\'{use-s3-fs}\']', title: vscode.l10n.t('S3 server domain for PROD stage')},
+                '{use-vault}': {type: 'yesno', title: vscode.l10n.t('Use Colibri vault to save passwords')},
+                '{vault-test-key}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Vault key for TEST stage')},
+                '{vault-prod-key}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Valut key for PROD stage')},
+                '{test-database-password}': {type: 'text', condition: '!data[\'{use-vault}\']', title: vscode.l10n.t('')},
+                '{comet-server-address}': {type: 'text', title: vscode.l10n.t('Address for Colibri comet server, if you not using it, please leave as default'), default: 'comet.colibrilab.pro'},
+                '{database-domain}': {type: 'text', title: vscode.l10n.t('Local database domain'), default: 'localhost'},
+                '{database-name}': {type: 'text', title: vscode.l10n.t('Local database name'), default: moduleName},
+                '{database-user}': {type: 'text', title: vscode.l10n.t('Local database user'), default: 'root'},
+                '{database-password}': {type: 'text', title: vscode.l10n.t('Local database password'), default: ''}
+            };
+
+            let data = {};
+            for(const variable of Object.keys(vars)) {
+                const varData = vars[variable];
+
+                let cont = true;
+                if(varData.condition) {
+                    eval('cont = ' + varData.condition + ';');
+                }
+
+                if(!cont) {
+                    data[variable] = varData.type === 'yesno' ? false : '';
+                    continue;
+                }
+
+                if(varData.type === 'yesno') {
+                    const result = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {title: varData.title, ignoreFocusOut: true});
+                    data[variable] = result === vscode.l10n.t('Yes');
+                }
+                else if(varData.type === 'text') {
+                    data[variable] = await vscode.window.showInputBox({title: varData.title, ignoreFocusOut: true, value: varData.default});
+                }
+
+
+            }
+         
+            __log.appendLine('Making changes to module files...');
+            replaceInFiles(modulePath, data);
+            
+        }
+
+        const commitResults = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {title: vscode.l10n.t('Commit changes?'), placeHolder: vscode.l10n.t('Do you wish to commit changes now'), ignoreFocusOut: true});
+        let commitResultsBool = commitResults === vscode.l10n.t('Yes');
+        if(commitResultsBool) {
+            __log.appendLine(cp.execSync(commandCommit).toString());
+        }
+
+        __log.appendLine('Job complete...');
+
+    }
 
 }
 

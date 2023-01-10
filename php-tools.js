@@ -317,18 +317,20 @@ async function createNewModule(context) {
         if(continueToVars) {
 
             let vars = {
-                '{use-s3-fs}': {type: 'yesno', title: vscode.l10n.t('Use S3 file storage (i.e. Remote Media Library)')},
-                '{s3-fs-test-domain}': {type: 'text', condition: 'data[\'{use-s3-fs}\']', title: vscode.l10n.t('S3 server domain for TEST stage')},
-                '{s3-fs-prod-domain}': {type: 'text', condition: 'data[\'{use-s3-fs}\']', title: vscode.l10n.t('S3 server domain for PROD stage')},
-                '{use-vault}': {type: 'yesno', title: vscode.l10n.t('Use Colibri vault to save passwords')},
-                '{vault-test-key}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Vault key for TEST stage')},
-                '{vault-prod-key}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Valut key for PROD stage')},
-                '{test-database-password}': {type: 'text', condition: '!data[\'{use-vault}\']', title: vscode.l10n.t('')},
-                '{comet-server-address}': {type: 'text', title: vscode.l10n.t('Address for Colibri comet server, if you not using it, please leave as default'), default: 'comet.colibrilab.pro'},
                 '{database-domain}': {type: 'text', title: vscode.l10n.t('Local database domain'), default: 'localhost'},
                 '{database-name}': {type: 'text', title: vscode.l10n.t('Local database name'), default: moduleName},
                 '{database-user}': {type: 'text', title: vscode.l10n.t('Local database user'), default: 'root'},
-                '{database-password}': {type: 'text', title: vscode.l10n.t('Local database password'), default: ''}
+                '{database-password}': {type: 'text', title: vscode.l10n.t('Local database password'), default: ''},
+                '{use-vault}': {type: 'yesno', title: vscode.l10n.t('Use Colibri vault to save passwords')},
+                '{prod-vault-database-password}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Valut key for PROD stage (database password)')},
+                '{test-vault-database-password}': {type: 'text', condition: 'data[\'{use-vault}\']', title: vscode.l10n.t('Vault key for TEST stage (database password)')},
+                '{prod-database-password}': {type: 'text', condition: '!data[\'{use-vault}\']', title: vscode.l10n.t('Production database password')},
+                '{test-database-password}': {type: 'text', condition: '!data[\'{use-vault}\']', title: vscode.l10n.t('Test database password')},
+                '{use-s3-fs}': {type: 'yesno', title: vscode.l10n.t('Use your own S3 file storage (i.e. Remote Media Library)')},
+                '{s3-fs-test-domain}': {type: 'text', condition: 'data[\'{use-s3-fs}\']', title: vscode.l10n.t('S3 server domain for TEST stage')},
+                '{s3-fs-prod-domain}': {type: 'text', condition: 'data[\'{use-s3-fs}\']', title: vscode.l10n.t('S3 server domain for PROD stage')},
+                '{comet-server-address}': {type: 'text', title: vscode.l10n.t('Address for Colibri comet server, if you not using it, please leave as default'), default: 'comet.colibrilab.pro'},
+                '{comet-server-port}': {type: 'text', title: vscode.l10n.t('Port for Colibri comet server, if you not using it, please leave as default'), default: '3005'},
             };
 
             let data = {};

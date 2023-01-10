@@ -64,14 +64,18 @@ class Installer
         elseif ($mode === 'test') {
             $hosts['domains']['manage'] = array_merge($hosts['domains']['manage'], ['backend.{project-test-domain}']);
             $hosts['domains']['{module-name}'] = ['{project-test-domain}'];
-            // $hosts['services']['fs'] = '{s3-fs-test-domain}';
+            if('{use-s3-fs}' === 'true') {
+                $hosts['services']['fs'] = '{s3-fs-test-domain}';
+            }
         }
         elseif ($mode === 'prod') {
             // захватываем управление админкой
             // управляющий модуль должен быть один
             $hosts['domains']['manage'] = array_merge($hosts['domains']['manage'], ['backend.{project-prod-domain}']);
             $hosts['domains']['{module-name}'] = ['{project-prod-domain}'];
-            // $hosts['services']['fs'] = '{s3-fs-prod-domain}';
+            if('{use-s3-fs}' === 'true') {
+                $hosts['services']['fs'] = '{s3-fs-prod-domain}';
+            }
         }
 
         self::_saveConfig($file, $hosts);
@@ -124,17 +128,27 @@ class Installer
     {
 
         $databases = self::_loadConfig($configDir.'databases.yaml');
+        
         // Updating database configuration
         $databases['access-points']['connections']['default_connection']['host'] = 'localhost';
         $databases['access-points']['connections']['default_connection']['user'] = '{module-name}';
         if($mode === 'prod') {
             // request from ColibriLab <vahan.grigoryan@gmail.com>
-            // $databases['access-points']['connections']['default_connection']['password'] = 'vault({vault-server}:{md5-project-key}:{password-key})';
-            $databases['access-points']['connections']['default_connection']['password'] = 'vault({vault-key})';
+            if('{use-vault}' === 'true') {
+                $databases['access-points']['connections']['default_connection']['password'] = 'vault({prod-vault-database-password})';
+            }
+            else {
+                $databases['access-points']['connections']['default_connection']['password'] = '{prod-database-password}';
+            }
+        } else if($mode === 'test') {
+            if('{use-vault}' === 'true') {
+                $databases['access-points']['connections']['default_connection']['password'] = 'vault({test-vault-database-password})';
+            }
+            else {
+                $databases['access-points']['connections']['default_connection']['password'] = '{test-database-password}';
+            }
         }
-        else {
-            $databases['access-points']['connections']['default_connection']['password'] = '{test-database-password}';
-        }
+
         $databases['access-points']['points']['main']['database'] = '{module-name}';
         
         self::_saveConfig($configDir.'databases.yaml', $databases);
@@ -180,9 +194,8 @@ class Installer
 
         $settings = self::_loadConfig($file);
 
-        // $settings['host'] = '{comet-server-address}';
-        $settings['host'] = 'comet.colibrilab.pro';
-        $settings['port'] = '3005';
+        $settings['host'] = '{comet-server-address}';
+        $settings['port'] = '{comet-server-port}';
 
         self::_saveConfig($file, $settings);
 

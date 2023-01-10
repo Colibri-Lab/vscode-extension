@@ -17,7 +17,7 @@ databases:
         # драйвер, который существует в секции access-points.drivers
         type: mysql
         # адрес подключения
-        host: localhost
+        host: {database-domain}
         # порт подключения
         port: 3306
         # пользователь

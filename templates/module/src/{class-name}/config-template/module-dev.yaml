@@ -1,0 +1,5 @@
+texts: include({module-name}-langtexts.yaml)
+
+databases:
+  storages: include({module-name}-storages.yaml)
+      

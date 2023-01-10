@@ -176,14 +176,14 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 function activate(context) {
 	try {
 
+		// allways exists
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-project', (e) => runCreateProject(context, e)));
+
 		__log.appendLine('Activating...');
 		__log.appendLine('Checking workspace...');
 		if(!checkWorkspace()) {
 			__log.appendLine('This is not a Colibri.UI Project');
 			__log.appendLine('Please, refer to the [dumentation](https://gitlab.repeatme.online/colibrilab/blank) for creating a project');
-
-			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-project', (e) => runCreateProject(context, e)));
-
 			return;
 		}
 

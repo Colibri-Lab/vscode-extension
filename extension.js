@@ -224,7 +224,7 @@ function activate(context) {
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
 		vscode.languages.registerDefinitionProvider('html', {provideDefinition: provideDefinitions});
 		vscode.languages.registerDeclarationProvider('html', {provideDeclaration: provideDeclarations});
-		
+
 		__log.appendLine('Success...');
 	}
 	catch(e) {

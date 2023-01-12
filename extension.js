@@ -16,14 +16,16 @@ const {
 	__langFilter,
 	checkWorkspace,
 	reloadCompletionItems,
-	hasLanguageModule
+	hasLanguageModule,
+	getComponentName,
+	getComponentNames
 } = require('./utils');
 const {
 	createNamespace,
     createComponent
 } = require('./component');
 
-const { provideHtmlCompletionItems } = require('./Completion');
+const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule } = require('./php-tools');
 
 
@@ -112,7 +114,7 @@ function onActiveEditorTextChanged(document) {
 	}
 
 	if(saveYamlLangFile(document, langsFileContent)) {
-		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+		// vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 	}
 
 }
@@ -215,34 +217,14 @@ function activate(context) {
 			__log.appendLine('Module Lang not found, please install to use multilangual abilities');
 		}
 
-
 		__log.appendLine('Loading class names...');
 		reloadCompletionItems();
 		
-		__log.appendLine('Registering completion...');
+		__log.appendLine('Registering completion, definitions and declarations...');
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
-
+		vscode.languages.registerDefinitionProvider('html', {provideDefinition: provideDefinitions});
+		vscode.languages.registerDeclarationProvider('html', {provideDeclaration: provideDeclarations});
 		
-		// vscode.debug.onDidStartDebugSession(event => {
-		// 	console.log(event);
-		// });
-		// vscode.debug.onDidChangeBreakpoints(event => {
-		// 	/** @var {BreakpointsChangeEvent} event */
-		// 	console.log(vscode.debug.registerDebugAdapterTrackerFactory);
-		// });
-		// vscode.debug.onDidReceiveDebugSessionCustomEvent(event => {
-		// 	console.log(event);
-		// 	if(event.event == 'stopped') {
-		// 		// ...
-		// 	}
-		// });
-		// vscode.debug.registerDebugAdapterTrackerFactory('*', {
-		// 	createDebugAdapterTracker(session) {
-		// 	  return new DebugAdapter(session);
-		// 	}
-		// });
-		
-
 		__log.appendLine('Success...');
 	}
 	catch(e) {

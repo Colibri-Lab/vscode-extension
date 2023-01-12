@@ -23,10 +23,15 @@ function provideHtmlCompletionItems(document, position, token, context) {
     // position.line
 
     const range = document.getWordRangeAtPosition(position);
+    const tagPositionStart = new vscode.Position(range.start.line, range.start.character - 1);
+    const tagPositionEnd = range.start;
+    const tagRange = new vscode.Range(tagPositionStart, tagPositionEnd);
+    const isTag = document.getText(tagRange) === '<';
     const line = document.lineAt(position.line);
 
     const text = line.text;
     const character = position.character;
+
 
     let tagName = '';
     let matches1;
@@ -39,7 +44,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
 
     let currentComponentName = getComponentName(document);
 
-    const classesAndFiles = getComponentNames(currentComponentName)
+    const classesAndFiles = getComponentNames(currentComponentName);
 
     __log.appendLine('Got components: ' + classesAndFiles.size);
 
@@ -72,7 +77,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
 
     for (let [componentName, value] of classesAndFiles) {
         const simpleCompletion = new vscode.CompletionItem(componentName);
-        simpleCompletion.insertText = new vscode.SnippetString('<' + componentName + ' shown="${1|true,false|}" name="${2}"></' + componentName + '>');
+        simpleCompletion.insertText = new vscode.SnippetString(isTag ? componentName : '<' + componentName + ' shown="${1|true,false|}" name="${2}"></' + componentName + '>');
         const docs = new vscode.MarkdownString(vscode.l10n.t('Insert the component {0} [link]({1}).', [value.fullName, value.file]));
         docs.baseUri = vscode.Uri.parse(value.file);
         simpleCompletion.documentation = docs;
@@ -82,6 +87,51 @@ function provideHtmlCompletionItems(document, position, token, context) {
     return comps;
 }
 
+/**
+ * 
+ * @param {vscode.TextDocument} document 
+ * @param {vscode.Position} position 
+ * @param {vscode.CancellationToken} token 
+ * @return ProviderResult<CompletionItem[] | CompletionList<...>>
+ */
+function provideDefinitions(document, position, token) {
+
+    const range = document.getWordRangeAtPosition(position);
+    const text = document.getText(range);
+
+    let currentComponentName = getComponentName(document);
+    const classesAndFiles = getComponentNames(currentComponentName);
+    const classObject = classesAndFiles.get(text);
+    if(!classObject) {
+        return null;
+    }
+
+    const locations = [new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(0, 0))];
+    if(classObject.html) {
+        locations.push(new vscode.Location(vscode.Uri.file(classObject.html), new vscode.Position(0, 1)));
+    }
+    return locations;
+
+}
+
+function provideDeclarations(document, position, token) {
+    const range = document.getWordRangeAtPosition(position);
+    const text = document.getText(range);
+
+    let currentComponentName = getComponentName(document);
+    const classesAndFiles = getComponentNames(currentComponentName);
+    const classObject = classesAndFiles.get(text);
+    if(!classObject) {
+        return null;
+    }
+
+    return new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(0, 0));
+    
+}
+
 module.exports = {
     provideHtmlCompletionItems,
+    provideDefinitions,
+    provideDeclarations
+    
 }

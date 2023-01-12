@@ -428,10 +428,15 @@ function enumerateColibriUIComponents(path = null) {
 }
 
 function getComponentNames(currentComponentName) {
-	const classesAndFiles = new Map(__colibriUIComponents);
-	for(const [key, value] of classesAndFiles) {
+	const classesAndFiles = new Map();
+	for(const [key, value] of __colibriUIComponents) {
 		const componentName = extractNames(key, currentComponentName);
-		classesAndFiles.set(componentName, value);
+		if(classesAndFiles.get(componentName)) {
+			classesAndFiles.set(key, value);
+		}
+		else {
+			classesAndFiles.set(componentName, value);
+		}
 	}
 	return classesAndFiles;
 }
@@ -443,10 +448,14 @@ function reloadCompletionItems() {
 	const uiItems = enumerateColibriUIComponents();
 	uiItems.forEach((value, key) => {
 		const componentName = replaceAll(key, 'Colibri.UI.', '');
-		__colibriUIComponents.set(componentName, {
+		const f = {
 			file: value,
 			fullName: key
-		});
+		};
+		if(fs.existsSync(replaceAll(value, '.js', '.html'))) {
+			f.html = replaceAll(value, '.js', '.html');
+		}
+		__colibriUIComponents.set(componentName, f);
 	});
 
 	const bundleItems = getBundlePaths();
@@ -454,10 +463,15 @@ function reloadCompletionItems() {
 		const itemClasses = enumerateColibriUIComponents(item);
 		itemClasses.forEach((value, key) => {
 			let componentName = replaceAll(replaceAll(key, 'Colibri.UI.', ''), 'App.Modules.', '');
-			__colibriUIComponents.set(componentName, {
+			
+			const f = {
 				file: value,
 				fullName: key
-			});
+			};
+			if(fs.existsSync(replaceAll(value, '.js', '.html'))) {
+				f.html = replaceAll(value, '.js', '.html');
+			}
+			__colibriUIComponents.set(componentName, f);
 		});
 	}
 }

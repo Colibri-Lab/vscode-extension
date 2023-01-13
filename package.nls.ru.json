@@ -10,5 +10,6 @@
 	"extension.create-project.title": "Создать пустой проект Colibri",
 	"extension.settings-create-project-command.description": "Команда для выполнения создание пустого проекта",
 	"extension.settings-download-module-command.description": "Команда для загрузки модуля",
-	"extension.download-module.title": "Загрузить модуль"
+	"extension.download-module.title": "Загрузить модуль",
+	"extension.open-component.title": "Открыть компоненту"
 }

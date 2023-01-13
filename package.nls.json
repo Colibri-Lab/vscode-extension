@@ -10,5 +10,6 @@
 	"extension.create-project.title": "Create the blank Colibri project",
 	"extension.settings-create-project-command.description": "Command to execute for create project",
 	"extension.settings-download-module-command.description": "Command for download module",
-	"extension.download-module.title": "Download module"
+	"extension.download-module.title": "Download module",
+	"extension.open-component.title": "Open selected component"
 }

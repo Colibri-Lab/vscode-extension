@@ -8,7 +8,10 @@ const {
 	loadYamlLangFile,
 	saveYamlLangFile,
 	getNamespaceName,
+	__log,
 } = require('./utils');
+const { Data } = require('./tree');
+const { getVSCodeDownloadUrl } = require('@vscode/test-electron/out/util');
 
 /**
  * 
@@ -274,8 +277,28 @@ function createComponent(context, e) {
 
 }
 
+/**
+ * Create a component
+ * @param {vscode.ExtensionContext} context
+ * @param {Data} data 
+ */
+function openComponent(context, data) {
+	
+	vscode.workspace.openTextDocument(vscode.Uri.file(data.data.file)).then((a) => {
+		vscode.window.showTextDocument(a, 1, false).then(e => {
+			let range = e.document.lineAt(data.data.line).range;			
+			e.selection = new vscode.Selection(range.start, range.end);
+			e.revealRange(range);
+		});
+		
+	}, (error) => {
+		console.error(error);
+	})
+}
+
 
 module.exports = {
 	createNamespace,
-	createComponent
+	createComponent,
+	openComponent
 }

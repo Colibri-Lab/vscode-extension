@@ -114,8 +114,20 @@
       {
         "command": "colibri-ui.download-module",
         "title": "%extension.download-module.title%"
+      },
+      {
+        "command": "colibri-ui.open-component",
+        "title": "%extension.open-component.title%"
       }
-    ]
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "colibriUIComponents",
+          "name": "Colibri UI Components"
+        }
+      ]
+    }
   },
   "scripts": {
     "lint": "eslint .",

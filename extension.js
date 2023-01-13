@@ -20,11 +20,13 @@ const {
 } = require('./utils');
 const {
 	createNamespace,
-    createComponent
+    createComponent,
+	openComponent
 } = require('./component');
 
 const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule } = require('./php-tools');
+const { ColibriUIComponentsTreeProvider } = require('./tree');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -196,6 +198,7 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
 
 		if(hasLanguageModule()) {
 			
@@ -226,7 +229,9 @@ function activate(context) {
 		vscode.languages.registerHoverProvider('html', {provideHover: provideHover});
 		vscode.languages.setLanguageConfiguration('html', {
 			wordPattern: /[^<\s]+/
-		})
+		});
+		vscode.window.registerTreeDataProvider('colibriUIComponents', new ColibriUIComponentsTreeProvider(context));
+		
 
 		__log.appendLine('Success...');
 	}

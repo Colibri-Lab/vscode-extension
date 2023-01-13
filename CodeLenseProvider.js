@@ -69,7 +69,6 @@ class CodelenceProvider {
             for(const langKey of Object.keys(languages)) {
                 const lang = languages[langKey];
 
-                console.log(range.langFile, langKey, range.text, range.textKey, range.textValue);
                 this.codeLenses.push(new vscode.CodeLens(range.range, {
                     title: lang.desc.toUpperCase(),
                     tooltip: "Edit language text for «" + range.textKey + "» in «" + lang.desc.toUpperCase() + "»",

@@ -1,7 +1,6 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const yaml = require('yaml');
-const path = require('path');
 
 const __langFilter = ['html', 'javascript', 'php'];
 const __log = vscode.window.createOutputChannel("Colibri UI");
@@ -289,7 +288,6 @@ function getComponentAttributes(document, classesAndFiles) {
 	const content = fullContent.split('\n');
 
 	let attrs = new Map();
-	let classMatch;
 	let className;
 	let parentClassName;
 	const classMatches = fullContent.matchAll(__attributesRegExp);

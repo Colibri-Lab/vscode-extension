@@ -17,9 +17,6 @@ const {
 	checkWorkspace,
 	reloadCompletionItems,
 	hasLanguageModule,
-	getWorkspacePath,
-	getBundlePaths,
-	getColibriUIFolder
 } = require('./utils');
 const {
 	createNamespace,

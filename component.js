@@ -7,11 +7,9 @@ const {
 	__languageMarkerRegularExpression,
 	loadYamlLangFile,
 	saveYamlLangFile,
-	getNamespaceName,
-	__log,
+	getNamespaceName
 } = require('./utils');
 const { Data, getTreeDataProvider } = require('./tree');
-const { getVSCodeDownloadUrl } = require('@vscode/test-electron/out/util');
 
 /**
  * 

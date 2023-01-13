@@ -10,7 +10,7 @@ const {
 	getNamespaceName,
 	__log,
 } = require('./utils');
-const { Data } = require('./tree');
+const { Data, getTreeDataProvider } = require('./tree');
 const { getVSCodeDownloadUrl } = require('@vscode/test-electron/out/util');
 
 /**
@@ -21,12 +21,32 @@ const { getVSCodeDownloadUrl } = require('@vscode/test-electron/out/util');
 function createNamespaceProcess(choosedPath, context) {
 	let namespaceName = '';
 
+	choosedPath = fs.realpathSync(choosedPath + '/');
+	const stat = fs.statSync(choosedPath);
+	if (!stat.isDirectory()) {
+		const parts = choosedPath.split('/');
+		parts.pop();
+		choosedPath = parts.join('/');
+	}
+
+	if(fs.existsSync(choosedPath + '/.js')) {
+		let lastFileData = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
+		lastFileData = lastFileData.split(' = class ')[0];
+		lastFileData = lastFileData.trim();
+		namespaceName = lastFileData;	
+	}
+
 	vscode.window.showInputBox({
 		password: false,
 		title: vscode.l10n.t('Enter namespace name in current parent'),
-		value: ''
+		value: namespaceName + '.'
 	}).then((input) => {
+
 		namespaceName = input;
+		if(!namespaceName) {
+			return null;
+		}
+
 		const dirName = namespaceName.split('.').pop();
 		fs.mkdirSync(choosedPath + '/' + dirName);
 
@@ -35,6 +55,9 @@ function createNamespaceProcess(choosedPath, context) {
 
 		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+		
+		getTreeDataProvider().refresh();	
+
 		vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
 
 	});
@@ -60,8 +83,6 @@ function createNamespace(context, e) {
 	else {
 		createNamespaceProcess(e.fsPath, context);
 	}
-
-
 }
 
 
@@ -107,12 +128,14 @@ function createCompnentProcess(choosedPath, context) {
 	}
 
 	let lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, { encoding: 'utf8', flag: 'r' });
-	lastFileData = lastFileData.split(' = class extends ')[0];
+	lastFileData = lastFile === '.js' ? lastFileData.split(' = class ')[0] : lastFileData.split(' = class extends ')[0];
 	lastFileData = lastFileData.trim();
-	if (lastFileData) {
+	if (lastFileData && lastFile !== '.js') {
 		let lastFileDataParts = lastFileData.split('.');
 		lastFileDataParts.pop();
 		className = lastFileDataParts.join('.');
+	} else {
+		className = lastFileData;
 	}
 
 	return vscode.window.showInputBox({
@@ -121,6 +144,10 @@ function createCompnentProcess(choosedPath, context) {
 		value: className + '.'
 	}).then((input) => {
 		className = input;
+		if(!className) {
+			return null;
+		}
+
 		return vscode.window.showInputBox({
 			password: false,
 			title: vscode.l10n.t('Input the parent class name with namespace'),
@@ -128,6 +155,10 @@ function createCompnentProcess(choosedPath, context) {
 		});
 	}).then(input => {
 		parentClass = input;
+		if(!parentClass) {
+			return null;
+		}
+
 		fileIndex++;
 
 
@@ -176,6 +207,7 @@ function createCompnentProcess(choosedPath, context) {
 		fs.writeFileSync(componentFileName + '.lang', langContent, { encoding: 'utf8', flag: 'w+' });
 
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+		getTreeDataProvider().refresh();
 
 		vscode.window.showInformationMessage('Component created!');
 
@@ -284,11 +316,19 @@ function createComponent(context, e) {
  */
 function openComponent(context, data) {
 	
-	vscode.workspace.openTextDocument(vscode.Uri.file(data.data.file)).then((a) => {
+	vscode.workspace.openTextDocument(vscode.Uri.file(data.data.object.file)).then((a) => {
 		vscode.window.showTextDocument(a, 1, false).then(e => {
-			let range = e.document.lineAt(data.data.line).range;			
-			e.selection = new vscode.Selection(range.start, range.end);
-			e.revealRange(range);
+			if(data.data.content) {
+				let range = e.document.lineAt(data.data.content.line).range;			
+				e.selection = new vscode.Selection(range.start, range.end);
+				e.revealRange(range);
+			}
+			else {
+				let range = e.document.lineAt(data.data.object.line).range;			
+				e.selection = new vscode.Selection(range.start, range.end);
+				e.revealRange(range);
+			}
+			
 		});
 		
 	}, (error) => {

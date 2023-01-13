@@ -14,7 +14,12 @@ const __componentRegularExpression = /<[^>\/]+\/?>/ig;
 const __completionItemsRegexp = /<([A-z.]+)/i;
 const __componentNameRegExp = /componentname="([^"]+)"/i;
 const __attributesRegExp = /([\w\.]+)\s+?=\s+?class extends\s+?([\w\.]+)\s*{?/gim;
-const __setAttributeRegExp = /set ([^(]+)[s+]?\(.*\)\s*{?/i;
+const __setAttributeRegExp = /set ([^(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
+const __getAttributeRegExp = /get ([^(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
+const __constructorRegExp = /^\s\s\s\sconstructor[s+]?\(.*\)\s*[^;][{\r]?/i;
+const __eventHandlersRegExp = /^\s\s\s\s__([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
+const __privateMethodsRegExp = /^\s\s\s\s_([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
+const __publicMethodsRegExp = /^\s\s\s\s([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
 const __langTextDecorationType = vscode.window.createTextEditorDecorationType({
 	borderWidth: '1px',
 	borderStyle: 'solid',
@@ -36,6 +41,10 @@ function cleanVariables() {
 } 
 
 const replaceAll = function(string, from, to) {
+	if(!string) {
+		return '';
+	}
+	
     let s = string;
     let s1 = s.replace(from, to);
     while (s != s1) {
@@ -185,7 +194,7 @@ function getLanguages() {
  * @param {string} workspacePath 
  * @returns 
  */
-function getBundlePaths(workspacePath = null) {
+function getBundlePaths(workspacePath = null, returnRealPath = false) {
 	try {
 		
 		workspacePath = workspacePath ? workspacePath : getWorkspacePath();
@@ -209,14 +218,18 @@ function getBundlePaths(workspacePath = null) {
 			
 			if(item.isDirectory() || item.isSymbolicLink()) {
 				if(item.name === '.Bundle') {
-					return [replaceAll(workspacePath + '/' + item.name, '//', '/')];
+					let p = replaceAll(workspacePath + '/' + item.name, '//', '/');
+					if(returnRealPath) {
+						p = fs.realpathSync(p);
+					}
+					return [p];
 				}
 				else {
 					// if(item.isSymbolicLink()) {
-					// 	items = [	...items, ...getBundlePaths(fs.readlinkSync(workspacePath + '/' + item.name))];
+					// 	items = [	...items, ...getBundlePaths(fs.readlinkSync(workspacePath + '/' + item.name), returnRealPath)];
 					// }
 					// else {
-						items = [	...items, ...getBundlePaths(workspacePath + '/' + item.name)];
+						items = [	...items, ...getBundlePaths(workspacePath + '/' + item.name, returnRealPath)];
 					//}
 				}
 			}
@@ -396,9 +409,9 @@ function getWorkspacePath() {
  * @param {string|null} workspacePath 
  * @returns {string}
  */
-function getColibriUIFolder(workspacePath = null) {
+function getColibriUIFolder(workspacePath = null, returnRealPath = false) {
 	workspacePath = workspacePath ? workspacePath : getWorkspacePath();
-	return workspacePath + '/vendor/colibri/ui/src/06.UI/';
+	return !returnRealPath ? workspacePath + '/vendor/colibri/ui/src/06.UI/' : fs.realpathSync(workspacePath + '/vendor/colibri/ui/src/06.UI/');
 }
 
 function enumerateColibriUIComponents(path = null) {
@@ -530,6 +543,12 @@ module.exports = {
 	__log,
 	__colibriUIComponents,
 	__attributesRegExp,
+	__setAttributeRegExp,
+	__getAttributeRegExp,
+	__constructorRegExp,
+	__eventHandlersRegExp,
+	__privateMethodsRegExp,
+	__publicMethodsRegExp,
 	readYaml,
 	reloadCompletionItems,
 	hasLanguageModule,

@@ -16,7 +16,10 @@ const {
 	__langFilter,
 	checkWorkspace,
 	reloadCompletionItems,
-	hasLanguageModule
+	hasLanguageModule,
+	getWorkspacePath,
+	getBundlePaths,
+	getColibriUIFolder
 } = require('./utils');
 const {
 	createNamespace,
@@ -26,7 +29,7 @@ const {
 
 const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule } = require('./php-tools');
-const { ColibriUIComponentsTreeProvider } = require('./tree');
+const { createTreeView, getTreeView, getTreeDataProvider } = require('./tree');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -130,11 +133,33 @@ function onActivateEditorTextChangedEventHandler(event) {
 
 }
 
+/**
+ * 
+ * @param {vscode.TextEditor} editor 
+ */
 function onChangeActiveTextEditor(editor) {
 	if (editor && __langFilter.indexOf(editor.document.languageId) !== -1 && checkForColibriProject(editor.document)) {
 		onActiveEditorTextChanged(editor.document);
 		triggerUpdateDecorations(editor);
 		reloadCompletionItems();
+		let treeView = getTreeView();
+		let dataProvider = getTreeDataProvider();
+		if(treeView && treeView.visible) {
+			const path = editor.document.uri.fsPath.toString();
+			const [key, value] = dataProvider.find(path);
+			let rootNode = key.indexOf('Colibri.UI') !== -1 ? dataProvider.core() : null;
+			if(!rootNode) {
+				const rootPath = replaceAll(key, 'App.Modules.', '').split('.').splice(0, 1).pop();
+				rootNode = dataProvider.module(rootPath);
+				
+			}
+			rootNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+			treeView.reveal(rootNode, {select: true, focus: false, expand: true}).then(() => {
+				treeView.reveal(dataProvider.findComponent(key));
+			});
+
+		}
+		
 	}
 }
 
@@ -171,6 +196,23 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 	});
 }
 
+function onFileSystemChanged(e, context) {
+	if(e.files) {
+		for(const f of e.files) {
+			let name = f.fsPath;
+			if(name.indexOf('.js') !== -1 || name.indexOf('.html') !== -1) {
+				getTreeDataProvider().refresh();
+				break;
+			}
+		}
+	}
+	else {
+		let name = e.fileName;
+		if(name.indexOf('.js') !== -1 || name.indexOf('.html') !== -1) {
+			getTreeDataProvider().refresh();
+		}
+	}
+}
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -190,6 +232,19 @@ function activate(context) {
 		}
 
 		vscode.commands.executeCommand('setContext', 'colibrilab.isColibriWorkspace', true);
+
+		__log.appendLine('Creating components tree');
+		createTreeView(context);
+		let treeView = getTreeView();
+		treeView.onDidChangeVisibility((e) => {
+			if(e.visible) {
+				onChangeActiveTextEditor(vscode.window.activeTextEditor);
+			}
+		});
+		
+		vscode.workspace.onDidCreateFiles(e => onFileSystemChanged(e, context));
+		vscode.workspace.onDidDeleteFiles(e => onFileSystemChanged(e, context));
+		vscode.workspace.onDidSaveTextDocument(e => onFileSystemChanged(e, context));
 
 		__log.appendLine('Registering events');
 
@@ -230,7 +285,6 @@ function activate(context) {
 		vscode.languages.setLanguageConfiguration('html', {
 			wordPattern: /[^<\s]+/
 		});
-		vscode.window.registerTreeDataProvider('colibriUIComponents', new ColibriUIComponentsTreeProvider(context));
 		
 
 		__log.appendLine('Success...');

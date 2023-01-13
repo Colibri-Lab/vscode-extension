@@ -74,11 +74,11 @@
       "explorer/context": [
         {
           "command": "colibri-ui.create-component",
-          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourceDirname =~ /(\\.Bundle|06\\.UI)/"
+          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourcePath =~ /(\\.Bundle|06\\.UI)/"
         },
         {
           "command": "colibri-ui.create-namespace",
-          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourceDirname =~ /(\\.Bundle|06\\.UI)/"
+          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourcePath =~ /(\\.Bundle|06\\.UI)/"
         },
         {
           "command": "colibri-ui.migrate",

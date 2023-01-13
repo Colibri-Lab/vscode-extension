@@ -71,6 +71,13 @@
           "when": "colibrilab.isColibriWorkspace && resourceLangId == html"
         }
       ],
+      "view/title": [
+        {
+          "command": "colibri-ui.refresh-tree",
+          "when": "view == colibriUIComponents",
+          "group": "navigation"
+        }
+      ],
       "explorer/context": [
         {
           "command": "colibri-ui.create-component",
@@ -118,6 +125,14 @@
       {
         "command": "colibri-ui.open-component",
         "title": "%extension.open-component.title%"
+      },
+      {
+        "command": "colibri-ui.refresh-tree",
+        "title": "Refresh",
+        "icon": {
+          "light": "./images/refresh-light.svg",
+          "dark": "./images/refresh-dark.svg"
+        }
       }
     ],
     "views": {

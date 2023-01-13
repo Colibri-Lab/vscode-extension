@@ -2,7 +2,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const yaml = require('yaml');
 
-const __langFilter = ['html', 'javascript', 'php'];
+const __langFilter = ['html', 'javascript', 'php', 'scss'];
 const __log = vscode.window.createOutputChannel("Colibri UI");
 const __openedLangDocuments = new Map();
 const __colibriUIComponents = new Map();
@@ -409,7 +409,7 @@ function getWorkspacePath() {
  */
 function getColibriUIFolder(workspacePath = null, returnRealPath = false) {
 	workspacePath = workspacePath ? workspacePath : getWorkspacePath();
-	return !returnRealPath ? workspacePath + '/vendor/colibri/ui/src/06.UI/' : fs.realpathSync(workspacePath + '/vendor/colibri/ui/src/06.UI/');
+	return !returnRealPath ? workspacePath + '/vendor/colibri/ui/src/06.UI' : fs.realpathSync(workspacePath + '/vendor/colibri/ui/src/06.UI');
 }
 
 function enumerateColibriUIComponents(path = null) {

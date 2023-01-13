@@ -139,21 +139,52 @@ function onChangeActiveTextEditor(editor) {
 		onActiveEditorTextChanged(editor.document);
 		triggerUpdateDecorations(editor);
 		reloadCompletionItems();
+
 		let treeView = getTreeView();
 		let dataProvider = getTreeDataProvider();
 		if(treeView && treeView.visible) {
-			const path = editor.document.uri.fsPath.toString();
+			let path = editor.document.uri.fsPath.toString();
+			let isTemplate = path.indexOf('.html') !== -1;
+			let isStyles = path.indexOf('.scss') !== -1;
+			path = replaceAll(replaceAll(path, '.scss', '.js'), '.html', '.js');
 			const [key, value] = dataProvider.find(path);
+			if(!key || !value) {
+				return;
+			}
+
 			let rootNode = key.indexOf('Colibri.UI') !== -1 ? dataProvider.core() : null;
 			if(!rootNode) {
 				const rootPath = replaceAll(key, 'App.Modules.', '').split('.').splice(0, 1).pop();
 				rootNode = dataProvider.module(rootPath);
-				
 			}
-			rootNode.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
-			treeView.reveal(rootNode, {select: true, focus: false, expand: true}).then(() => {
-				treeView.reveal(dataProvider.findComponent(key));
-			});
+
+			const select = (key, treeView, dataProvider) => {
+				let component = dataProvider.findComponent(key);
+				if(isTemplate) {
+					treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
+						component = component.data.template;
+						treeView.reveal(component);
+					});
+				} else if (isStyles) {
+					treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
+						component = component.data.styles;
+						treeView.reveal(component, {select: true});
+					});
+				} else {
+					treeView.reveal(component);
+				}
+			}
+
+			let c = dataProvider.findComponent(key);
+			if(c) {
+				select(key, treeView, dataProvider);
+			}
+			else {
+				treeView.reveal(rootNode, {select: false, focus: false, expand: true}).then(() => {
+					select(key, treeView, dataProvider);
+				});
+			}
+
 
 		}
 		
@@ -251,6 +282,7 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-tree', (e) => getTreeDataProvider().refresh()));
 
 		if(hasLanguageModule()) {
 			

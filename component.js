@@ -314,8 +314,8 @@ function createComponent(context, e) {
  */
 function openComponent(context, data) {
 	
-	vscode.workspace.openTextDocument(vscode.Uri.file(data.data.object.file)).then((a) => {
-		vscode.window.showTextDocument(a, 1, false).then(e => {
+	vscode.workspace.openTextDocument(vscode.Uri.file(data.data.content && data.data.content.path ? data.data.content.path : data.data.object.file)).then((a) => {
+		vscode.window.showTextDocument(a, 1, true).then(e => {
 			if(data.data.content) {
 				let range = e.document.lineAt(data.data.content.line).range;			
 				e.selection = new vscode.Selection(range.start, range.end);

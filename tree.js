@@ -46,7 +46,7 @@ class ColibriUIComponentsTreeProvider {
                 return [key, value];
             }
         }
-        return null;
+        return [null, null];
     }
 
     findComponent(key) {
@@ -69,8 +69,7 @@ class ColibriUIComponentsTreeProvider {
             this._components = new Map();
         }
 
-        const uiItems = enumerateColibriUIComponents();
-        uiItems.forEach((value, key) => {
+        const setContent = (key, value) => {
             const f = {
                 file: value.path,
                 line: value.line,
@@ -79,75 +78,84 @@ class ColibriUIComponentsTreeProvider {
             if(fs.existsSync(replaceAll(value.path, '.js', '.html'))) {
                 f.html = replaceAll(value.path, '.js', '.html');
             }
-            this._components.set(key, f);
+            if(fs.existsSync(replaceAll(value.path, '.js', '.scss'))) {
+                f.styles = replaceAll(value.path, '.js', '.scss');
+            }
+
+            const content = fs.readFileSync(f.file).toString();
+            const lines = content.split('\n');
+            f.content = {
+                template: f.html ? {
+                    name: 'template',
+                    line: 0,
+                    path: f.html
+                } : null,
+                styles: f.styles ? {
+                    name: 'styles',
+                    line: 0,
+                    path: f.styles
+                } : null,
+                constructor: null,
+                attributes_get: [],
+                attributes_set: [],
+                eventHandlers: [],
+                privateMethods: [],
+                publicMethods: []
+            };
+            
+            for(let index=f.line + 1; index<lines.length; index++) {
+                let match;
+                let line = lines[index];
+                if(line.match(__attributesRegExp)) {
+                    break;
+                }
+
+                if(match = line.match(__getAttributeRegExp)) {
+                    f.content.attributes_get.push({
+                        name: match[1],
+                        line: index
+                    });
+                } else if(match = line.match(__setAttributeRegExp)) {
+                    f.content.attributes_set.push({
+                        name: match[1],
+                        line: index
+                    });
+                } else if(match = line.match(__constructorRegExp)) {
+                    f.content.constructor = {
+                        name: 'constructor',
+                        line: index
+                    };
+                } else if(match = line.match(__eventHandlersRegExp)) {
+                    f.content.eventHandlers.push({
+                        name: match[1],
+                        line: index
+                    });
+                } else if(match = line.match(__privateMethodsRegExp)) {
+                    f.content.privateMethods.push({
+                        name: match[1],
+                        line: index
+                    });
+                } else if(match = line.match(__publicMethodsRegExp)) {
+                    f.content.publicMethods.push({
+                        name: match[1],
+                        line: index
+                    });
+                }
+
+            }
+            return f;
+        }
+
+        const uiItems = enumerateColibriUIComponents();
+        uiItems.forEach((value, key) => {
+            this._components.set(key, setContent(key, value));
         });
     
         const bundleItems = getBundlePaths();
         for(const item of bundleItems) {
             const itemClasses = enumerateColibriUIComponents(item);
             itemClasses.forEach((value, key) => {
-                const f = {
-                    file: value.path,
-                    line: value.line,
-                    fullName: key
-                };
-                if(fs.existsSync(replaceAll(value.path, '.js', '.html'))) {
-                    f.html = replaceAll(value.path, '.js', '.html');
-                }
-
-                const content = fs.readFileSync(f.file).toString();
-                const lines = content.split('\n');
-                f.content = {
-                    constructor: null,
-                    attributes_get: [],
-                    attributes_set: [],
-                    eventHandlers: [],
-                    privateMethods: [],
-                    publicMethods: []
-                };
-                
-                for(let index=f.line + 1; index<lines.length; index++) {
-                    let match;
-                    let line = lines[index];
-                    if(line.match(__attributesRegExp)) {
-                        break;
-                    }
-
-                    if(match = line.match(__getAttributeRegExp)) {
-                        f.content.attributes_get.push({
-                            name: match[1],
-                            line: index
-                        });
-                    } else if(match = line.match(__setAttributeRegExp)) {
-                        f.content.attributes_set.push({
-                            name: match[1],
-                            line: index
-                        });
-                    } else if(match = line.match(__constructorRegExp)) {
-                        f.content.constructor = {
-                            name: 'constructor',
-                            line: index
-                        };
-                    } else if(match = line.match(__eventHandlersRegExp)) {
-                        f.content.eventHandlers.push({
-                            name: match[1],
-                            line: index
-                        });
-                    } else if(match = line.match(__privateMethodsRegExp)) {
-                        f.content.privateMethods.push({
-                            name: match[1],
-                            line: index
-                        });
-                    } else if(match = line.match(__publicMethodsRegExp)) {
-                        f.content.publicMethods.push({
-                            name: match[1],
-                            line: index
-                        });
-                    }
-
-                }
-
-                this._components.set(key, f);
+                this._components.set(key, setContent(key, value));
             });
         }
 
@@ -236,6 +244,20 @@ class ColibriUIComponentsTreeProvider {
             const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
 
             let children = [];
+            if(element.data.object.content.template) {    
+                const item2 = new Data('Template', vscode.TreeItemCollapsibleState.None, {name: 'template', type: 'item', object: element.data.object, content: element.data.object.content.template, parent: element}, 'colibri-ui.open-component');
+                item2.iconPath = this._path + '/images/template' + iconprefix + '.svg';
+                item2.tooltip = 'Component template';
+                element.data.template = item2;
+                children.push(item2);    
+            }
+            if(element.data.object.content.styles) {    
+                const item2 = new Data('Styles', vscode.TreeItemCollapsibleState.None, {name: 'styles', type: 'item', object: element.data.object, content: element.data.object.content.styles, parent: element}, 'colibri-ui.open-component');
+                item2.iconPath = this._path + '/images/styles' + iconprefix + '.svg';
+                item2.tooltip = 'Component styles';
+                element.data.styles = item2;
+                children.push(item2);    
+            }
             if(element.data.object.content.constructor) {    
                 const item2 = new Data('constructor', vscode.TreeItemCollapsibleState.None, {name: 'constructor', type: 'item', object: element.data.object, content: element.data.object.content.constructor, parent: element}, 'colibri-ui.open-component');
                 item2.iconPath = this._path + '/images/constructor' + iconprefix + '.svg';
@@ -332,7 +354,8 @@ function getTreeDataProvider() {
 function createTreeView(context) {
     __treeDataProvider = new ColibriUIComponentsTreeProvider(context);
     __treeView = vscode.window.createTreeView('colibriUIComponents', {
-        treeDataProvider: __treeDataProvider
+        treeDataProvider: __treeDataProvider,
+        showCollapseAll: true
     });
 }
 

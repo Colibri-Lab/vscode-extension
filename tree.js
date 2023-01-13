@@ -1,6 +1,6 @@
 const vscode = require('vscode');
 const fs = require('fs');
-const { __colibriUIComponents, enumerateColibriUIComponents, replaceAll, getBundlePaths, getWorkspacePath } = require('./utils');
+const { replaceAll, getBundlePaths } = require('./utils');
 
 class ColibriUIComponentsTreeProvider {
 

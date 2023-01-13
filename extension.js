@@ -16,16 +16,14 @@ const {
 	__langFilter,
 	checkWorkspace,
 	reloadCompletionItems,
-	hasLanguageModule,
-	getComponentName,
-	getComponentNames
+	hasLanguageModule
 } = require('./utils');
 const {
 	createNamespace,
     createComponent
 } = require('./component');
 
-const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations } = require('./Completion');
+const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule } = require('./php-tools');
 
 
@@ -224,6 +222,11 @@ function activate(context) {
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
 		vscode.languages.registerDefinitionProvider('html', {provideDefinition: provideDefinitions});
 		vscode.languages.registerDeclarationProvider('html', {provideDeclaration: provideDeclarations});
+		vscode.languages.registerReferenceProvider('html', {provideReferences: provideReferences});
+		vscode.languages.registerHoverProvider('html', {provideHover: provideHover});
+		vscode.languages.setLanguageConfiguration('html', {
+			wordPattern: /[^<\s]+/
+		})
 
 		__log.appendLine('Success...');
 	}

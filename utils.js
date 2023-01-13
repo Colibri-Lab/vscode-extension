@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const yaml = require('yaml');
+const path = require('path');
 
 const __langFilter = ['html', 'javascript', 'php'];
 const __log = vscode.window.createOutputChannel("Colibri UI");
@@ -411,11 +412,13 @@ function enumerateColibriUIComponents(path = null) {
 			}
 
 			const content = fs.readFileSync(path + '/' + file.name).toString().split('\n');
+			let line = 0;
 			for(const s of content) {
 				if(s.indexOf('= class extends') !== -1) {
 					let className = s.split('= class extends')[0].trim();
-					items.set(className, path + '/' + file.name);
+					items.set(className, {path: path + '/' + file.name, line: line});
 				}
+				line++;
 			}
 
 		}
@@ -441,19 +444,40 @@ function getComponentNames(currentComponentName) {
 	return classesAndFiles;
 }
 
+function filterCompomentNames(namespace, currentComponentName) {
+	const classesAndFiles = new Map();
+	for(const [key, value] of __colibriUIComponents) {
+		if(key.substring(0, namespace.length) === namespace) {
+			classesAndFiles.set(key.substring(namespace.length + 1), value);
+		}
+		else {
+			const componentName = extractNames(key, currentComponentName);
+			if(classesAndFiles.get(componentName)) {
+				classesAndFiles.set(key, value);
+			}
+			else {
+				classesAndFiles.set(componentName, value);
+			}
+		}
+	}
+	return classesAndFiles;
+}
+
 function reloadCompletionItems() {
 
 	__colibriUIComponents.clear();
+	
 
 	const uiItems = enumerateColibriUIComponents();
 	uiItems.forEach((value, key) => {
 		const componentName = replaceAll(key, 'Colibri.UI.', '');
 		const f = {
-			file: value,
+			file: value.path,
+			line: value.line,
 			fullName: key
 		};
-		if(fs.existsSync(replaceAll(value, '.js', '.html'))) {
-			f.html = replaceAll(value, '.js', '.html');
+		if(fs.existsSync(replaceAll(value.path, '.js', '.html'))) {
+			f.html = replaceAll(value.path, '.js', '.html');
 		}
 		__colibriUIComponents.set(componentName, f);
 	});
@@ -465,11 +489,12 @@ function reloadCompletionItems() {
 			let componentName = replaceAll(replaceAll(key, 'Colibri.UI.', ''), 'App.Modules.', '');
 			
 			const f = {
-				file: value,
+				file: value.path,
+				line: value.line,
 				fullName: key
 			};
-			if(fs.existsSync(replaceAll(value, '.js', '.html'))) {
-				f.html = replaceAll(value, '.js', '.html');
+			if(fs.existsSync(replaceAll(value.path, '.js', '.html'))) {
+				f.html = replaceAll(value.path, '.js', '.html');
 			}
 			__colibriUIComponents.set(componentName, f);
 		});
@@ -481,6 +506,20 @@ function readYaml(path) {
     return yaml.parse(content);
 }
 
+function searchForCommentBlock(lines, line) {
+	while(line > 0 && lines[line].indexOf('*/') === -1) line--;
+
+	const commentblock = [];
+	while(line > 0 && lines[line].indexOf('/**') === -1) {
+		if(lines[line] !== '*/' && lines[line] !== '/**' && lines[line] !== '') {
+			commentblock.push(lines[line].substring(3));
+		}
+		line--;
+	}
+	return commentblock;
+}
+
+
 module.exports = {
 	__langFilter,
     __languageMarkerRegularExpression,
@@ -490,6 +529,7 @@ module.exports = {
 	__completionItemsRegexp,
 	__log,
 	__colibriUIComponents,
+	__attributesRegExp,
 	readYaml,
 	reloadCompletionItems,
 	hasLanguageModule,
@@ -511,5 +551,7 @@ module.exports = {
 	getComponentAttributes,
 	getComponentNames,
 	getColibriUIFolder,
-	getWorkspacePath
+	getWorkspacePath,
+	filterCompomentNames,
+	searchForCommentBlock
 };

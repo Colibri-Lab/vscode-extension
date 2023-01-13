@@ -49,6 +49,8 @@ CodeLence for each of the keys displays the translation function as a list of la
 <Text value="#{modulename-language-key}" />
 ```
 
+# Code completion, references and goto functions in HTML templates
+
 # Open the component html template
 
 Component code completion

@@ -1,11 +1,15 @@
 const vscode = require('vscode');
+const fs = require('fs');
 const { 
     __log, 
     __componentRegularExpression, 
     __completionItemsRegexp, 
     getComponentName, 
     getComponentNames, 
-    getComponentAttributes 
+    getComponentAttributes, 
+    filterCompomentNames,
+    __attributesRegExp,
+    searchForCommentBlock
 } = require('./utils');
 
 /**
@@ -23,11 +27,15 @@ function provideHtmlCompletionItems(document, position, token, context) {
     // position.line
 
     const range = document.getWordRangeAtPosition(position);
-    const tagPositionStart = new vscode.Position(range.start.line, range.start.character - 1);
-    const tagPositionEnd = range.start;
-    const tagRange = new vscode.Range(tagPositionStart, tagPositionEnd);
-    const isTag = document.getText(tagRange) === '<';
-    const line = document.lineAt(position.line);
+    let isTag = false;
+    if(range) {
+        const tagPositionStart = new vscode.Position(range.start.line, range.start.character - 1);
+        const tagPositionEnd = range.start;
+        const tagRange = new vscode.Range(tagPositionStart, tagPositionEnd);
+        isTag = document.getText(tagRange) === '<';
+    }
+
+    const line = document.lineAt(position.line);    
 
     const text = line.text;
     const character = position.character;
@@ -99,16 +107,21 @@ function provideDefinitions(document, position, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);
 
-    let currentComponentName = getComponentName(document);
-    const classesAndFiles = getComponentNames(currentComponentName);
+    const classNamespaceLength = text.split('.').length;
+    const currentComponentName = getComponentName(document);
+    const parts = currentComponentName.split('.');
+    parts.splice(parts.length - classNamespaceLength, parts.length);
+    const currentNamespaceName = parts.join('.');
+
+    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
     const classObject = classesAndFiles.get(text);
     if(!classObject) {
         return null;
     }
 
-    const locations = [new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(0, 0))];
+    const locations = [new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(classObject.line, 0))];
     if(classObject.html) {
-        locations.push(new vscode.Location(vscode.Uri.file(classObject.html), new vscode.Position(0, 1)));
+        locations.push(new vscode.Location(vscode.Uri.file(classObject.html), new vscode.Position(classObject.line, 0)));
     }
     return locations;
 
@@ -118,20 +131,87 @@ function provideDeclarations(document, position, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);
 
-    let currentComponentName = getComponentName(document);
-    const classesAndFiles = getComponentNames(currentComponentName);
+    const classNamespaceLength = text.split('.').length;
+    const currentComponentName = getComponentName(document);
+    const parts = currentComponentName.split('.');
+    parts.splice(parts.length - classNamespaceLength, parts.length);
+    const currentNamespaceName = parts.join('.');
+
+    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
     const classObject = classesAndFiles.get(text);
     if(!classObject) {
         return null;
     }
 
-    return new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(0, 0));
+    return new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(classObject.line, 0));
     
+}
+
+function provideReferences(document, position, context, token) {
+    const range = document.getWordRangeAtPosition(position);
+    const text = document.getText(range);
+
+    const classNamespaceLength = text.split('.').length;
+    const currentComponentName = getComponentName(document);
+    const parts = currentComponentName.split('.');
+    parts.splice(parts.length - classNamespaceLength, parts.length);
+    const currentNamespaceName = parts.join('.');
+
+    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
+    const classObject = classesAndFiles.get(text);
+    if(!classObject) {
+        return null;
+    }
+
+    const locations = [new vscode.Location(vscode.Uri.file(classObject.file), new vscode.Position(classObject.line, 0))];
+    if(classObject.html) {
+        locations.push(new vscode.Location(vscode.Uri.file(classObject.html), new vscode.Position(classObject.line, 0)));
+    }
+    return locations;
+}
+function provideHover(document, position, token) {
+    const range = document.getWordRangeAtPosition(position);
+    const text = document.getText(range);
+
+    const classNamespaceLength = text.split('.').length;
+    const currentComponentName = getComponentName(document);
+    const parts = currentComponentName.split('.');
+    parts.splice(parts.length - classNamespaceLength, parts.length);
+    const currentNamespaceName = parts.join('.');
+
+    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
+    const classObject = classesAndFiles.get(text);
+    if(!classObject) {
+        return null;
+    }
+
+    const file = classObject.file;
+    const content = fs.readFileSync(file).toString();
+    const lines = content.split(/\n/);
+    const line = lines[classObject.line];
+    const matches = line.matchAll(__attributesRegExp); 
+    const markdown = new vscode.MarkdownString();
+    for(const match of matches) {
+        const className = match[1].split('.').pop();
+        markdown.appendMarkdown('# ' + className + '\n');
+        const commentblock = searchForCommentBlock(lines, classObject.line);
+        if(commentblock.length > 0) {
+            let text = commentblock.join('\n');
+            markdown.appendMarkdown('*Class comment*' + '\n');
+            markdown.appendText(text);
+        }
+        markdown.appendCodeblock(match[0] + '\n ... \n}');
+
+    }
+
+    return new vscode.Hover(markdown);
 }
 
 module.exports = {
     provideHtmlCompletionItems,
     provideDefinitions,
-    provideDeclarations
+    provideDeclarations,
+    provideReferences,
+    provideHover
     
 }

@@ -530,13 +530,15 @@ function searchForCommentBlock(lines, line) {
 	return commentblock;
 }
 
-function openFile(path, selectLine) {
+function openFile(path, selectLine = 0) {
 
 	vscode.workspace.openTextDocument(vscode.Uri.file(path)).then((a) => {
 		vscode.window.showTextDocument(a, 1, true).then(e => {
-			let range = e.document.lineAt(selectLine).range;			
-			e.selection = new vscode.Selection(range.start, range.end);
-			e.revealRange(range);
+			if(selectLine) {
+				let range = e.document.lineAt(selectLine).range;			
+				e.selection = new vscode.Selection(range.start, range.end);
+				e.revealRange(range);
+			}
 		});
 		
 	}, (error) => {

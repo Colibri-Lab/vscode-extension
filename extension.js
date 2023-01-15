@@ -25,7 +25,7 @@ const {
 } = require('./component');
 
 const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
-const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule } = require('./php-tools');
+const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider } = require('./tree');
 
 
@@ -282,6 +282,8 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e) => createController(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller-action', (e) => createControllerAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-tree', (e) => getTreeDataProvider().refresh()));
 
 		if(hasLanguageModule()) {

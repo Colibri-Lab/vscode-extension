@@ -1,7 +1,7 @@
 const cp = require('child_process');
 const vscode = require('vscode');
 const fs = require('fs');
-const { __log, getWorkspacePath, replaceAll, readYaml } = require('./utils');
+const { __log, getWorkspacePath, replaceAll, readYaml, openFile } = require('./utils');
 const glob = require('glob');
 
 function runMigrationScript(context, e) {
@@ -375,6 +375,100 @@ async function createNewModule(context) {
 
 }
 
+async function createController(context, e) {
+    if(!e) {
+        vscode.window.showInformationMessage(vscode.l10n.t('Please use this command in context menu of Controllers folder'));
+        return;
+    }
+
+    let moduleName = '';
+    let controllerName = '';
+    let controllerDescription = '';
+    const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
+    const templatesPath = extensionPath + '/templates/';
+
+    const folderPath = e.fsPath;
+    if(folderPath.indexOf('/vendor/') !== -1) {
+        // модуль
+        const p = folderPath.split('/vendor/')[1];
+        const innerPath = p.split('/src/')[1];
+        moduleName = innerPath.split('/')[0];
+
+        controllerName = await vscode.window.showInputBox({title: vscode.l10n.t('Controller name:'), placeHolder: vscode.l10n.t('Enter controller name, without Controller word'), ignoreFocusOut: true});
+        if(!controllerName) {
+            return;
+        }
+
+        controllerDescription = await vscode.window.showInputBox({title: vscode.l10n.t('Controller description:'), placeHolder: vscode.l10n.t('Please, describe your controller'), ignoreFocusOut: true});
+
+        let templateContent = fs.readFileSync(templatesPath + 'Controller.php') + '';
+		templateContent = replaceAll(templateContent, /\{module-name\}/, moduleName);
+		templateContent = replaceAll(templateContent, /\{controller-name\}/, controllerName);
+		templateContent = replaceAll(templateContent, /\{controller-description\}/, controllerDescription);
+
+        const fileName = folderPath + '/' + controllerName + 'Controller.php';
+        fs.writeFileSync(fileName, templateContent);
+
+        openFile(fileName);
+
+        vscode.window.showInformationMessage(vscode.l10n.t('Controller file created!'));
+
+    }
+    else  {
+        vscode.window.showInformationMessage(vscode.l10n.t('Can not create controller in application folder, please select module!'));
+    }
+
+
+}
+async function createControllerAction(context, e) {
+
+    let controllerActionName = '';
+    let controllerActionDescription = '';
+    const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
+    const templatesPath = extensionPath + '/templates/';
+    const editor = vscode.window.activeTextEditor;
+
+    if(!e && !editor) {
+        vscode.window.showInformationMessage(vscode.l10n.t('Please use this command in editor context menu!'));
+        return;
+    }
+    
+    const folderPath = !e ? editor.document.uri.fsPath : e.fsPath;
+    if(folderPath.indexOf('/vendor/') !== -1) {        
+
+        controllerActionName = await vscode.window.showInputBox({title: vscode.l10n.t('Action name:'), placeHolder: vscode.l10n.t('Please, enter action name'), ignoreFocusOut: true});
+        if(!controllerActionName) {
+            return;
+        }
+
+        controllerActionDescription = await vscode.window.showInputBox({title: vscode.l10n.t('Action description:'), placeHolder: vscode.l10n.t('Please, describe your action'), ignoreFocusOut: true});
+
+        let templateContent = fs.readFileSync(templatesPath + 'Action.php') + '';
+        templateContent = replaceAll(templateContent, /\{controller-action-name\}/, controllerActionName);
+		templateContent = replaceAll(templateContent, /\{controller-action-description\}/, controllerActionDescription);
+
+        // модуль        
+        const text = editor.document.getText();
+        let lastLine = 0;
+        const lines = text.split('\n');
+        let index = 0;
+        for(const line of lines) {
+            if(line.trim() === '}') {
+                lastLine = index;
+            }
+            index++;
+        }
+
+        editor.edit(builder => {
+            builder.insert(new vscode.Position(lastLine, 0), templateContent + '\n');
+        })
+
+    }
+    else  {
+        vscode.window.showInformationMessage(vscode.l10n.t('Can not create action in application controller, please select module controller!'));
+    }
+}
+
 function runCreateProject(context, e) {
 
     const workbenchConfig = vscode.workspace.getConfiguration();
@@ -421,5 +515,7 @@ module.exports = {
     runMigrationScript,
     runModelsGenerator,
     runCreateProject,
-    runDownloadModule
+    runDownloadModule,
+    createController,
+    createControllerAction
 }

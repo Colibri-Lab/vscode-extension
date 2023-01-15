@@ -57,5 +57,18 @@
   "Port for Colibri comet server, if you not using it, please leave as default": "Port for Colibri comet server, if you not using it, please leave as default",
   "Commit changes?": "Commit changes?",
   "Do you wish to commit changes now": "Do you wish to commit changes now",
+  "Please use this command in context menu of Controllers folder": "Please use this command in context menu of Controllers folder",
+  "Controller name:": "Controller name:",
+  "Enter controller name, without Controller word": "Enter controller name, without Controller word",
+  "Controller description:": "Controller description:",
+  "Please, describe your controller": "Please, describe your controller",
+  "Controller file created!": "Controller file created!",
+  "Can not create controller in application folder, please select module!": "Can not create controller in application folder, please select module!",
+  "Please use this command in editor context menu!": "Please use this command in editor context menu!",
+  "Action name:": "Action name:",
+  "Please, enter action name": "Please, enter action name",
+  "Action description:": "Action description:",
+  "Please, describe your action": "Please, describe your action",
+  "Can not create action in application controller, please select module controller!": "Can not create action in application controller, please select module controller!",
   "Select the folder to create project": "Select the folder to create project"
 }

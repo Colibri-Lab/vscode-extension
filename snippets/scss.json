@@ -1,0 +1,20 @@
+{
+	"DataObjectName": {
+		"prefix": "dom",
+		"body": [
+			"[data-object-name=\"$1\"] {",
+			"\t$2",
+			"}"
+		],
+		"description": "Add data-object-name reference"
+	},
+	"SetShown": {
+		"prefix": "shown",
+		"body": [
+			"&.app-component-shown {",
+			"\tdisplay: $1",
+			"}"
+		],
+		"description": "Add data-object-name reference"
+	}
+}

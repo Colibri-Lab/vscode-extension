@@ -1,0 +1,84 @@
+{	
+	"AddPrivateProperty": {
+		"prefix": "child",
+		"body": [
+			"this._$1 = this.Children('${2:$1}');"
+		],
+		"description": "Add event handler"
+	},
+	"AddEventHandlerReference": {
+		"prefix": "event",
+		"body": [
+			"this._$1.AddHandler('$2', (event, args) => this.__$1$2(event, args));"
+		],
+		"description": "Add event handler"
+	},
+	"AddEventHandler": {
+		"prefix": "handler",
+		"body": [
+			"__$1(event, args) {",
+			"\t$2",
+			"}"
+		],
+		"description": "Add event handler"
+	},
+	"AddAttributeGet": {
+		"prefix": "getattr",
+		"body": [
+			"/**",
+			" * $3",
+			" * @type {$2}",
+			" */",
+			"get $1() {",
+			"\treturn this._$1;",
+			"}"
+		],
+		"description": "Add attribute get"
+	},
+	"AddAttribute": {
+		"prefix": "attr",
+		"body": [
+			"/**",
+			" * $3",
+			" * @type {$2}",
+			" */",
+			"get $1() {",
+			"\treturn this._$1;",
+			"}",
+			"/**",
+			" * $3",
+			" * @type {$2}",
+			" */",
+			"set $1(value) {",
+			"\tthis._$1 = value;",
+			"\tthis._show${1/.*/${0:/capitalize}/}();",
+			"}",
+			"_show${1/.*/${0:/capitalize}/}() {",
+			"\t$4",
+			"}"
+		],
+		"description": "Add attribute"
+	},
+	"AddBinding": {
+		"prefix": "binding",
+		"body": [
+			"/**",
+			" * Обработка binding",
+			" */",
+			"__renderBoundedValues(data, path) {",
+			"\tif(!data) {",
+			"\t\treturn;",
+			"\t}",
+			"\t$1$0",
+			"}"
+		],
+		"description": "Add event handler"
+	},
+	"multilangtext": {
+		"prefix": "#",
+		"body": [
+			"#{$1}"
+		],
+		"description": "Add multilangual text"
+	}
+}

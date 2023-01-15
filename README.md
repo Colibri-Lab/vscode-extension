@@ -69,6 +69,12 @@ Component attributes code completion
 
 - Ctrl+P -> Download module -> Create new
 
+# New functionality for php mode
+
+- Ctrl+P -> Create controller
+
+- Ctrl+P -> Create controller action
+
 ## License
 
 Copyright (c) Microsoft Corporation. All rights reserved.

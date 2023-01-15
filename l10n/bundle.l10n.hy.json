@@ -57,5 +57,18 @@
   "Address for Colibri comet server, if you not using it, please leave as default": "Colibri comet սերվերի հասցեն, եթե այն չեք օգտագործում, խնդրում ենք թողնել որպես լռելյայն",
   "Port for Colibri comet server, if you not using it, please leave as default": "Նավահանգիստ Colibri comet սերվերի համար, եթե այն չեք օգտագործում, խնդրում ենք թողնել որպես լռելյայն",
   "Commit changes?": "Կատարե՞լ փոփոխություններ:",
+  "Controller name:": "Վերահսկիչի անունը",
+  "Enter controller name, without Controller word": "Մուտքագրեք վերահսկիչի անունը առանց Controller բառի",
+  "Controller description:": "Վերահսկիչի նկարագրությունը",
+  "Please, describe your controller": "Խնդրում ենք նկարագրել ձեր վերահսկիչը",
+  "Controller file created!": "Ստեղծվել է վերահսկիչի ֆայլ:",
+  "Can not create controller in application folder, please select module!": "Հնարավոր չէ ստեղծել կարգավորիչ հավելվածի թղթապանակում, խնդրում ենք ընտրել մոդուլ:",
+  "Action name:": "Գործողության (մեթոդի) անվանումը.",
+  "Please, enter action name": "Խնդրում ենք մուտքագրել գործողության անվանումը (մեթոդը)",
+  "Action description:": "Գործողության նկարագրությունը.",
+  "Please, describe your action": "Խնդրում ենք նկարագրել գործողությունը",
+  "Can not create action in application controller, please select module controller!": "Հնարավոր չէ ստեղծել գործողություն հավելվածի վերահսկիչի ֆայլում:",
+  "Please use this command in editor context menu!": "Խնդրում ենք օգտագործել այս հրամանը բաց վերահսկիչի ֆայլում:",
+  "Please use this command in context menu of Controllers folder": "Խնդրում ենք օգտագործել այս հրամանը Controllers պանակի համատեքստի ընտրացանկից",
   "Do you wish to commit changes now": "Ցանկանու՞մ եք հիմա փոփոխություններ կատարել"
 }

@@ -7,7 +7,8 @@ const {
 	__languageMarkerRegularExpression,
 	loadYamlLangFile,
 	saveYamlLangFile,
-	getNamespaceName
+	getNamespaceName,
+	openFile
 } = require('./utils');
 const { Data, getTreeDataProvider } = require('./tree');
 
@@ -312,26 +313,8 @@ function createComponent(context, e) {
  * @param {vscode.ExtensionContext} context
  * @param {Data} data 
  */
-function openComponent(context, data) {
-	
-	vscode.workspace.openTextDocument(vscode.Uri.file(data.data.content && data.data.content.path ? data.data.content.path : data.data.object.file)).then((a) => {
-		vscode.window.showTextDocument(a, 1, true).then(e => {
-			if(data.data.content) {
-				let range = e.document.lineAt(data.data.content.line).range;			
-				e.selection = new vscode.Selection(range.start, range.end);
-				e.revealRange(range);
-			}
-			else {
-				let range = e.document.lineAt(data.data.object.line).range;			
-				e.selection = new vscode.Selection(range.start, range.end);
-				e.revealRange(range);
-			}
-			
-		});
-		
-	}, (error) => {
-		console.error(error);
-	})
+function openComponent(context, data) {	
+	openFile(data.data.content && data.data.content.path ? data.data.content.path : data.data.object.file, data.data.content ? data.data.content.line : data.data.object.line);
 }
 
 

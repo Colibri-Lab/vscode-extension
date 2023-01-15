@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.32",
+  "version": "0.0.35",
   
   "categories": [
     "Programming Languages"
@@ -69,6 +69,10 @@
         {
           "command": "colibri-ui.create-component",
           "when": "colibrilab.isColibriWorkspace && resourceLangId == html"
+        },
+        {
+          "command": "colibri-ui.create-controller-action",
+          "when": "colibrilab.isColibriWorkspace && resourceLangId == php && resourcePath =~ /Controllers/ && resourceFilename =~ /Controller/"
         }
       ],
       "view/title": [
@@ -86,6 +90,10 @@
         {
           "command": "colibri-ui.create-namespace",
           "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourcePath =~ /(\\.Bundle|06\\.UI)/"
+        },
+        {
+          "command": "colibri-ui.create-controller",
+          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourcePath =~ /Controllers/"
         },
         {
           "command": "colibri-ui.migrate",
@@ -127,12 +135,70 @@
         "title": "%extension.open-component.title%"
       },
       {
+        "command": "colibri-ui.create-controller",
+        "title": "%extension.create-controller.title%"
+      },
+      {
+        "command": "colibri-ui.create-controller-action",
+        "title": "%extension.create-controller-action.title%"
+      },
+      {
         "command": "colibri-ui.refresh-tree",
         "title": "Refresh",
         "icon": {
           "light": "./images/refresh-light.svg",
           "dark": "./images/refresh-dark.svg"
         }
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "colibri-ui.migrate",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+m",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+m",
+        "when": "colibrilab.isColibriWorkspace"
+      },
+      {
+        "command": "colibri-ui.models-generate",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+g",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+g",
+        "when": "colibrilab.isColibriWorkspace"
+      },
+      {
+        "command": "colibri-ui.create-component",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+c",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+c",
+        "when": "colibrilab.isColibriWorkspace"
+      },
+      {
+        "command": "colibri-ui.create-namespace",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+n",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+n",
+        "when": "colibrilab.isColibriWorkspace"
+      },
+      {
+        "command": "colibri-ui.create-project",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+p",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+p",
+        "when": "!colibrilab.isColibriWorkspace"
+      },
+      {
+        "command": "colibri-ui.download-module",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+e",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+e",
+        "when": "colibrilab.isColibriWorkspace"
+      },
+      {
+        "command": "colibri-ui.create-controller",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+k",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+k",
+        "when": "colibrilab.isColibriWorkspace"
+      },
+      { 
+        "command": "colibri-ui.create-controller-action",
+        "key": "ctrl+alt+shift+n ctrl+alt+shift+a",
+        "mac": "cmd+alt+shift+n cmd+alt+shift+a",
+        "when": "colibrilab.isColibriWorkspace"
       }
     ],
     "views": {
@@ -142,7 +208,21 @@
           "name": "Colibri UI Components"
         }
       ]
-    }
+    },
+    "snippets": [
+      {
+        "language": "html",
+        "path": "./snippets/html.json"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/javascript.json"
+      },
+      {
+        "language": "scss",
+        "path": "./snippets/scss.json"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",

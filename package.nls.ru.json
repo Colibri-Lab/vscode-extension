@@ -11,5 +11,7 @@
 	"extension.settings-create-project-command.description": "Команда для выполнения создание пустого проекта",
 	"extension.settings-download-module-command.description": "Команда для загрузки модуля",
 	"extension.download-module.title": "Загрузить модуль",
-	"extension.open-component.title": "Открыть компоненту"
+	"extension.open-component.title": "Открыть компоненту",
+	"extension.create-controller.title": "Создать новый контроллер",
+	"extension.create-controller-action.title": "Создать новый экшен"
 }

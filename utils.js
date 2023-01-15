@@ -530,6 +530,20 @@ function searchForCommentBlock(lines, line) {
 	return commentblock;
 }
 
+function openFile(path, selectLine) {
+
+	vscode.workspace.openTextDocument(vscode.Uri.file(path)).then((a) => {
+		vscode.window.showTextDocument(a, 1, true).then(e => {
+			let range = e.document.lineAt(selectLine).range;			
+			e.selection = new vscode.Selection(range.start, range.end);
+			e.revealRange(range);
+		});
+		
+	}, (error) => {
+		console.error(error);
+	});
+}
+
 
 module.exports = {
 	__langFilter,
@@ -570,5 +584,6 @@ module.exports = {
 	getColibriUIFolder,
 	getWorkspacePath,
 	filterCompomentNames,
-	searchForCommentBlock
+	searchForCommentBlock,
+	openFile
 };

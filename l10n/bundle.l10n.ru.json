@@ -57,5 +57,18 @@
   "Address for Colibri comet server, if you not using it, please leave as default": "Адрес Colibri Comet сервера, оставьте по умолчанию если не собираетесь использовать",
   "Port for Colibri comet server, if you not using it, please leave as default": "Порт Colibri Comet сервера, оставьте по умолчанию если не собираетесь использовать",
   "Commit changes?": "Зафиксировать изменения?",
+  "Controller name:": "Название контроллера:",
+  "Enter controller name, without Controller word": "Введите название контроллер без слова Controller",
+  "Controller description:": "Описание контроллера:",
+  "Please, describe your controller": "Пожалуйста, опишите свой контроллер",
+  "Controller file created!": "Файл контроллера создан!",
+  "Can not create controller in application folder, please select module!": "Невозможно создать контроллер в папке приложения, пожалуйста выберите модуль!",
+  "Please use this command in editor context menu!": "Пожалуйста, используйте эту команду в открытом файле контроллера!",
+  "Please use this command in context menu of Controllers folder": "Пожалуйста используйте эту команду из контекстного меню в папке Controllers",
+  "Action name:": "Название экшена (метода):",
+  "Please, enter action name": "Пожалуйста, введите название экшена (метода)",
+  "Action description:": "Описание экшена:",
+  "Please, describe your action": "Пожалуйста, опишите экшен",
+  "Can not create action in application controller, please select module controller!": "Невозможно создать экшен в файле контроллера приложения!",
   "Do you wish to commit changes now": "Нажмите да, если хотите зафиксировать изменения прямо сейчас"
 }

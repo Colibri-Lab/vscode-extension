@@ -511,11 +511,21 @@ function runCreateProject(context, e) {
 
 }
 
+function openPhpClass(context, data) {
+    if(data.data.file) {
+        openFile(data.data.file.path, data.data.file.line);
+    } else if(data.data.method) {
+        openFile(data.data.method.path, data.data.method.line);
+    }
+
+}
+
 module.exports = {
     runMigrationScript,
     runModelsGenerator,
     runCreateProject,
     runDownloadModule,
     createController,
-    createControllerAction
+    createControllerAction,
+    openPhpClass
 }

@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.35",
+  "version": "0.0.37",
   
   "categories": [
     "Programming Languages"
@@ -80,6 +80,11 @@
           "command": "colibri-ui.refresh-tree",
           "when": "view == colibriUIComponents",
           "group": "navigation"
+        },
+        {
+          "command": "colibri-ui.refresh-php-tree",
+          "when": "view == colibriPHPBackend",
+          "group": "navigation"
         }
       ],
       "explorer/context": [
@@ -135,6 +140,10 @@
         "title": "%extension.open-component.title%"
       },
       {
+        "command": "colibri-ui.open-phpclass",
+        "title": "%extension.open-phpclass.title%"
+      },
+      {
         "command": "colibri-ui.create-controller",
         "title": "%extension.create-controller.title%"
       },
@@ -144,6 +153,14 @@
       },
       {
         "command": "colibri-ui.refresh-tree",
+        "title": "Refresh",
+        "icon": {
+          "light": "./images/refresh-light.svg",
+          "dark": "./images/refresh-dark.svg"
+        }
+      },
+      {
+        "command": "colibri-ui.refresh-php-tree",
         "title": "Refresh",
         "icon": {
           "light": "./images/refresh-light.svg",
@@ -205,7 +222,11 @@
       "explorer": [
         {
           "id": "colibriUIComponents",
-          "name": "Colibri UI Components"
+          "name": "Colibri: UI Components"
+        },
+        {
+          "id": "colibriPHPBackend",
+          "name": "Colibri: PHP Backend"
         }
       ]
     },

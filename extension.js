@@ -25,8 +25,8 @@ const {
 } = require('./component');
 
 const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
-const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction } = require('./php-tools');
-const { createTreeView, getTreeView, getTreeDataProvider } = require('./tree');
+const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass } = require('./php-tools');
+const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -263,8 +263,19 @@ function activate(context) {
 
 		__log.appendLine('Creating components tree');
 		createTreeView(context);
+
+		__log.appendLine('Creating php backend tree');
+		createPHPTreeView(context);
+		
 		let treeView = getTreeView();
 		treeView.onDidChangeVisibility((e) => {
+			if(e.visible) {
+				onChangeActiveTextEditor(vscode.window.activeTextEditor);
+			}
+		});
+
+		let phpTreeView = getPHPTreeView();
+		phpTreeView.onDidChangeVisibility((e) => {
 			if(e.visible) {
 				onChangeActiveTextEditor(vscode.window.activeTextEditor);
 			}
@@ -282,9 +293,11 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-phpclass', (e) => openPhpClass(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e) => createController(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller-action', (e) => createControllerAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-tree', (e) => getTreeDataProvider().refresh()));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-php-tree', (e) => getPHPTreeDataProvider().refresh()));
 
 		if(hasLanguageModule()) {
 			

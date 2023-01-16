@@ -516,6 +516,10 @@ function readYaml(path) {
 	const content = fs.readFileSync(path).toString();
     return yaml.parse(content);
 }
+function readJson(path) {
+	const content = fs.readFileSync(path).toString();
+    return JSON.parse(content);
+}
 
 function searchForCommentBlock(lines, line) {
 	while(line > 0 && lines[line].indexOf('*/') === -1) line--;
@@ -546,6 +550,119 @@ function openFile(path, selectLine = 0) {
 	});
 }
 
+function getPHPModules() {
+	const ret = {};
+	const path = getWorkspacePath();
+	let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
+	if(composerContent.require) {
+		const modules = Object.keys(composerContent.require);
+		for(const moduleName of modules) {
+			if(!fs.existsSync(path + '/vendor/' + moduleName + '/composer.json')) {
+				continue;
+			}
+
+			const composer = readJson(path + '/vendor/' + moduleName + '/composer.json');
+			if(composer && !!composer.require['colibri/core'] && fs.existsSync(path + '/vendor/' + moduleName + '/deploy.yml')) {
+				// это вериятно модуль
+				let modulePath = '';
+				let moduleRealName = '';
+				const psr4 = composer.autoload['psr-4'];
+				const psr4keys = Object.keys(psr4);
+				for(const psr4key of psr4keys) {
+					if(psr4key.indexOf('App\\Modules\\') === 0) {
+						modulePath = psr4[psr4key];
+						moduleRealName = replaceAll(psr4key.split('App\\Modules\\')[1], '\\', '');
+						break;
+					}
+				}
+				if(moduleName && modulePath) {
+					// это точно модуль
+					ret[moduleRealName] = path + '/vendor/' + moduleName + '/' + modulePath;
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+function findPhpDoc(lines, line) {
+	if(lines[line - 1].indexOf('*/') === -1) {
+		return '';
+	}
+	line--;
+
+	let ret = [];
+	while(lines[line].indexOf('/**') === -1) {
+		ret.push(replaceAll(replaceAll(lines[line].trim(), '* ', ''), '*/', ''));
+		line--;
+	}
+
+	return ret.reverse().join('\n');
+
+}
+
+function readPhp(path) {
+
+	const content = fs.readFileSync(path).toString();
+	const lines = content.split('\n');
+
+	let className = '';
+	let classParent = '';
+	let classNameIndex = 0;
+	let methods = {public: {}, private: {}, static: {}};
+	let index = 0;
+	for(const line of lines) {
+
+		let match = /class\s([^\s]+)\sextends\s([^\s]+)/igm.exec(line);
+		if(match && match.length > 0) {
+			className = match[1];
+			classParent = match[2];
+			classNameIndex = index;
+		}
+
+		match = /static\sfunction\s([^\s\(]+).*/igm.exec(line);
+		if(match && match.length > 0) {
+			methods.static[match[1]] = {
+				line: index,
+				path: path,
+				row: match[0],
+				desc: findPhpDoc(lines, index)
+			};
+		}
+		match = /private\sfunction\s([^\s\(]+).*/igm.exec(line);
+		if(match && match.length > 0) {
+			methods.private[match[1]] = {
+				line: index,
+				path: path,
+				row: match[0],
+				desc: findPhpDoc(lines, index)
+			};
+		}
+		match = /public\sfunction\s([^\s\(]+).*/igm.exec(line);
+		if(match && match.length > 0) {
+			methods.public[match[1]] = {
+				line: index,
+				path: path,
+				row: match[0],
+				desc: findPhpDoc(lines, index)
+			};
+		}
+
+		index++;
+	}
+	
+	const ret = {};
+	ret[className] = {
+		name: className,
+		path: path,
+		line: classNameIndex,
+		parent: classParent,
+		methods: methods
+	};
+
+	return ret;
+
+}
 
 module.exports = {
 	__langFilter,
@@ -563,7 +680,10 @@ module.exports = {
 	__eventHandlersRegExp,
 	__privateMethodsRegExp,
 	__publicMethodsRegExp,
+	getPHPModules,
 	readYaml,
+	readJson,
+	readPhp,
 	reloadCompletionItems,
 	hasLanguageModule,
     replaceAll,

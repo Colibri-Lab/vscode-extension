@@ -1,9 +1,13 @@
 const vscode = require('vscode');
 const fs = require('fs');
-const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp } = require('./utils');
+const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp, getWorkspacePath, readJson, getPHPModules, readPhp } = require('./utils');
+const glob = require('glob');
+
 
 let __treeDataProvider = null;
+let __phpTreeDataProvider = null;
 let __treeView = null;
+let __phpTreeView = null;
 
 class ColibriUIComponentsTreeProvider {
 
@@ -317,6 +321,220 @@ class ColibriUIComponentsTreeProvider {
 
 }
 
+class ColibriPHPBackendTreeProvider {
+
+    /**
+     * 
+     * @param  {vscode.ExtensionContext} context 
+     */
+    constructor(context) {
+		this._path = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
+
+        this._onDidChangeTreeData = new vscode.EventEmitter(); 
+        this.onDidChangeTreeData = this._onDidChangeTreeData.event;
+    
+        this._core = null;
+        this._roots = new Map();
+        this._paths = new Map();
+        this._loadComponents();
+
+    }
+
+    /**
+     * 
+     * @returns {vscode.TreeItem}
+     */
+    core() {
+        return this._core;
+    }
+
+    /**
+     * @param {string} name 
+     * @returns {vscode.TreeItem}
+     */
+    module(name) {
+        return this._roots.get(name);
+    }
+
+    find(path) {
+        for(let [key, value] of this._components) {
+            if(value.file === path) {
+                return [key, value];
+            }
+        }
+        return [null, null];
+    }
+
+    findComponent(key) {
+        return this._paths.get(key);
+    }
+
+    refresh() {
+        this._core = null;
+        this._roots = new Map();
+        this._paths = new Map();
+        this._loadComponents();
+        this._onDidChangeTreeData.fire();
+    }
+
+    _loadComponents() {
+        if(this._components) {
+            this._components.clear();
+        }
+        else {
+            this._components = new Map();
+        }
+
+        const modules = getPHPModules();
+
+        for(const moduleName of Object.keys(modules)) {
+            const modulePath = modules[moduleName];
+            const obj = {
+                path: modulePath,
+                moduleClass: modulePath + 'Module.php',
+                moduleObject: readPhp(modulePath + 'Module.php')['Module'],
+                controllersPath: modulePath + '/Controllers',
+                modelsPath: modulePath + '/Models',
+                templatesPath: modulePath + '/templates',
+                controllers: {},
+                models: {},
+                templates: {},
+            };
+
+            
+
+            const controllers = glob.sync(obj.controllersPath + '**/*', {
+                nodir: true
+            });
+            for(const controller of controllers) {
+                obj.controllers = Object.assign(obj.controllers, readPhp(controller))
+            }
+
+            const models = glob.sync(obj.modelsPath + '**/*', {
+                nodir: true
+            });
+            for(const model of models) {
+                obj.models = Object.assign(obj.models, readPhp(model))
+            }
+
+            this._components.set(moduleName, obj);
+
+
+        }
+        
+    }
+
+    getParent(element) {
+        if(element.data && element.data.parent) {
+            return element.data.parent;
+        }
+        return null;
+    }
+
+    getTreeItem(element) {
+        return element;
+    }
+
+    /**
+     * 
+     * @param {Data} element 
+     * @returns 
+     */
+    getChildren(element) {
+
+        // отдельно ядро, отдельно каждый модуль, фильтруем 
+        if(!element) {
+            const children = [];
+
+            for(const [key, value] of this._components) {
+                const item1 = new Data(key, vscode.TreeItemCollapsibleState.Collapsed, {name: key, type: 'module', parent: null, obj: value});
+                item1.tooltip = key + ' Module \n\n';
+                item1.iconPath = vscode.ThemeIcon.Folder;
+                children.push(item1);        
+            }
+
+            return children;
+            
+        } else if(element.data.type === 'module') {
+            
+            const children = [];
+            const moduleObject = element.data.obj;
+
+            const item1 = new Data('Module', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Module', type: 'file', parent: null, obj: moduleObject, file: moduleObject.moduleObject});
+            item1.tooltip = 'Module class\n\n';
+            item1.iconPath = vscode.ThemeIcon.Folder;
+            children.push(item1);   
+
+            if(Object.keys(moduleObject.controllers).length > 0) {
+                const item1 = new Data('Controllers', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Controllers', type: 'folder', parent: null, obj: moduleObject, list: moduleObject.controllers});
+                item1.tooltip = 'Module controllers';
+                item1.iconPath = vscode.ThemeIcon.Folder;
+                children.push(item1);   
+            }
+
+            if(Object.keys(moduleObject.models).length > 0) {
+                const item1 = new Data('Models', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Models', type: 'folder', parent: null, obj: moduleObject, list: moduleObject.models});
+                item1.tooltip = 'Module models';
+                item1.iconPath = vscode.ThemeIcon.Folder;
+                children.push(item1);   
+            }
+
+            return children;
+        } else if (element.data.type === 'folder') {
+            // это файл
+            const moduleObject = element.data.obj;
+            const list = element.data.list;
+            const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
+
+            let children = [];
+            for(const item of Object.keys(list)) {
+                const fileObject = list[item];
+                const item1 = new Data(item + ': ' + fileObject.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: item, type: 'file', parent: null, obj: moduleObject, file: fileObject}, 'colibri-ui.open-phpclass');
+                item1.tooltip = item + ' class\n\n' + fileObject.desc;
+                item1.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                children.push(item1); 
+            }
+
+            return children;
+        } else if (element.data.type === 'file') {
+            // это файл
+            const moduleObject = element.data.obj;
+            const file = element.data.file;
+            const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
+ 
+            let children = [];
+            for(const item of Object.keys(file.methods.static)) {
+                const methodObject = file.methods.static[item];
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', parent: null, obj: moduleObject, method: methodObject}, 'colibri-ui.open-phpclass');
+                item1.tooltip = methodObject.row + '\n\n' + methodObject.desc;
+                item1.iconPath = item === '__construct' ? this._path + '/images/constructor' + iconprefix + '.svg' : this._path + '/images/publicMethods' + iconprefix + '.svg';
+                children.push(item1); 
+            }
+            for(const item of Object.keys(file.methods.private)) {
+                const methodObject = file.methods.private[item];
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', parent: null, obj: moduleObject, method: methodObject}, 'colibri-ui.open-phpclass');
+                item1.tooltip = methodObject.row + '\n\n' + methodObject.desc;
+                item1.iconPath = this._path + '/images/privateMethods' + iconprefix + '.svg';
+                children.push(item1); 
+            }
+            for(const item of Object.keys(file.methods.public)) {
+                const methodObject = file.methods.public[item];
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', parent: null, obj: moduleObject, method: methodObject}, 'colibri-ui.open-phpclass');
+                item1.tooltip = methodObject.row + '\n\n' + methodObject.desc;
+                item1.iconPath = this._path + '/images/publicMethods' + iconprefix + '.svg';
+                children.push(item1); 
+            }
+
+            return children;
+        }
+
+
+        return [];
+    }
+
+
+}
+
 
 class Data extends vscode.TreeItem {
     constructor(label, collapsibleState, data, commandId = undefined) {
@@ -343,12 +561,30 @@ class Data extends vscode.TreeItem {
 function getTreeView() {
     return __treeView;
 }
+
+/**
+ * 
+ * @returns {vscode.TreeView}
+ */
+function getPHPTreeView() {
+    return __phpTreeView;
+}
+
+
 /**
  * 
  * @returns {ColibriUIComponentsTreeProvider}
  */
 function getTreeDataProvider() {
     return __treeDataProvider;
+}
+
+/**
+ * 
+ * @returns {ColibriUIComponentsTreeProvider}
+ */
+function getPHPTreeDataProvider() {
+    return __phpTreeDataProvider;
 }
 
 function createTreeView(context) {
@@ -359,10 +595,22 @@ function createTreeView(context) {
     });
 }
 
+function createPHPTreeView(context) {
+    __phpTreeDataProvider = new ColibriPHPBackendTreeProvider(context);
+    __phpTreeView = vscode.window.createTreeView('colibriPHPBackend', {
+        treeDataProvider: __phpTreeDataProvider,
+        showCollapseAll: true
+    });
+}
+
 module.exports = {
     ColibriUIComponentsTreeProvider,
+    ColibriPHPBackendTreeProvider,
     Data,
     createTreeView,
+    createPHPTreeView,
     getTreeView,
-    getTreeDataProvider
+    getPHPTreeView,
+    getTreeDataProvider,
+    getPHPTreeDataProvider
 }

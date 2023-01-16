@@ -12,6 +12,7 @@
 	"extension.settings-download-module-command.description": "Command for download module",
 	"extension.download-module.title": "Download module",
 	"extension.open-component.title": "Open selected component",
+	"extension.open-phpclass.title": "Open selected php class",
 	"extension.create-controller.title": "Create new controller",
 	"extension.create-controller-action.title": "Create controller action"
 }

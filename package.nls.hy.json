@@ -12,6 +12,7 @@
 	"extension.settings-download-module-command.description": "Մոդուլը բեռնելու հրաման",
 	"extension.download-module.title": "Ներբեռնել մոդուլ",
 	"extension.open-component.title": "Բացել կոմպոնենտը",
+	"extension.open-phpclass.title": "Բացել PHP ֆայլը",
 	"extension.create-controller.title": "Ստեղձել վերահսկիչ",
 	"extension.create-controller-action.title": "Ստեղծեք վերահսկիչի գործողություն"
 }

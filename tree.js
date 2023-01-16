@@ -1,7 +1,8 @@
 const vscode = require('vscode');
 const fs = require('fs');
-const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp, getWorkspacePath, readJson, getPHPModules, readPhp } = require('./utils');
+const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp, getWorkspacePath, readJson, getPHPModules } = require('./utils');
 const glob = require('glob');
+const { readPhp } = require('./php-tools');
 
 
 let __treeDataProvider = null;

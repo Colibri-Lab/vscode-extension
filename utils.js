@@ -585,85 +585,6 @@ function getPHPModules() {
 	return ret;
 }
 
-function findPhpDoc(lines, line) {
-	if(lines[line - 1].indexOf('*/') === -1) {
-		return '';
-	}
-	line--;
-
-	let ret = [];
-	while(lines[line].indexOf('/**') === -1) {
-		ret.push(replaceAll(replaceAll(lines[line].trim(), '* ', ''), '*/', ''));
-		line--;
-	}
-
-	return ret.reverse().join('\n');
-
-}
-
-function readPhp(path) {
-
-	const content = fs.readFileSync(path).toString();
-	const lines = content.split('\n');
-
-	let className = '';
-	let classParent = '';
-	let classNameIndex = 0;
-	let methods = {public: {}, private: {}, static: {}};
-	let index = 0;
-	for(const line of lines) {
-
-		let match = /class\s([^\s]+)\sextends\s([^\s]+)/igm.exec(line);
-		if(match && match.length > 0) {
-			className = match[1];
-			classParent = match[2];
-			classNameIndex = index;
-		}
-
-		match = /static\sfunction\s([^\s\(]+).*/igm.exec(line);
-		if(match && match.length > 0) {
-			methods.static[match[1]] = {
-				line: index,
-				path: path,
-				row: match[0],
-				desc: findPhpDoc(lines, index)
-			};
-		}
-		match = /private\sfunction\s([^\s\(]+).*/igm.exec(line);
-		if(match && match.length > 0) {
-			methods.private[match[1]] = {
-				line: index,
-				path: path,
-				row: match[0],
-				desc: findPhpDoc(lines, index)
-			};
-		}
-		match = /public\sfunction\s([^\s\(]+).*/igm.exec(line);
-		if(match && match.length > 0) {
-			methods.public[match[1]] = {
-				line: index,
-				path: path,
-				row: match[0],
-				desc: findPhpDoc(lines, index)
-			};
-		}
-
-		index++;
-	}
-	
-	const ret = {};
-	ret[className] = {
-		name: className,
-		path: path,
-		line: classNameIndex,
-		parent: classParent,
-		methods: methods
-	};
-
-	return ret;
-
-}
-
 module.exports = {
 	__langFilter,
     __languageMarkerRegularExpression,
@@ -683,7 +604,6 @@ module.exports = {
 	getPHPModules,
 	readYaml,
 	readJson,
-	readPhp,
 	reloadCompletionItems,
 	hasLanguageModule,
     replaceAll,

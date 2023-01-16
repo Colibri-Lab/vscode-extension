@@ -1,10 +1,6 @@
 <?php
 
-
-
 namespace App\Modules\{class-name}\Controllers;
-
-
 
 use App\Modules\{class-name}\Module;
 use Colibri\App;
@@ -22,7 +18,9 @@ use ScssPhp\ScssPhp\OutputStyle;
 use Colibri\Web\PayloadCopy;
 use Colibri\Utils\Minifiers\Javascript as Minifier;
 
-
+/**
+ * Default controller
+ */
 class Controller extends WebController
 {
 
@@ -62,7 +60,9 @@ class Controller extends WebController
         );
     }
 
-    
+    /**
+     * Initializes bundle event handlers
+     */
     private function _initDefaultBundleHandlers() 
     {
         App::$instance->HandleEvent(EventsContainer::BundleComplete, function ($event, $args) {

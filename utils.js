@@ -585,6 +585,41 @@ function getPHPModules() {
 	return ret;
 }
 
+function getPhpModulesByVendor() {
+	const ret = {};
+	const path = getWorkspacePath();
+	let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
+	if(composerContent.require) {
+		const modules = Object.keys(composerContent.require);
+		for(const moduleName of modules) {
+			if(!fs.existsSync(path + '/vendor/' + moduleName + '/composer.json')) {
+				continue;
+			}
+
+			const composer = readJson(path + '/vendor/' + moduleName + '/composer.json');
+			if(composer && !!composer.require['colibri/core'] && fs.existsSync(path + '/vendor/' + moduleName + '/deploy.yml')) {
+				// это вериятно модуль
+				let modulePath = '';
+				let moduleRealName = '';
+				const psr4 = composer.autoload['psr-4'];
+				const psr4keys = Object.keys(psr4);
+				for(const psr4key of psr4keys) {
+					if(psr4key.indexOf('App\\Modules\\') === 0) {
+						modulePath = psr4[psr4key];
+						moduleRealName = replaceAll(psr4key.split('App\\Modules\\')[1], '\\', '');
+						break;
+					}
+				}
+				if(moduleName && modulePath) {
+					// это точно модуль
+					ret[moduleName] = moduleRealName;
+				}
+			}
+		}
+	}
+	return ret;
+}
+
 module.exports = {
 	__langFilter,
     __languageMarkerRegularExpression,
@@ -611,6 +646,7 @@ module.exports = {
     saveYamlLangFile,
     loadYamlLangFile,
     getModuleName,
+	getPhpModulesByVendor,
     getLangFilePath,
     cleanVariables,
     checkForColibriProject,

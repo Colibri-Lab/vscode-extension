@@ -507,6 +507,7 @@ function readPhp(path) {
 	let className = '';
 	let classParent = '';
 	let classNameIndex = 0;
+    let classDesc = '';
 	let methods = {public: {}, private: {}, static: {}};
 	let index = 0;
 	for(const line of lines) {
@@ -516,6 +517,7 @@ function readPhp(path) {
 			className = match[1];
 			classParent = match[2];
 			classNameIndex = index;
+            classDesc = findPhpDoc(lines, index);
 		}
 
 		match = /static\sfunction\s([^\s\(]+).*/igm.exec(line);
@@ -553,6 +555,7 @@ function readPhp(path) {
 	ret[className] = {
 		name: className,
 		path: path,
+        desc: classDesc,
 		line: classNameIndex,
 		parent: classParent,
 		methods: methods

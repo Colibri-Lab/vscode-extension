@@ -17,6 +17,8 @@ const {
 	checkWorkspace,
 	reloadCompletionItems,
 	hasLanguageModule,
+	getPHPModules,
+	getPhpModulesByVendor,
 } = require('./utils');
 const {
 	createNamespace,
@@ -25,7 +27,7 @@ const {
 } = require('./component');
 
 const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
-const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass } = require('./php-tools');
+const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 
 
@@ -130,6 +132,120 @@ function onActivateEditorTextChangedEventHandler(event) {
 
 }
 
+function selectComponentInTree(path) {
+	let treeView = getTreeView();
+	let dataProvider = getTreeDataProvider();
+	if(treeView && treeView.visible) {
+		let isTemplate = path.indexOf('.html') !== -1;
+		let isStyles = path.indexOf('.scss') !== -1;
+		path = replaceAll(replaceAll(path, '.scss', '.js'), '.html', '.js');
+		const [key, value] = dataProvider.find(path);
+		if(!key || !value) {
+			return;
+		}
+
+		let rootNode = key.indexOf('Colibri.UI') !== -1 ? dataProvider.core() : null;
+		if(!rootNode) {
+			const rootPath = replaceAll(key, 'App.Modules.', '').split('.').splice(0, 1).pop();
+			rootNode = dataProvider.module(rootPath);
+		}
+
+		const select = (key, treeView, dataProvider) => {
+			let component = dataProvider.findComponent(key);
+			if(isTemplate) {
+				treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
+					component = component.data.template;
+					treeView.reveal(component);
+				});
+			} else if (isStyles) {
+				treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
+					component = component.data.styles;
+					treeView.reveal(component, {select: true});
+				});
+			} else {
+				treeView.reveal(component);
+			}
+		}
+
+		let c = dataProvider.findComponent(key);
+		if(c) {
+			select(key, treeView, dataProvider);
+		}
+		else {
+			treeView.reveal(rootNode, {select: false, focus: false, expand: true}).then(() => {
+				select(key, treeView, dataProvider);
+			});
+		}
+
+
+	}
+}
+
+function selectPhpInTree(path) {
+	let phpTreeView = getPHPTreeView();
+	let phpDataProvider = getPHPTreeDataProvider();
+	if(phpTreeView && phpTreeView.visible) {
+		if(path.indexOf('.php') === -1 && path.indexOf('/vendor/') === -1) {
+			return;
+		}
+			
+		let modulePath = path.split('/vendor/')[1];
+		let moduleRealName = '';
+		const modules = getPhpModulesByVendor();
+		for(const module of Object.keys(modules)) {
+			if(modulePath.indexOf(module) === 0) {
+				moduleRealName = modules[module];
+				break;
+			}
+		}
+		if(!moduleRealName) {
+			return;
+		}
+		
+		let rootNode = phpDataProvider.module(moduleRealName);
+		phpTreeView.reveal(rootNode, {select: false, focus: false, expand: true}).then(() => {
+			if(path.indexOf('Controllers/') !== -1) {
+				const controllersNode = phpDataProvider.findComponent(moduleRealName + '_Controllers');
+				return phpTreeView.reveal(controllersNode, {select: false, focus: false, expand: true});
+			} else if(path.indexOf('Models/') !== -1) {
+				const modulesNode = phpDataProvider.findComponent(moduleRealName + '_Modules');
+				return phpTreeView.reveal(modulesNode, {select: false, focus: false, expand: true});
+			}
+			return null;
+		}).then(() => {
+			if(path.indexOf('Controllers/') !== -1) {
+				const component = phpDataProvider.findComponent(path);
+				phpTreeView.reveal(component);
+			} else if(path.indexOf('Models/') !== -1) {
+				const storageModels = findStorageModels();
+				const storages = storageModels[moduleRealName];
+				let storageName = '';
+				for(const storage of Object.keys(storages)) {
+					if(path.indexOf(replaceAll(storages[storage].table, '\\', '/')) !== -1 || path.indexOf(replaceAll(storages[storage].row, '\\', '/')) !== -1) {
+						storageName = storage;
+						break;
+					}
+				}
+
+				if(!storageName) {
+					return null;
+				}
+
+				const component = phpDataProvider.findComponent(moduleRealName + '_storages_' + storageName);
+				return phpTreeView.reveal(component, {select: false, focus: false, expand: true});
+
+			}
+		}).then(() => {
+			const component = phpDataProvider.findComponent(path);
+			phpTreeView.reveal(component);
+		});
+
+
+
+	}
+
+}
+
 /**
  * 
  * @param {vscode.TextEditor} editor 
@@ -140,54 +256,9 @@ function onChangeActiveTextEditor(editor) {
 		triggerUpdateDecorations(editor);
 		reloadCompletionItems();
 
-		let treeView = getTreeView();
-		let dataProvider = getTreeDataProvider();
-		if(treeView && treeView.visible) {
-			let path = editor.document.uri.fsPath.toString();
-			let isTemplate = path.indexOf('.html') !== -1;
-			let isStyles = path.indexOf('.scss') !== -1;
-			path = replaceAll(replaceAll(path, '.scss', '.js'), '.html', '.js');
-			const [key, value] = dataProvider.find(path);
-			if(!key || !value) {
-				return;
-			}
-
-			let rootNode = key.indexOf('Colibri.UI') !== -1 ? dataProvider.core() : null;
-			if(!rootNode) {
-				const rootPath = replaceAll(key, 'App.Modules.', '').split('.').splice(0, 1).pop();
-				rootNode = dataProvider.module(rootPath);
-			}
-
-			const select = (key, treeView, dataProvider) => {
-				let component = dataProvider.findComponent(key);
-				if(isTemplate) {
-					treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
-						component = component.data.template;
-						treeView.reveal(component);
-					});
-				} else if (isStyles) {
-					treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
-						component = component.data.styles;
-						treeView.reveal(component, {select: true});
-					});
-				} else {
-					treeView.reveal(component);
-				}
-			}
-
-			let c = dataProvider.findComponent(key);
-			if(c) {
-				select(key, treeView, dataProvider);
-			}
-			else {
-				treeView.reveal(rootNode, {select: false, focus: false, expand: true}).then(() => {
-					select(key, treeView, dataProvider);
-				});
-			}
-
-
-		}
+		selectComponentInTree(editor.document.uri.fsPath);
 		
+		selectPhpInTree(editor.document.uri.fsPath);
 	}
 }
 
@@ -231,6 +302,9 @@ function onFileSystemChanged(e, context) {
 			if(name.indexOf('.js') !== -1 || name.indexOf('.html') !== -1) {
 				getTreeDataProvider().refresh();
 				break;
+			} else if(name.indexOf('.php') !== -1) {
+				getPHPTreeDataProvider().refresh();
+				break;
 			}
 		}
 	}
@@ -238,6 +312,8 @@ function onFileSystemChanged(e, context) {
 		let name = e.fileName;
 		if(name.indexOf('.js') !== -1 || name.indexOf('.html') !== -1) {
 			getTreeDataProvider().refresh();
+		} else if(name.indexOf('.php') !== -1) {
+			getPHPTreeDataProvider().refresh();
 		}
 	}
 }

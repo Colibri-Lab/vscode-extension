@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Search
+ * {module-description}
  *
  * @author Author Name <author.name@action-media.ru>
  * @copyright {year} {vendor}
@@ -16,7 +16,7 @@ use Colibri\App;
 use Colibri\Utils\Logs\Logger;
 
 /**
- * Описание модуля
+ * {module-description}
  * @package App\Modules\{class-name}
  *
  *

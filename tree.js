@@ -2,7 +2,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp, getWorkspacePath, readJson, getPHPModules } = require('./utils');
 const glob = require('glob');
-const { readPhp } = require('./php-tools');
+const { readPhp, findStorageModels } = require('./php-tools');
 
 
 let __treeDataProvider = null;
@@ -387,6 +387,7 @@ class ColibriPHPBackendTreeProvider {
         }
 
         const modules = getPHPModules();
+        const storages = findStorageModels();
 
         for(const moduleName of Object.keys(modules)) {
             const modulePath = modules[moduleName];
@@ -398,11 +399,9 @@ class ColibriPHPBackendTreeProvider {
                 modelsPath: modulePath + '/Models',
                 templatesPath: modulePath + '/templates',
                 controllers: {},
-                models: {},
+                models: storages[moduleName] || {},
                 templates: {},
             };
-
-            
 
             const controllers = glob.sync(obj.controllersPath + '**/*', {
                 nodir: true
@@ -411,11 +410,11 @@ class ColibriPHPBackendTreeProvider {
                 obj.controllers = Object.assign(obj.controllers, readPhp(controller))
             }
 
-            const models = glob.sync(obj.modelsPath + '**/*', {
-                nodir: true
-            });
-            for(const model of models) {
-                obj.models = Object.assign(obj.models, readPhp(model))
+            for(const storage of Object.keys(obj.models)) {
+                const f1 = readPhp(modulePath + replaceAll(obj.models[storage].row, '\\', '/') + '.php');
+                obj.models[storage].row = Object.values(f1)[0];
+                const f2 = readPhp(modulePath + replaceAll(obj.models[storage].table, '\\', '/') + '.php');
+                obj.models[storage].table = Object.values(f2)[0];
             }
 
             this._components.set(moduleName, obj);
@@ -442,6 +441,7 @@ class ColibriPHPBackendTreeProvider {
      * @returns 
      */
     getChildren(element) {
+        const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
 
         // отдельно ядро, отдельно каждый модуль, фильтруем 
         if(!element) {
@@ -474,18 +474,53 @@ class ColibriPHPBackendTreeProvider {
             }
 
             if(Object.keys(moduleObject.models).length > 0) {
-                const item1 = new Data('Models', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Models', type: 'folder', parent: null, obj: moduleObject, list: moduleObject.models});
+                const item1 = new Data('Models', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Models', type: 'storages', parent: null, obj: moduleObject, list: moduleObject.models});
                 item1.tooltip = 'Module models';
                 item1.iconPath = vscode.ThemeIcon.Folder;
                 children.push(item1);   
             }
 
             return children;
+        } else if (element.data.type === 'storages') {
+            // это файл
+            const moduleObject = element.data.obj;
+            const list = element.data.list;
+
+            let children = [];
+            for(const item of Object.keys(list)) {
+                const fileObject = list[item];
+                
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.Collapsed, {name: item, type: 'storage', parent: null, obj: moduleObject, file: fileObject});
+                item1.tooltip = item + ' Storage';
+                item1.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                children.push(item1); 
+
+            }
+
+            return children;
+        } else if (element.data.type === 'storage') {
+            // это файл
+            const moduleObject = element.data.obj;
+            const file = element.data.file;
+
+            let children = [];
+            let fileObject1 = file.table;
+            const item1 = new Data(fileObject1.name + ': ' + fileObject1.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: fileObject1.name, type: 'file', parent: null, obj: moduleObject, file: fileObject1}, 'colibri-ui.open-phpclass');
+            item1.tooltip = fileObject1.name + ' Table class';
+            item1.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+            children.push(item1);
+
+            const fileObject2 = file.row;
+            const item2 = new Data(fileObject2.name + ': ' + fileObject2.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: fileObject2.name, type: 'file', parent: null, obj: moduleObject, file: fileObject2}, 'colibri-ui.open-phpclass');
+            item2.tooltip = fileObject2.name + ' Row class';
+            item2.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+            children.push(item2);
+
+            return children;
         } else if (element.data.type === 'folder') {
             // это файл
             const moduleObject = element.data.obj;
             const list = element.data.list;
-            const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
 
             let children = [];
             for(const item of Object.keys(list)) {
@@ -501,7 +536,6 @@ class ColibriPHPBackendTreeProvider {
             // это файл
             const moduleObject = element.data.obj;
             const file = element.data.file;
-            const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
  
             let children = [];
             for(const item of Object.keys(file.methods.static)) {

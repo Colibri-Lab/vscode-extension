@@ -33,45 +33,7 @@ function runModelsGenerator(context, e) {
     const workbenchConfig = vscode.workspace.getConfiguration();
     let command = workbenchConfig.get('colibrilab.models-generate-command');
     command = replaceAll(command, '{app-root}', path);
-    
-    const appContent = readYaml(path + '/config/app.yaml');
-
-    let modules = appContent.modules;
-    if(typeof modules == 'string') {
-        modules = replaceAll(modules, 'include(', '');
-        modules = replaceAll(modules, ')', '');
-        modules = readYaml(path + '/config/' + modules);
-    }
-
-    let storages = [];
-    for(const module of modules.entries) {
-
-        if(typeof module.config == 'string') {
-            module.config = replaceAll(module.config, 'include(', '');
-            module.config = replaceAll(module.config, ')', '');
-            module.config = readYaml(path + module.config);
-        }
-
-        try {
-            if(module.config.databases.storages) {
-                if(typeof module.config.databases.storages == 'string') {
-                    module.config.databases.storages = replaceAll(module.config.databases.storages, 'include(', '');
-                    module.config.databases.storages = replaceAll(module.config.databases.storages, ')', '');
-                    module.config.databases.storages = readYaml(path + '/config/' + module.config.databases.storages);
-                }
-    
-                storages = [...storages, ...Object.keys(module.config.databases.storages)];
-            }    
-        }
-        catch(e) {}
-    }
-
-    let list = [];
-    for(const storage of storages) {
-        if(storage.substring(0, 2) !== '__') {
-            list.push(storage);
-        }
-    }
+    let list = findStorageNames(path);
 
     vscode.window.showQuickPick(list).then(function(storageName) {
         __log.appendLine('Choosed: ' + storageName);
@@ -600,6 +562,105 @@ function readPhp(path) {
 
 }
 
+function findStorageNames(path) {
+
+    path = path ? path : getWorkspacePath();
+    const appContent = readYaml(path + '/config/app.yaml');
+
+    let modules = appContent.modules;
+    if(typeof modules == 'string') {
+        modules = replaceAll(modules, 'include(', '');
+        modules = replaceAll(modules, ')', '');
+        modules = readYaml(path + '/config/' + modules);
+    }
+
+    let storages = [];
+    for(const module of modules.entries) {
+
+        if(typeof module.config == 'string') {
+            module.config = replaceAll(module.config, 'include(', '');
+            module.config = replaceAll(module.config, ')', '');
+            module.config = readYaml(path + module.config);
+        }
+
+        try {
+            if(module.config.databases.storages) {
+                if(typeof module.config.databases.storages == 'string') {
+                    module.config.databases.storages = replaceAll(module.config.databases.storages, 'include(', '');
+                    module.config.databases.storages = replaceAll(module.config.databases.storages, ')', '');
+                    module.config.databases.storages = readYaml(path + '/config/' + module.config.databases.storages);
+                }
+    
+                storages = [...storages, ...Object.keys(module.config.databases.storages)];
+            }    
+        }
+        catch(e) {}
+    }
+
+    let list = [];
+    for(const storage of storages) {
+        if(storage.substring(0, 2) !== '__') {
+            list.push(storage);
+        }
+    }
+
+    return list;
+}
+
+function findStorageModels(path) {
+
+    path = path ? path : getWorkspacePath();
+    const appContent = readYaml(path + '/config/app.yaml');
+
+    let modules = appContent.modules;
+    if(typeof modules == 'string') {
+        modules = replaceAll(modules, 'include(', '');
+        modules = replaceAll(modules, ')', '');
+        modules = readYaml(path + '/config/' + modules);
+    }
+
+    let storages = {};
+    for(const module of modules.entries) {
+
+        if(typeof module.config == 'string') {
+            module.config = replaceAll(module.config, 'include(', '');
+            module.config = replaceAll(module.config, ')', '');
+            module.config = readYaml(path + module.config);
+        }
+
+        try {
+            if(module.config.databases.storages) {
+                if(typeof module.config.databases.storages == 'string') {
+                    module.config.databases.storages = replaceAll(module.config.databases.storages, 'include(', '');
+                    module.config.databases.storages = replaceAll(module.config.databases.storages, ')', '');
+                    module.config.databases.storages = readYaml(path + '/config/' + module.config.databases.storages);
+                }
+
+                for(const storageName of Object.keys(module.config.databases.storages)) {
+                    if(storageName.indexOf('__') === 0) {
+                        continue;
+                    }
+
+                    let storage = module.config.databases.storages[storageName];
+                    if(!storages[module.name]) {
+                        storages[module.name] = {};;
+                    } 
+
+                    if(typeof storage === 'string') {
+                        storage = readYaml(path + '/config/' + replaceAll(replaceAll(storage, ')', ''), 'include(', ''));
+                    }
+
+                    storages[module.name][storageName] = storage.models;
+                }
+    
+            }    
+        }
+        catch(e) {}
+    }
+
+    return storages;
+}
+
 
 module.exports = {
     runMigrationScript,
@@ -609,5 +670,7 @@ module.exports = {
     createController,
     createControllerAction,
     openPhpClass,
-    readPhp
+    readPhp,
+    findStorageNames,
+    findStorageModels
 }

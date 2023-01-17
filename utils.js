@@ -19,6 +19,7 @@ const __constructorRegExp = /^\s\s\s\sconstructor[s+]?\(.*\)\s*[^;][{\r]?/i;
 const __eventHandlersRegExp = /^\s\s\s\s__([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
 const __privateMethodsRegExp = /^\s\s\s\s_([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
 const __publicMethodsRegExp = /^\s\s\s\s([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
+const __staticMethodsRegExp = /^\s\s\s\sstatic\s([^\s(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;
 const __langTextDecorationType = vscode.window.createTextEditorDecorationType({
 	borderWidth: '1px',
 	borderStyle: 'solid',
@@ -428,6 +429,9 @@ function enumerateColibriUIComponents(path = null) {
 				if(s.indexOf('= class extends') !== -1) {
 					let className = s.split('= class extends')[0].trim();
 					items.set(className, {path: path + '/' + file.name, line: line});
+				} else if(s.indexOf('= class {') !== -1) {
+					let className = s.split('= class {')[0].trim();
+					items.set(className, {path: path + '/' + file.name, line: line});
 				}
 				line++;
 			}
@@ -534,11 +538,11 @@ function searchForCommentBlock(lines, line) {
 	return commentblock;
 }
 
-function openFile(path, selectLine = 0) {
+function openFile(path, selectLine = null) {
 
 	vscode.workspace.openTextDocument(vscode.Uri.file(path)).then((a) => {
 		vscode.window.showTextDocument(a, 1, true).then(e => {
-			if(selectLine) {
+			if(selectLine !== null) {
 				let range = e.document.lineAt(selectLine).range;			
 				e.selection = new vscode.Selection(range.start, range.end);
 				e.revealRange(range);
@@ -636,6 +640,7 @@ module.exports = {
 	__eventHandlersRegExp,
 	__privateMethodsRegExp,
 	__publicMethodsRegExp,
+	__staticMethodsRegExp,
 	getPHPModules,
 	readYaml,
 	readJson,

@@ -1,6 +1,6 @@
 const vscode = require('vscode');
 const fs = require('fs');
-const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp, getWorkspacePath, readJson, getPHPModules } = require('./utils');
+const { replaceAll, getBundlePaths, enumerateColibriUIComponents, __getAttributeRegExp, __setAttributeRegExp, __constructorRegExp, __eventHandlersRegExp, __privateMethodsRegExp, __publicMethodsRegExp, __attributesRegExp, getWorkspacePath, readJson, getPHPModules, __staticMethodsRegExp } = require('./utils');
 const glob = require('glob');
 const { readPhp, findStorageModels } = require('./php-tools');
 
@@ -21,52 +21,118 @@ class ColibriUIComponentsTreeProvider {
 
         this._onDidChangeTreeData = new vscode.EventEmitter(); 
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
-    
-        this._core = null;
-        this._roots = new Map();
+        
         this._paths = new Map();
-        this._loadComponents();
+        this.__loadComponentsTree();
 
     }
-
+    
     /**
      * 
-     * @returns {vscode.TreeItem}
+     * @param {string} path 
+     * @returns {Data[]}
      */
-    core() {
-        return this._core;
-    }
-
-    /**
-     * @param {string} name 
-     * @returns {vscode.TreeItem}
-     */
-    module(name) {
-        return this._roots.get(name);
-    }
-
     find(path) {
-        for(let [key, value] of this._components) {
-            if(value.file === path) {
-                return [key, value];
-            }
+        let element = this._paths.get(path);
+        let p = [element];
+        while(element.parent != null) {
+            p = [element.parent, ...p];
+            element = element.parent;
         }
-        return [null, null];
-    }
-
-    findComponent(key) {
-        return this._paths.get(key);
+        return p;
     }
 
     refresh() {
-        this._core = null;
-        this._roots = new Map();
         this._paths = new Map();
-        this._loadComponents();
+        this.__loadComponentsTree();
         this._onDidChangeTreeData.fire();
     }
 
-    _loadComponents() {
+    __setContent(key, value) {
+        const f = {
+            file: value.path,
+            line: value.line,
+            fullName: key
+        };
+        if(fs.existsSync(replaceAll(value.path, '.js', '.html'))) {
+            f.html = replaceAll(value.path, '.js', '.html');
+        }
+        if(fs.existsSync(replaceAll(value.path, '.js', '.scss'))) {
+            f.styles = replaceAll(value.path, '.js', '.scss');
+        }
+
+        const content = fs.readFileSync(f.file).toString();
+        const lines = content.split('\n');
+        f.content = {
+            template: f.html ? {
+                name: 'template',
+                line: 0,
+                path: f.html
+            } : null,
+            styles: f.styles ? {
+                name: 'styles',
+                line: 0,
+                path: f.styles
+            } : null,
+            constructor: null,
+            attributes_get: [],
+            attributes_set: [],
+            eventHandlers: [],
+            privateMethods: [],
+            publicMethods: []
+        };
+        
+        for(let index=f.line + 1; index<lines.length; index++) {
+            let match;
+            let line = lines[index];
+            if(line.match(__attributesRegExp)) {
+                break;
+            }
+
+            if(match = line.match(__getAttributeRegExp)) {
+                f.content.attributes_get.push({
+                    name: match[1],
+                    line: index
+                });
+            } else if(match = line.match(__setAttributeRegExp)) {
+                f.content.attributes_set.push({
+                    name: match[1],
+                    line: index
+                });
+            } else if(match = line.match(__constructorRegExp)) {
+                f.content.constructor = {
+                    name: 'constructor',
+                    line: index
+                };
+            } else if(match = line.match(__eventHandlersRegExp)) {
+                f.content.eventHandlers.push({
+                    name: match[1],
+                    line: index
+                });
+            } else if(match = line.match(__privateMethodsRegExp)) {
+                f.content.privateMethods.push({
+                    name: match[1],
+                    line: index
+                });
+            } else if(match = line.match(__publicMethodsRegExp)) {
+                f.content.publicMethods.push({
+                    name: match[1],
+                    line: index
+                });
+            } else if(match = line.match(__staticMethodsRegExp)) {
+                f.content.publicMethods.push({
+                    name: match[1],
+                    line: index
+                });
+            }
+
+        }
+        return f;
+    
+    }
+
+    __loadComponentsTree() {
+
         if(this._components) {
             this._components.clear();
         }
@@ -74,101 +140,196 @@ class ColibriUIComponentsTreeProvider {
             this._components = new Map();
         }
 
-        const setContent = (key, value) => {
-            const f = {
-                file: value.path,
-                line: value.line,
-                fullName: key
-            };
-            if(fs.existsSync(replaceAll(value.path, '.js', '.html'))) {
-                f.html = replaceAll(value.path, '.js', '.html');
-            }
-            if(fs.existsSync(replaceAll(value.path, '.js', '.scss'))) {
-                f.styles = replaceAll(value.path, '.js', '.scss');
-            }
+        if(this._paths) {
+            this._paths.clear();
+        }
+        else {
+            this._paths = new Map();
+        }
+        
+        const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
 
-            const content = fs.readFileSync(f.file).toString();
-            const lines = content.split('\n');
-            f.content = {
-                template: f.html ? {
-                    name: 'template',
-                    line: 0,
-                    path: f.html
-                } : null,
-                styles: f.styles ? {
-                    name: 'styles',
-                    line: 0,
-                    path: f.styles
-                } : null,
-                constructor: null,
-                attributes_get: [],
-                attributes_set: [],
-                eventHandlers: [],
-                privateMethods: [],
-                publicMethods: []
-            };
-            
-            for(let index=f.line + 1; index<lines.length; index++) {
-                let match;
-                let line = lines[index];
-                if(line.match(__attributesRegExp)) {
-                    break;
+        const insertChildsForFiles = (element) => {
+
+            if(element.data.object.content.template) {    
+                const node = new Data('Template', vscode.TreeItemCollapsibleState.None, {name: 'template', type: 'item', object: element.data.object, content: element.data.object.content.template}, element, 'colibri-ui.open-component');
+                node.iconPath = this._path + '/images/template' + iconprefix + '.svg';
+                node.tooltip = 'Component template';
+                this._paths.set(element.data.object.content.template.path, node);
+                element.children.set('template', node);
+            }
+            if(element.data.object.content.styles) {    
+                const node = new Data('Styles', vscode.TreeItemCollapsibleState.None, {name: 'styles', type: 'item', object: element.data.object, content: element.data.object.content.styles}, element, 'colibri-ui.open-component');
+                node.iconPath = this._path + '/images/styles' + iconprefix + '.svg';
+                node.tooltip = 'Component styles';
+                this._paths.set(element.data.object.content.styles.path, node);
+                element.children.set('styles', node);
+            }
+            if(element.data.object.content.constructor) {    
+                const node = new Data('constructor', vscode.TreeItemCollapsibleState.None, {name: 'constructor', type: 'item', object: element.data.object, content: element.data.object.content.constructor}, element, 'colibri-ui.open-component');
+                node.iconPath = this._path + '/images/constructor' + iconprefix + '.svg';
+                node.tooltip = 'Constructor';
+                element.children.set('constructor', node);
+            }
+            if(element.data.object.content.attributes_get.length > 0) {
+                const content = element.data.object.content.attributes_get;
+                for(const o of content) {
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    node.iconPath = this._path + '/images/attributes_get' + iconprefix + '.svg';
+                    node.tooltip = 'Attribute (get)';
+                    element.children.set('attributes_get_' + o.name, node);
                 }
-
-                if(match = line.match(__getAttributeRegExp)) {
-                    f.content.attributes_get.push({
-                        name: match[1],
-                        line: index
-                    });
-                } else if(match = line.match(__setAttributeRegExp)) {
-                    f.content.attributes_set.push({
-                        name: match[1],
-                        line: index
-                    });
-                } else if(match = line.match(__constructorRegExp)) {
-                    f.content.constructor = {
-                        name: 'constructor',
-                        line: index
-                    };
-                } else if(match = line.match(__eventHandlersRegExp)) {
-                    f.content.eventHandlers.push({
-                        name: match[1],
-                        line: index
-                    });
-                } else if(match = line.match(__privateMethodsRegExp)) {
-                    f.content.privateMethods.push({
-                        name: match[1],
-                        line: index
-                    });
-                } else if(match = line.match(__publicMethodsRegExp)) {
-                    f.content.publicMethods.push({
-                        name: match[1],
-                        line: index
-                    });
-                }
-
             }
-            return f;
+            if(element.data.object.content.attributes_set.length > 0) {
+                const content = element.data.object.content.attributes_set;
+                for(const o of content) {
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    node.iconPath = this._path + '/images/attributes_set' + iconprefix + '.svg';
+                    node.tooltip = 'Attribute (set)';
+                    element.children.set('attributes_set_' + o.name, node);
+                }
+            }
+            if(element.data.object.content.privateMethods.length > 0) {
+                const content = element.data.object.content.privateMethods;
+                for(const o of content) {
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    node.iconPath = this._path + '/images/privateMethods' + iconprefix + '.svg';
+                    node.tooltip = 'Method (private)';
+                    element.children.set('privateMethods_' + o.name, node);
+                }
+            }
+            if(element.data.object.content.publicMethods.length > 0) {
+                const content = element.data.object.content.publicMethods;
+                for(const o of content) {
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    node.iconPath = this._path + '/images/publicMethods' + iconprefix + '.svg';
+                    node.tooltip = 'Method (public)';
+                    element.children.set('publicMethods_' + o.name, node);
+                }
+            }
+            if(element.data.object.content.eventHandlers.length > 0) {
+                const content = element.data.object.content.eventHandlers;
+                for(const o of content) {
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    node.iconPath = this._path + '/images/eventHandlers' + iconprefix + '.svg';
+                    node.tooltip = 'Event handler';
+                    element.children.set('eventHandlers_' + o.name, node);
+                } 
+            }
+
+
         }
 
+        let colibriUIRootNode = null;
         const uiItems = enumerateColibriUIComponents();
-        uiItems.forEach((value, key) => {
-            this._components.set(key, setContent(key, value));
-        });
-    
+        for(let [key, value] of uiItems) {
+            value = this.__setContent(key, value);
+            
+            if(key === 'Colibri.UI') {
+                colibriUIRootNode = new Data('Colibri.UI', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Colibri.UI', type: 'folder', object: value}, null, 'colibri-ui.open-component');
+                colibriUIRootNode.tooltip = 'Colbri.UI - Core components';
+                colibriUIRootNode.iconPath = this._path + '/images/module' + iconprefix + '.svg';
+                this._components.set('Colibri.UI', colibriUIRootNode);
+                this._paths.set(value.file, colibriUIRootNode);
+                continue;
+            }
+
+            key = replaceAll(key, 'Colibri.UI.', '');
+            const parts = key.split('.');
+            if(parts.length === 1) {
+                const componentNode = new Data(key, vscode.TreeItemCollapsibleState.Collapsed, {name: key, type: 'file', object: value}, colibriUIRootNode, 'colibri-ui.open-component');
+                componentNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                componentNode.tooltip = key + ' - Module';
+                insertChildsForFiles(componentNode);
+                this._paths.set(value.file, componentNode);
+                colibriUIRootNode.children.set(key, componentNode);
+            }
+            else {
+                let parent = colibriUIRootNode;
+                let componentName = parts.pop();
+                for(const part of parts) {
+
+                    if(!parent.children.has(part)) {
+                        const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'folder'}, parent);
+                        namespaceNode.tooltip = part + ' - Namespace';
+                        namespaceNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                        parent.children.set(part, namespaceNode);                    
+                    }
+                    parent = parent.children.get(part);
+                    
+                }
+
+                const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value}, parent, 'colibri-ui.open-component');
+                componentNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                componentNode.tooltip = key + ' - Component';
+                parent.children.set(componentName, componentNode);
+                this._paths.set(value.file, componentNode);
+                insertChildsForFiles(componentNode);
+
+            }
+            
+
+        }
+
         const bundleItems = getBundlePaths();
         for(const item of bundleItems) {
             const itemClasses = enumerateColibriUIComponents(item);
-            itemClasses.forEach((value, key) => {
-                this._components.set(key, setContent(key, value));
-            });
+            for(let [key, value] of itemClasses) {
+
+                key = replaceAll(key, 'App.Modules.', '');
+                value = this.__setContent(key, value);
+
+                let parts = key.split('.');
+                let moduleName = parts.splice(0, 1).pop();
+                if(moduleName === 'Colibri') {
+                    moduleName = 'Colibri.UI';
+                    parts.splice(0, 1);
+                }
+
+                if(!this._components.has(moduleName)) {
+                    const moduleRootNode = new Data(moduleName, vscode.TreeItemCollapsibleState.Collapsed, {name: moduleName, type: 'file', object: value}, null, 'colibri-ui.open-component');
+                    moduleRootNode.tooltip = moduleName + ' - Module';
+                    moduleRootNode.iconPath = this._path + '/images/module' + iconprefix + '.svg';
+                    insertChildsForFiles(moduleRootNode);
+                    this._paths.set(value.file, moduleRootNode);
+                    this._components.set(moduleName, moduleRootNode);
+                }
+
+                let parent = this._components.get(moduleName);
+                const componentName = parts.pop();
+                for(const part of parts) {
+
+                    if(!parent.children.has(part)) {
+                        const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'file', object: value}, parent, 'colibri-ui.open-component');
+                        namespaceNode.tooltip = part + ' - Namespace';
+                        namespaceNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                        insertChildsForFiles(namespaceNode);
+                        this._paths.set(value.file, namespaceNode);
+                        parent.children.set(part, namespaceNode);
+                    }
+                    parent = parent.children.get(part);
+
+                }
+
+                if(componentName) {
+                    const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value}, parent, 'colibri-ui.open-component');
+                    componentNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                    componentNode.tooltip = key + ' - Module';
+                    insertChildsForFiles(componentNode);
+                    this._paths.set(value.file, componentNode);
+                    parent.children.set(componentName, componentNode);
+                }
+
+            }
         }
+
+        console.log(this._components);
 
     }
 
     getParent(element) {
-        if(element.data && element.data.parent) {
-            return element.data.parent;
+        if(element && element.parent) {
+            return element.parent;
         }
         return null;
     }
@@ -183,135 +344,15 @@ class ColibriUIComponentsTreeProvider {
      * @returns 
      */
     getChildren(element) {
-        const iconprefix = vscode.window.activeColorTheme.kind == vscode.ColorThemeKind.Dark ? '-dark' : '-light';
 
-        // отдельно ядро, отдельно каждый модуль, фильтруем 
-        if(!element) {
+        // отдельно ядро, отдельно каждый модуль, фильтруем
+        let children = this._components;
+        if(element) {
+            children = element.children;
+        } 
 
-            let children = [];
-            const item1 = new Data('Colibri.UI', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Colibri.UI', type: 'folder', parent: null});
-            item1.tooltip = 'Colbri.UI - Core componentns';
-            item1.iconPath = this._path + '/images/module' + iconprefix + '.svg';
-            this._core = item1;
-            children.push(item1);    
-
-            const modules = [];
-            for(const [key, obj] of this._components) {
-
-                if(key.indexOf('Colibri.UI') !== -1) {
-                    continue;
-                }
-
-                const name = replaceAll(key, 'App.Modules.', '');
-                const moduleName = name.split('.').splice(0, 1).pop();
-                if(!moduleName) {
-                    continue;
-                }
-                if(modules.indexOf(moduleName) !== -1) {
-                    continue;
-                }
-
-                modules.push(moduleName);
-                
-                const item2 = new Data(replaceAll(moduleName, 'App.Modules.', ''), vscode.TreeItemCollapsibleState.Collapsed, {name: key, type: 'folder', parent: null});
-                item2.iconPath = this._path + '/images/module' + iconprefix + '.svg';
-                item2.tooltip = moduleName + ' - Module';
-                this._roots.set(moduleName, item2);
-                children.push(item2);    
-                
-            }            
-            return children;
-            
-        } else if(element.data.type === 'folder') {
-            
-            const children = [];
-            for(const [key, obj] of this._components) {
-                
-                if(key.indexOf(element.data.name) === -1) {
-                    continue;
-                }
-
-                const item = new Data(replaceAll(replaceAll(key, 'Colibri.UI.', ''), 'App.Modules.', ''), vscode.TreeItemCollapsibleState.Collapsed, {type: 'class', object: obj, parent: element}, 'colibri-ui.open-component');
-                item.iconPath = this._path + '/images/component' + iconprefix + '.svg';
-                item.tooltip = key;
-                this._paths.set(key, item);
-                children.push(item);    
-            }
-
-            return children;
-        } else if (element.data.type === 'class') {
-            // это файл
-
-
-            let children = [];
-            if(element.data.object.content.template) {    
-                const item2 = new Data('Template', vscode.TreeItemCollapsibleState.None, {name: 'template', type: 'item', object: element.data.object, content: element.data.object.content.template, parent: element}, 'colibri-ui.open-component');
-                item2.iconPath = this._path + '/images/template' + iconprefix + '.svg';
-                item2.tooltip = 'Component template';
-                element.data.template = item2;
-                children.push(item2);    
-            }
-            if(element.data.object.content.styles) {    
-                const item2 = new Data('Styles', vscode.TreeItemCollapsibleState.None, {name: 'styles', type: 'item', object: element.data.object, content: element.data.object.content.styles, parent: element}, 'colibri-ui.open-component');
-                item2.iconPath = this._path + '/images/styles' + iconprefix + '.svg';
-                item2.tooltip = 'Component styles';
-                element.data.styles = item2;
-                children.push(item2);    
-            }
-            if(element.data.object.content.constructor) {    
-                const item2 = new Data('constructor', vscode.TreeItemCollapsibleState.None, {name: 'constructor', type: 'item', object: element.data.object, content: element.data.object.content.constructor, parent: element}, 'colibri-ui.open-component');
-                item2.iconPath = this._path + '/images/constructor' + iconprefix + '.svg';
-                item2.tooltip = 'Constructor';
-                children.push(item2);    
-            }
-            if(element.data.object.content.attributes_get.length > 0) {
-                const content = element.data.object.content.attributes_get;
-                for(const o of content) {
-                    const item2 = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, parent: element}, 'colibri-ui.open-component');
-                    item2.iconPath = this._path + '/images/attributes_get' + iconprefix + '.svg';
-                    item2.tooltip = 'Attribute (get)';
-                    children.push(item2);
-                }
-            }
-            if(element.data.object.content.attributes_set.length > 0) {
-                const content = element.data.object.content.attributes_set;
-                for(const o of content) {
-                    const item2 = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, parent: element}, 'colibri-ui.open-component');
-                    item2.iconPath = this._path + '/images/attributes_set' + iconprefix + '.svg';
-                    item2.tooltip = 'Attribute (set)';
-                    children.push(item2);
-                }
-            }
-            if(element.data.object.content.privateMethods.length > 0) {
-                const content = element.data.object.content.privateMethods;
-                for(const o of content) {
-                    const item2 = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, parent: element}, 'colibri-ui.open-component');
-                    item2.iconPath = this._path + '/images/privateMethods' + iconprefix + '.svg';
-                    item2.tooltip = 'Method (private)';
-                    children.push(item2);
-                }
-            }
-            if(element.data.object.content.publicMethods.length > 0) {
-                const content = element.data.object.content.publicMethods;
-                for(const o of content) {
-                    const item2 = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, parent: element}, 'colibri-ui.open-component');
-                    item2.iconPath = this._path + '/images/publicMethods' + iconprefix + '.svg';
-                    item2.tooltip = 'Method (public)';
-                    children.push(item2);
-                }
-            }
-            if(element.data.object.content.eventHandlers.length > 0) {
-                const content = element.data.object.content.eventHandlers;
-                for(const o of content) {
-                    const item2 = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, parent: element}, 'colibri-ui.open-component');
-                    item2.iconPath = this._path + '/images/eventHandlers' + iconprefix + '.svg';
-                    item2.tooltip = 'Event handler';
-                    children.push(item2);
-                } 
-            }
-            return children;
-        }
-
+        return Array.from(children, ([name, value]) => value);
+    
     }
 
 
@@ -345,7 +386,7 @@ class ColibriPHPBackendTreeProvider {
         return this._roots.get(name);
     }
 
-    findComponent(path) {
+    findComponent(path) { 
         return this._paths.get(path);
     }
 
@@ -409,8 +450,8 @@ class ColibriPHPBackendTreeProvider {
     }
 
     getParent(element) {
-        if(element.data && element.data.parent) {
-            return element.data.parent;
+        if(element && element.parent) {
+            return element.parent;
         }
         return null;
     }
@@ -446,14 +487,14 @@ class ColibriPHPBackendTreeProvider {
             const children = [];
             const moduleObject = element.data.obj;
 
-            const item1 = new Data('Module', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Module', type: 'file', parent: element, obj: moduleObject, file: moduleObject.moduleObject}, 'colibri-ui.open-phpclass');
+            const item1 = new Data('Module', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Module', type: 'file', obj: moduleObject, file: moduleObject.moduleObject}, element, 'colibri-ui.open-phpclass');
             item1.tooltip = 'Module class\n\n' + moduleObject.moduleObject.desc;
             item1.iconPath = this._path + '/images/module-open' + iconprefix + '.svg';
             children.push(item1);   
             this._paths.set(moduleObject.moduleObject.path, item1);
 
             if(Object.keys(moduleObject.controllers).length > 0) {
-                const item1 = new Data('Controllers', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Controllers', type: 'folder', parent: element, obj: moduleObject, list: moduleObject.controllers});
+                const item1 = new Data('Controllers', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Controllers', type: 'folder', moduleObject, list: moduleObject.controllers}, element);
                 item1.tooltip = 'Module controllers';
                 item1.iconPath = this._path + '/images/controllers' + iconprefix + '.svg';
                 children.push(item1);   
@@ -461,7 +502,7 @@ class ColibriPHPBackendTreeProvider {
             }
 
             if(Object.keys(moduleObject.models).length > 0) {
-                const item1 = new Data('Models', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Models', type: 'storages', parent: element, obj: moduleObject, list: moduleObject.models});
+                const item1 = new Data('Models', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Models', type: 'storages', obj: moduleObject, list: moduleObject.models}, element);
                 item1.tooltip = 'Module models';
                 item1.iconPath = this._path + '/images/models' + iconprefix + '.svg';
                 children.push(item1);   
@@ -478,7 +519,7 @@ class ColibriPHPBackendTreeProvider {
             for(const item of Object.keys(list)) {
                 const fileObject = list[item];
                 
-                const item1 = new Data(item, vscode.TreeItemCollapsibleState.Collapsed, {name: item, type: 'storage', parent: element, obj: moduleObject, file: fileObject});
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.Collapsed, {name: item, type: 'storage', obj: moduleObject, file: fileObject}, element);
                 item1.tooltip = item + ' Storage';
                 item1.iconPath = this._path + '/images/storage' + iconprefix + '.svg';
                 children.push(item1); 
@@ -494,14 +535,14 @@ class ColibriPHPBackendTreeProvider {
 
             let children = [];
             let fileObject1 = file.table;
-            const item1 = new Data(fileObject1.name + ': ' + fileObject1.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: fileObject1.name, type: 'file', parent: element, obj: moduleObject, file: fileObject1}, 'colibri-ui.open-phpclass');
+            const item1 = new Data(fileObject1.name + ': ' + fileObject1.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: fileObject1.name, type: 'file', obj: moduleObject, file: fileObject1}, element, 'colibri-ui.open-phpclass');
             item1.tooltip = fileObject1.name + ' Table class';
             item1.iconPath = this._path + '/images/table' + iconprefix + '.svg';
             children.push(item1);
             this._paths.set(fileObject1.path, item1);
 
             const fileObject2 = file.row;
-            const item2 = new Data(fileObject2.name + ': ' + fileObject2.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: fileObject2.name, type: 'file', parent: element, obj: moduleObject, file: fileObject2}, 'colibri-ui.open-phpclass');
+            const item2 = new Data(fileObject2.name + ': ' + fileObject2.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: fileObject2.name, type: 'file', obj: moduleObject, file: fileObject2}, element, 'colibri-ui.open-phpclass');
             item2.tooltip = fileObject2.name + ' Row class';
             item2.iconPath = this._path + '/images/row' + iconprefix + '.svg';
             children.push(item2);
@@ -516,7 +557,7 @@ class ColibriPHPBackendTreeProvider {
             let children = [];
             for(const item of Object.keys(list)) {
                 const fileObject = list[item];
-                const item1 = new Data(item + ': ' + fileObject.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: item, type: 'file', parent: element, obj: moduleObject, file: fileObject}, 'colibri-ui.open-phpclass');
+                const item1 = new Data(item + ': ' + fileObject.parent, vscode.TreeItemCollapsibleState.Collapsed, {name: item, type: 'file', obj: moduleObject, file: fileObject}, element, 'colibri-ui.open-phpclass');
                 item1.tooltip = item + ' class\n\n' + fileObject.desc;
                 item1.iconPath = element.data.name === 'Controllers' ? this._path + '/images/controller' + iconprefix + '.svg' : this._path + '/images/component' + iconprefix + '.svg';
                 children.push(item1); 
@@ -532,21 +573,21 @@ class ColibriPHPBackendTreeProvider {
             let children = [];
             for(const item of Object.keys(file.methods.static)) {
                 const methodObject = file.methods.static[item];
-                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', parent: element, obj: moduleObject, method: methodObject}, 'colibri-ui.open-phpclass');
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', obj: moduleObject, method: methodObject}, element, 'colibri-ui.open-phpclass');
                 item1.tooltip = methodObject.row + '\n\n' + methodObject.desc;
                 item1.iconPath = item === '__construct' ? this._path + '/images/constructor' + iconprefix + '.svg' : this._path + '/images/publicMethods' + iconprefix + '.svg';
                 children.push(item1); 
             }
             for(const item of Object.keys(file.methods.private)) {
                 const methodObject = file.methods.private[item];
-                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', parent: element, obj: moduleObject, method: methodObject}, 'colibri-ui.open-phpclass');
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', obj: moduleObject, method: methodObject}, element, 'colibri-ui.open-phpclass');
                 item1.tooltip = methodObject.row + '\n\n' + methodObject.desc;
                 item1.iconPath = this._path + '/images/privateMethods' + iconprefix + '.svg';
                 children.push(item1); 
             }
             for(const item of Object.keys(file.methods.public)) {
                 const methodObject = file.methods.public[item];
-                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', parent: element, obj: moduleObject, method: methodObject}, 'colibri-ui.open-phpclass');
+                const item1 = new Data(item, vscode.TreeItemCollapsibleState.None, {name: item, type: 'method', obj: moduleObject, method: methodObject}, element, 'colibri-ui.open-phpclass');
                 item1.tooltip = methodObject.row + '\n\n' + methodObject.desc;
                 item1.iconPath = this._path + '/images/publicMethods' + iconprefix + '.svg';
                 children.push(item1); 
@@ -564,9 +605,11 @@ class ColibriPHPBackendTreeProvider {
 
 
 class Data extends vscode.TreeItem {
-    constructor(label, collapsibleState, data, commandId = undefined) {
+    constructor(label, collapsibleState, data, parent = null, commandId = undefined) {
       super(label, collapsibleState);
       this._data = data;
+      this._parent = parent;
+      this._children = new Map();
       if(commandId) {
         // It should be a command to execute
         this.command = {
@@ -576,9 +619,23 @@ class Data extends vscode.TreeItem {
         };
       }
     }
+    get parent() {
+        return this._parent;
+    }
     get data() {
         return this._data;
     }
+    get children() {
+        return this._children;
+    }
+
+    collapse() {
+        this.collapsibleState = vscode.TreeItemCollapsibleState.Collapsed;
+    }
+    expand() {
+        this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
+    }
+   
 }
 
 /**
@@ -608,7 +665,7 @@ function getTreeDataProvider() {
 
 /**
  * 
- * @returns {ColibriUIComponentsTreeProvider}
+ * @returns {ColibriPHPBackendTreeProvider}
  */
 function getPHPTreeDataProvider() {
     return __phpTreeDataProvider;
@@ -620,6 +677,13 @@ function createTreeView(context) {
         treeDataProvider: __treeDataProvider,
         showCollapseAll: true
     });
+    __treeView.onDidCollapseElement(e => {
+        e.element.collapse();
+    });
+    __treeView.onDidExpandElement(e => {
+        e.element.expand();
+    });
+    
 }
 
 function createPHPTreeView(context) {

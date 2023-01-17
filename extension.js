@@ -132,51 +132,48 @@ function onActivateEditorTextChangedEventHandler(event) {
 
 }
 
-function selectComponentInTree(path) {
+async function selectComponentInTree(path, line = null) {
 	let treeView = getTreeView();
 	let dataProvider = getTreeDataProvider();
 	if(treeView && treeView.visible) {
-		let isTemplate = path.indexOf('.html') !== -1;
-		let isStyles = path.indexOf('.scss') !== -1;
-		path = replaceAll(replaceAll(path, '.scss', '.js'), '.html', '.js');
-		const [key, value] = dataProvider.find(path);
-		if(!key || !value) {
-			return;
-		}
-
-		let rootNode = key.indexOf('Colibri.UI') !== -1 ? dataProvider.core() : null;
-		if(!rootNode) {
-			const rootPath = replaceAll(key, 'App.Modules.', '').split('.').splice(0, 1).pop();
-			rootNode = dataProvider.module(rootPath);
-		}
-
-		const select = (key, treeView, dataProvider) => {
-			let component = dataProvider.findComponent(key);
-			if(isTemplate) {
-				treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
-					component = component.data.template;
-					treeView.reveal(component);
-				});
-			} else if (isStyles) {
-				treeView.reveal(component, {select: false, focus: false, expand: true}).then(() => {
-					component = component.data.styles;
-					treeView.reveal(component, {select: true});
-				});
-			} else {
-				treeView.reveal(component);
+		const elementsPlacement = dataProvider.find(path);
+		const component = elementsPlacement.pop();
+		const selected = treeView.selection[0];
+		
+		for(const element of elementsPlacement) {
+			if(element.collapsibleState !== vscode.TreeItemCollapsibleState.Expanded) {
+				await treeView.reveal(element, {select: false, focus: false, expand: true});
+				element.expand();
 			}
 		}
 
-		let c = dataProvider.findComponent(key);
-		if(c) {
-			select(key, treeView, dataProvider);
-		}
-		else {
-			treeView.reveal(rootNode, {select: false, focus: false, expand: true}).then(() => {
-				select(key, treeView, dataProvider);
-			});
+		if(!selected || selected.parent != component) {
+			await treeView.reveal(component, line !== null ? {select: false, focus: false, expand: true} : {select: true});
+			if(line !== null) {
+				component.expand();
+			}
 		}
 
+		if(line !== null) {
+			let lines = {};
+			lines['0'] = component;
+			for(let [key, value] of component.children) {
+				if(['template', 'styles'].indexOf(key) !== -1) { continue; }
+				if(value.data.content && value.data.content.line) { lines[value.data.content.line] = value; }
+			}
+
+			let index = '0';
+			for(let l in lines) {
+				if(parseInt(l) <= line) {
+					index = l;
+				}
+				else {
+					break;
+				}
+			}
+			await treeView.reveal(lines[index], {select: true});
+
+		}
 
 	}
 }
@@ -256,7 +253,7 @@ function onChangeActiveTextEditor(editor) {
 		triggerUpdateDecorations(editor);
 		reloadCompletionItems();
 
-		selectComponentInTree(editor.document.uri.fsPath);
+		selectComponentInTree(editor.document.uri.fsPath, editor.selection.start.line);
 		
 		selectPhpInTree(editor.document.uri.fsPath);
 	}
@@ -374,12 +371,13 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller-action', (e) => createControllerAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-tree', (e) => getTreeDataProvider().refresh()));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-php-tree', (e) => getPHPTreeDataProvider().refresh()));
-
+		
 		if(hasLanguageModule()) {
 			
 			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue)));
 			context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event)));
 			vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
+			vscode.window.onDidChangeTextEditorSelection((e) => selectComponentInTree(e.textEditor.document.uri.fsPath, e.selections.length > 0 ? e.selections[0].start.line : null));
 			onChangeActiveTextEditor(vscode.window.activeTextEditor);	
 				
 			__log.appendLine('Registering codelence items...');

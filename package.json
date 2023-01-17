@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.40",
+  "version": "0.0.41",
   
   "categories": [
     "Programming Languages"
@@ -218,8 +218,17 @@
         "when": "colibrilab.isColibriWorkspace"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "colibri-explorer",
+          "title": "Colibri UI/Modules Explorer",
+          "icon": "./images/sidebar.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "colibri-explorer": [
         {
           "id": "colibriUIComponents",
           "name": "Colibri: UI Components"

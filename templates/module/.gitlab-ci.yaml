@@ -43,7 +43,7 @@ production:
       -e project_dir="{project-prod-domain}"
       -e folder="{module-name}_dist"
       -e "modules=['colibri/security:dev-master','colibri/mainframe:dev-master','colibri/manage:dev-master','colibri/lang:dev-master','colibri/sites:dev-master','colibri/tools:dev-master','{vendor-name}/{module-name}:$CI_COMMIT_REF_NAME']"
-      -e "bin_scripts=['{module-name}-migrate.sh','{module-name}-bundle.sh {project-prod-domain}']"
+      -e "bin_scripts=['{module-name}-migrate.sh','{module-name}-bundle.sh {project-prod-domain}','{module-name}-bundle.sh {project-prod-domain} bundle']"
       -e php=8.0
       -e composer=2
  
@@ -73,7 +73,7 @@ test:
       -e project_dir="{project-test-domain}"
       -e folder="{module-name}_dist"
       -e "modules=['colibri/security:dev-master','colibri/mainframe:dev-master','colibri/manage:dev-master','colibri/lang:dev-master','colibri/sites:dev-master','colibri/tools:dev-master','{vendor-name}/{module-name}:dev-$CI_COMMIT_REF_NAME']"
-      -e "bin_scripts=['{module-name}-migrate.sh','{module-name}-bundle.sh {project-test-domain}']"
+      -e "bin_scripts=['{module-name}-migrate.sh','{module-name}-bundle.sh {project-test-domain}','{module-name}-bundle.sh {project-test-domain} bundle']"
       -e php=8.0
       -e composer=2
   when: always

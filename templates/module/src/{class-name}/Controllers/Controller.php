@@ -124,24 +124,49 @@ class Controller extends WebController
 
         $this->_initDefaultBundleHandlers();
 
-        $jsBundle = Bundle::Automate(App::$domainKey, ($langModule ? $langModule->current : '').($themeKey ? '.'.$themeKey : '').'assets.bundle.js', 'js', [
-            ['path' => App::$moduleManager->{module-name}->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
-        ]);
-        $cssBundle = Bundle::Automate(App::$domainKey, ($langModule ? $langModule->current : '').($themeKey ? '.'.$themeKey : '').'assets.bundle.css', 'scss', [
-            ['path' => App::$moduleManager->{module-name}->modulePath . 'web/res/css/'],
-            ['path' => App::$moduleManager->{module-name}->modulePath . '.Bundle/'],
-            ['path' => $themeFile], 
-        ]);
+        if (!App::$request->server->commandline) {
 
-        return $this->Finish(
-            200,
-            'Bundle created successfuly',
-            (object)[
-                'js' => str_replace('http://', 'https://', App::$request->address) . $jsBundle,
-                'css' => str_replace('http://', 'https://', App::$request->address) . $cssBundle
-            ],
-            'utf-8'
-        );
+            $jsBundle = Bundle::Automate(App::$domainKey, ($langModule ? $langModule->current : '') . ($themeKey ? '.' . $themeKey : '') . '.assets.bundle.js', 'js', [
+                ['path' => App::$moduleManager->auth->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
+            ]);
+            $cssBundle = Bundle::Automate(App::$domainKey, ($langModule ? $langModule->current : '') . ($themeKey ? '.' . $themeKey : '') . 'assets.bundle.css', 'scss', [
+                ['path' => App::$moduleManager->auth->modulePath . 'web/res/css/'],
+                ['path' => App::$moduleManager->auth->modulePath . '.Bundle/'],
+                ['path' => $themeFile],
+            ], 'https://' . App::$request->host);
+
+            return $this->Finish(
+                200,
+                'Bundle created successfuly',
+                (object) [
+                    'js' => str_replace('http://', 'https://', App::$request->address) . $jsBundle,
+                    'css' => str_replace('http://', 'https://', App::$request->address) . $cssBundle
+                ],
+                'utf-8'
+            );
+        } else {
+
+            // bundle all languages
+            $oldLangKey = $langModule->current;
+            $langs = $langModule->Langs();
+            foreach ($langs as $langKey => $langData) {
+
+                $langModule->InitCurrent($langKey);
+
+                $jsBundle = Bundle::Automate(App::$domainKey, $langKey . ($themeKey ? '.' . $themeKey : '') . '.assets.bundle.js', 'js', [
+                    ['path' => App::$moduleManager->auth->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
+                ]);
+                $cssBundle = Bundle::Automate(App::$domainKey, $langKey . ($themeKey ? '.' . $themeKey : '') . 'assets.bundle.css', 'scss', [
+                    ['path' => App::$moduleManager->auth->modulePath . 'web/res/css/'],
+                    ['path' => App::$moduleManager->auth->modulePath . '.Bundle/'],
+                    ['path' => $themeFile],
+                ], 'https://' . App::$request->host);
+
+            }
+            $langModule->InitCurrent($oldLangKey);
+
+            exit;
+        }    
     }
 
 

@@ -114,6 +114,7 @@ function createCompnentProcess(choosedPath, context) {
 			jsFiles.push(uri);
 		}
 	});
+	let firstFile = jsFiles.splice(0, 1)[0];
 	let lastFile = jsFiles.pop();
 
 	if (lastFile === '.js') {
@@ -126,15 +127,25 @@ function createCompnentProcess(choosedPath, context) {
 		}
 	}
 
-	let lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, { encoding: 'utf8', flag: 'r' });
-	lastFileData = lastFile === '.js' ? lastFileData.split(' = class ')[0] : lastFileData.split(' = class extends ')[0];
-	lastFileData = lastFileData.trim();
-	if (lastFileData && lastFile !== '.js') {
-		let lastFileDataParts = lastFileData.split('.');
-		lastFileDataParts.pop();
-		className = lastFileDataParts.join('.');
-	} else {
+	let lastFileData = '';
+	if(firstFile === '.js') {
+		// namespace exists
+		lastFileData = fs.readFileSync(choosedPath + '/' + firstFile, { encoding: 'utf8', flag: 'r' });
+		lastFileData = lastFileData.split(' = class ')[0];
+		lastFileData = lastFileData.trim();
 		className = lastFileData;
+	}
+	else {
+		lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, { encoding: 'utf8', flag: 'r' });
+		lastFileData = lastFile === '.js' ? lastFileData.split(' = class ')[0] : lastFileData.split(' = class extends ')[0];
+		lastFileData = lastFileData.trim();
+		if (lastFileData && lastFile !== '.js') {
+			let lastFileDataParts = lastFileData.split('.');
+			lastFileDataParts.pop();
+			className = lastFileDataParts.join('.');
+		} else {
+			className = lastFileData;
+		}
 	}
 
 	return vscode.window.showInputBox({

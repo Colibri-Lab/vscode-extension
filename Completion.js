@@ -107,14 +107,16 @@ function provideDefinitions(document, position, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);
 
-    const classNamespaceLength = text.split('.').length;
     const currentComponentName = getComponentName(document);
     const parts = currentComponentName.split('.');
-    parts.splice(parts.length - classNamespaceLength, parts.length);
-    const currentNamespaceName = parts.join('.');
+    const possibleNames = [];
+    while(parts.length > 0) {
+        possibleNames.push(parts.join('.') + '.' + text);
+        parts.pop();
+    }
+    possibleNames.push(text);
 
-    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
-    const classObject = classesAndFiles.get(text);
+    const classObject = filterCompomentNames(possibleNames);
     if(!classObject) {
         return null;
     }
@@ -131,14 +133,16 @@ function provideDeclarations(document, position, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);
 
-    const classNamespaceLength = text.split('.').length;
     const currentComponentName = getComponentName(document);
     const parts = currentComponentName.split('.');
-    parts.splice(parts.length - classNamespaceLength, parts.length);
-    const currentNamespaceName = parts.join('.');
+    const possibleNames = [];
+    while(parts.length > 0) {
+        possibleNames.push(parts.join('.') + '.' + text);
+        parts.pop();
+    }
+    possibleNames.push(text);
 
-    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
-    const classObject = classesAndFiles.get(text);
+    const classObject = filterCompomentNames(possibleNames);
     if(!classObject) {
         return null;
     }
@@ -151,14 +155,16 @@ function provideReferences(document, position, context, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);
 
-    const classNamespaceLength = text.split('.').length;
     const currentComponentName = getComponentName(document);
     const parts = currentComponentName.split('.');
-    parts.splice(parts.length - classNamespaceLength, parts.length);
-    const currentNamespaceName = parts.join('.');
+    const possibleNames = [];
+    while(parts.length > 0) {
+        possibleNames.push(parts.join('.') + '.' + text);
+        parts.pop();
+    }
+    possibleNames.push(text);
 
-    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
-    const classObject = classesAndFiles.get(text);
+    const classObject = filterCompomentNames(possibleNames);
     if(!classObject) {
         return null;
     }
@@ -173,14 +179,16 @@ function provideHover(document, position, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);
 
-    const classNamespaceLength = text.split('.').length;
     const currentComponentName = getComponentName(document);
     const parts = currentComponentName.split('.');
-    parts.splice(parts.length - classNamespaceLength, parts.length);
-    const currentNamespaceName = parts.join('.');
+    const possibleNames = [];
+    while(parts.length > 0) {
+        possibleNames.push(parts.join('.') + '.' + text);
+        parts.pop();
+    }
+    possibleNames.push(text);
 
-    const classesAndFiles = filterCompomentNames(currentNamespaceName, currentComponentName);
-    const classObject = classesAndFiles.get(text);
+    const classObject = filterCompomentNames(possibleNames);
     if(!classObject) {
         return null;
     }

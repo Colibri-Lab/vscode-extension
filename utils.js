@@ -459,23 +459,13 @@ function getComponentNames(currentComponentName) {
 	return classesAndFiles;
 }
 
-function filterCompomentNames(namespace, currentComponentName) {
-	const classesAndFiles = new Map();
+function filterCompomentNames(possibleNames) {
 	for(const [key, value] of __colibriUIComponents) {
-		if(key.substring(0, namespace.length) === namespace) {
-			classesAndFiles.set(key.substring(namespace.length + 1), value);
-		}
-		else {
-			const componentName = extractNames(key, currentComponentName);
-			if(classesAndFiles.get(componentName)) {
-				classesAndFiles.set(key, value);
-			}
-			else {
-				classesAndFiles.set(componentName, value);
-			}
+		if( possibleNames.indexOf(key) !== -1) {
+			return value;
 		}
 	}
-	return classesAndFiles;
+	return null;
 }
 
 function reloadCompletionItems() {

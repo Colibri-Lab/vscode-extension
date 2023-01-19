@@ -115,7 +115,7 @@ function createCompnentProcess(choosedPath, context) {
 		}
 	});
 	let firstFile = jsFiles.splice(0, 1)[0];
-	let lastFile = jsFiles.pop();
+	let lastFile = jsFiles.pop() || firstFile;
 
 	if (lastFile === '.js') {
 		// модуль, значит номер 1

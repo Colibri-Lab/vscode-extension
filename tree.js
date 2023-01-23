@@ -60,6 +60,9 @@ class ColibriUIComponentsTreeProvider {
         if(fs.existsSync(replaceAll(value.path, '.js', '.scss'))) {
             f.styles = replaceAll(value.path, '.js', '.scss');
         }
+        if(fs.existsSync(replaceAll(value.path, '.js', '.lang'))) {
+            f.lang = replaceAll(value.path, '.js', '.lang');
+        }
 
         const content = fs.readFileSync(f.file).toString();
         const lines = content.split('\n');
@@ -73,6 +76,11 @@ class ColibriUIComponentsTreeProvider {
                 name: 'styles',
                 line: 0,
                 path: f.styles
+            } : null,
+            lang: f.lang ? {
+                name: 'lang',
+                line: 0,
+                path: f.lang
             } : null,
             constructor: null,
             attributes_get: [],
@@ -164,6 +172,13 @@ class ColibriUIComponentsTreeProvider {
                 node.tooltip = 'Component styles';
                 this._paths.set(element.data.object.content.styles.path, node);
                 element.children.set('styles', node);
+            }
+            if(element.data.object.content.lang) {    
+                const node = new Data('Text resources', vscode.TreeItemCollapsibleState.None, {name: 'lang', type: 'item', object: element.data.object, content: element.data.object.content.lang}, element, 'colibri-ui.open-component');
+                node.iconPath = this._path + '/images/langs' + iconprefix + '.svg';
+                node.tooltip = 'Component text resources';
+                this._paths.set(element.data.object.content.lang.path, node);
+                element.children.set('lang', node);
             }
             if(element.data.object.content.constructor) {    
                 const node = new Data('constructor', vscode.TreeItemCollapsibleState.None, {name: 'constructor', type: 'item', object: element.data.object, content: element.data.object.content.constructor}, element, 'colibri-ui.open-component');

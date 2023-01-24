@@ -293,6 +293,7 @@ class ColibriUIComponentsTreeProvider {
 
                 key = replaceAll(key, 'App.Modules.', '');
                 value = this.__setContent(key, value);
+                const isNamespace = value.file.indexOf('/.js') !== -1;
 
                 let parts = key.split('.');
                 let moduleName = parts.splice(0, 1).pop();
@@ -317,7 +318,7 @@ class ColibriUIComponentsTreeProvider {
                     if(!parent.children.has(part)) {
                         const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'file', object: value}, parent, 'colibri-ui.open-component');
                         namespaceNode.tooltip = part + ' - Namespace';
-                        namespaceNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                        namespaceNode.iconPath = this._path + '/images/namespace' + iconprefix + '.svg';
                         insertChildsForFiles(namespaceNode);
                         this._paths.set(value.file, namespaceNode);
                         parent.children.set(part, namespaceNode);
@@ -328,8 +329,8 @@ class ColibriUIComponentsTreeProvider {
 
                 if(componentName) {
                     const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value}, parent, 'colibri-ui.open-component');
-                    componentNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
-                    componentNode.tooltip = key + ' - Module';
+                    componentNode.iconPath = this._path + '/images/' + (isNamespace ? 'namespace' : 'component') + iconprefix + '.svg';
+                    componentNode.tooltip = key + (isNamespace ? ' - Namespace' : ' - Component');
                     insertChildsForFiles(componentNode);
                     this._paths.set(value.file, componentNode);
                     parent.children.set(componentName, componentNode);

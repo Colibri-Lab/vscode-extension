@@ -160,28 +160,28 @@ class ColibriUIComponentsTreeProvider {
         const insertChildsForFiles = (element) => {
 
             if(element.data.object.content.template) {    
-                const node = new Data('Template', vscode.TreeItemCollapsibleState.None, {name: 'template', type: 'item', object: element.data.object, content: element.data.object.content.template}, element, 'colibri-ui.open-component');
+                const node = new Data('Template', vscode.TreeItemCollapsibleState.None, {name: 'template', type: 'item', object: element.data.object, content: element.data.object.content.template, group: 'parts'}, element, 'colibri-ui.open-component');
                 node.iconPath = this._path + '/images/template' + iconprefix + '.svg';
                 node.tooltip = 'Component template';
                 this._paths.set(element.data.object.content.template.path, node);
                 element.children.set('template', node);
             }
-            if(element.data.object.content.styles) {    
-                const node = new Data('Styles', vscode.TreeItemCollapsibleState.None, {name: 'styles', type: 'item', object: element.data.object, content: element.data.object.content.styles}, element, 'colibri-ui.open-component');
+            if(element.data.object.content.styles) {
+                const node = new Data('Styles', vscode.TreeItemCollapsibleState.None, {name: 'styles', type: 'item', object: element.data.object, content: element.data.object.content.styles, group: 'parts'}, element, 'colibri-ui.open-component');
                 node.iconPath = this._path + '/images/styles' + iconprefix + '.svg';
                 node.tooltip = 'Component styles';
                 this._paths.set(element.data.object.content.styles.path, node);
                 element.children.set('styles', node);
             }
-            if(element.data.object.content.lang) {    
-                const node = new Data('Text resources', vscode.TreeItemCollapsibleState.None, {name: 'lang', type: 'item', object: element.data.object, content: element.data.object.content.lang}, element, 'colibri-ui.open-component');
+            if(element.data.object.content.lang) {
+                const node = new Data('Text resources', vscode.TreeItemCollapsibleState.None, {name: 'lang', type: 'item', object: element.data.object, content: element.data.object.content.lang, group: 'parts'}, element, 'colibri-ui.open-component');
                 node.iconPath = this._path + '/images/langs' + iconprefix + '.svg';
                 node.tooltip = 'Component text resources';
                 this._paths.set(element.data.object.content.lang.path, node);
                 element.children.set('lang', node);
             }
-            if(element.data.object.content.constructor) {    
-                const node = new Data('constructor', vscode.TreeItemCollapsibleState.None, {name: 'constructor', type: 'item', object: element.data.object, content: element.data.object.content.constructor}, element, 'colibri-ui.open-component');
+            if(element.data.object.content.constructor) {
+                const node = new Data('constructor', vscode.TreeItemCollapsibleState.None, {name: 'constructor', type: 'item', object: element.data.object, content: element.data.object.content.constructor, group: 'parts'}, element, 'colibri-ui.open-component');
                 node.iconPath = this._path + '/images/constructor' + iconprefix + '.svg';
                 node.tooltip = 'Constructor';
                 element.children.set('constructor', node);
@@ -189,7 +189,7 @@ class ColibriUIComponentsTreeProvider {
             if(element.data.object.content.attributes_get.length > 0) {
                 const content = element.data.object.content.attributes_get;
                 for(const o of content) {
-                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, group: 'attrs'}, element, 'colibri-ui.open-component');
                     node.iconPath = this._path + '/images/attributes_get' + iconprefix + '.svg';
                     node.tooltip = 'Attribute (get)';
                     element.children.set('attributes_get_' + o.name, node);
@@ -198,7 +198,7 @@ class ColibriUIComponentsTreeProvider {
             if(element.data.object.content.attributes_set.length > 0) {
                 const content = element.data.object.content.attributes_set;
                 for(const o of content) {
-                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, group: 'attrs'}, element, 'colibri-ui.open-component');
                     node.iconPath = this._path + '/images/attributes_set' + iconprefix + '.svg';
                     node.tooltip = 'Attribute (set)';
                     element.children.set('attributes_set_' + o.name, node);
@@ -207,7 +207,7 @@ class ColibriUIComponentsTreeProvider {
             if(element.data.object.content.privateMethods.length > 0) {
                 const content = element.data.object.content.privateMethods;
                 for(const o of content) {
-                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, group: 'methods'}, element, 'colibri-ui.open-component');
                     node.iconPath = this._path + '/images/privateMethods' + iconprefix + '.svg';
                     node.tooltip = 'Method (private)';
                     element.children.set('privateMethods_' + o.name, node);
@@ -216,7 +216,7 @@ class ColibriUIComponentsTreeProvider {
             if(element.data.object.content.publicMethods.length > 0) {
                 const content = element.data.object.content.publicMethods;
                 for(const o of content) {
-                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, group: 'methods'}, element, 'colibri-ui.open-component');
                     node.iconPath = this._path + '/images/publicMethods' + iconprefix + '.svg';
                     node.tooltip = 'Method (public)';
                     element.children.set('publicMethods_' + o.name, node);
@@ -225,7 +225,7 @@ class ColibriUIComponentsTreeProvider {
             if(element.data.object.content.eventHandlers.length > 0) {
                 const content = element.data.object.content.eventHandlers;
                 for(const o of content) {
-                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o}, element, 'colibri-ui.open-component');
+                    const node = new Data(o.name, vscode.TreeItemCollapsibleState.None, {name: o.name, type: 'item', object: element.data.object, content: o, group: 'handlers'}, element, 'colibri-ui.open-component');
                     node.iconPath = this._path + '/images/eventHandlers' + iconprefix + '.svg';
                     node.tooltip = 'Event handler';
                     element.children.set('eventHandlers_' + o.name, node);
@@ -239,9 +239,10 @@ class ColibriUIComponentsTreeProvider {
         const uiItems = enumerateColibriUIComponents();
         for(let [key, value] of uiItems) {
             value = this.__setContent(key, value);
-            
+            const isNamespace = value.file.indexOf('/.js') !== -1;
+
             if(key === 'Colibri.UI') {
-                colibriUIRootNode = new Data('Colibri.UI', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Colibri.UI', type: 'folder', object: value}, null, 'colibri-ui.open-component');
+                colibriUIRootNode = new Data('Colibri.UI', vscode.TreeItemCollapsibleState.Collapsed, {name: 'Colibri.UI', type: 'folder', object: value, group: 'core'}, null, 'colibri-ui.open-component');
                 colibriUIRootNode.tooltip = 'Colbri.UI - Core components';
                 colibriUIRootNode.iconPath = this._path + '/images/module' + iconprefix + '.svg';
                 this._components.set('Colibri.UI', colibriUIRootNode);
@@ -252,9 +253,9 @@ class ColibriUIComponentsTreeProvider {
             key = replaceAll(key, 'Colibri.UI.', '');
             const parts = key.split('.');
             if(parts.length === 1) {
-                const componentNode = new Data(key, vscode.TreeItemCollapsibleState.Collapsed, {name: key, type: 'file', object: value}, colibriUIRootNode, 'colibri-ui.open-component');
-                componentNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
-                componentNode.tooltip = key + ' - Module';
+                const componentNode = new Data(key, vscode.TreeItemCollapsibleState.Collapsed, {name: key, type: 'file', object: value, group: (isNamespace ? 'namespaces' : 'components')}, colibriUIRootNode, 'colibri-ui.open-component');
+                componentNode.iconPath = this._path + '/images/' + (isNamespace ? 'namespace' : 'component') + iconprefix + '.svg';
+                componentNode.tooltip = key + (isNamespace ? ' - Namespace' : ' - Component');
                 insertChildsForFiles(componentNode);
                 this._paths.set(value.file, componentNode);
                 colibriUIRootNode.children.set(key, componentNode);
@@ -265,18 +266,18 @@ class ColibriUIComponentsTreeProvider {
                 for(const part of parts) {
 
                     if(!parent.children.has(part)) {
-                        const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'folder'}, parent);
+                        const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'folder', group: 'namespaces'}, parent);
                         namespaceNode.tooltip = part + ' - Namespace';
-                        namespaceNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
+                        namespaceNode.iconPath = this._path + '/images/namespace' + iconprefix + '.svg';
                         parent.children.set(part, namespaceNode);                    
                     }
                     parent = parent.children.get(part);
                     
                 }
 
-                const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value}, parent, 'colibri-ui.open-component');
-                componentNode.iconPath = this._path + '/images/component' + iconprefix + '.svg';
-                componentNode.tooltip = key + ' - Component';
+                const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value, group: (isNamespace ? 'namespaces' : 'components')}, parent, 'colibri-ui.open-component');
+                componentNode.iconPath = this._path + '/images/' + (isNamespace ? 'namespace' : 'component') + iconprefix + '.svg';
+                componentNode.tooltip = key + (isNamespace ? ' - Namespace' : ' - Component');
                 parent.children.set(componentName, componentNode);
                 this._paths.set(value.file, componentNode);
                 insertChildsForFiles(componentNode);
@@ -303,7 +304,7 @@ class ColibriUIComponentsTreeProvider {
                 }
 
                 if(!this._components.has(moduleName)) {
-                    const moduleRootNode = new Data(moduleName, vscode.TreeItemCollapsibleState.Collapsed, {name: moduleName, type: 'file', object: value}, null, 'colibri-ui.open-component');
+                    const moduleRootNode = new Data(moduleName, vscode.TreeItemCollapsibleState.Collapsed, {name: moduleName, type: 'file', object: value, group: 'modules'}, null, 'colibri-ui.open-component');
                     moduleRootNode.tooltip = moduleName + ' - Module';
                     moduleRootNode.iconPath = this._path + '/images/module' + iconprefix + '.svg';
                     insertChildsForFiles(moduleRootNode);
@@ -316,7 +317,7 @@ class ColibriUIComponentsTreeProvider {
                 for(const part of parts) {
 
                     if(!parent.children.has(part)) {
-                        const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'file', object: value}, parent, 'colibri-ui.open-component');
+                        const namespaceNode = new Data(part, vscode.TreeItemCollapsibleState.Collapsed, {name: part, type: 'file', object: value, group: 'namespaces'}, parent, 'colibri-ui.open-component');
                         namespaceNode.tooltip = part + ' - Namespace';
                         namespaceNode.iconPath = this._path + '/images/namespace' + iconprefix + '.svg';
                         insertChildsForFiles(namespaceNode);
@@ -328,7 +329,7 @@ class ColibriUIComponentsTreeProvider {
                 }
 
                 if(componentName) {
-                    const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value}, parent, 'colibri-ui.open-component');
+                    const componentNode = new Data(componentName, vscode.TreeItemCollapsibleState.Collapsed, {name: componentName, type: 'file', object: value, group: (isNamespace ? 'namespaces' : 'components')}, parent, 'colibri-ui.open-component');
                     componentNode.iconPath = this._path + '/images/' + (isNamespace ? 'namespace' : 'component') + iconprefix + '.svg';
                     componentNode.tooltip = key + (isNamespace ? ' - Namespace' : ' - Component');
                     insertChildsForFiles(componentNode);
@@ -338,8 +339,6 @@ class ColibriUIComponentsTreeProvider {
 
             }
         }
-
-        console.log(this._components);
 
     }
 
@@ -367,7 +366,27 @@ class ColibriUIComponentsTreeProvider {
             children = element.children;
         } 
 
-        return Array.from(children, ([name, value]) => value);
+        let prefixes = {
+            'core': '000',
+            'parts': '001',
+            'attrs': '002',
+            'methods': '003',
+            'handlers': '004',
+            'components': '005',
+            'namespaces': '006',
+            'modules': '007'
+        };
+        let childs = Array.from(children, ([name, value]) => value);
+        childs = childs.sort((a, b) => {
+            let aprefix = prefixes[a.data.group];
+            let bprefix = prefixes[b.data.group];
+
+            if(aprefix + a.label > bprefix + b.label) return 1;
+            else if(aprefix + a.label < bprefix + b.label) return -1;
+            else return 0;
+        });
+
+        return childs;
     
     }
 

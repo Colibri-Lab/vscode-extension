@@ -3,6 +3,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const { __log, getWorkspacePath, replaceAll, readYaml, openFile } = require('./utils');
 const glob = require('glob');
+const { Data } = require('./tree');
 
 function runMigrationScript(context, e) {
     const path = getWorkspacePath();
@@ -36,6 +37,9 @@ function runModelsGenerator(context, e) {
     let list = findStorageNames(path);
 
     vscode.window.showQuickPick(list).then(function(storageName) {
+        if(!storageName) {
+            return;
+        }
         __log.appendLine('Choosed: ' + storageName);
         __log.appendLine('Generating models...');
         command = replaceAll(command, '{storage-name}', storageName);
@@ -349,7 +353,14 @@ async function createController(context, e) {
     const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
     const templatesPath = extensionPath + '/templates/';
 
-    const folderPath = e.fsPath;
+    let path = '';
+    if(e?.data?.obj?.controllersPath !== undefined) {
+        path = e?.data?.obj?.controllersPath;
+    } else {
+        path = e.fsPath;
+    }
+
+    const folderPath = path;
     if(folderPath.indexOf('/vendor/') !== -1) {
         // модуль
         const p = folderPath.split('/vendor/')[1];

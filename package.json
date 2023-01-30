@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.49",
+  "version": "0.0.50",
   
   "categories": [
     "Programming Languages"
@@ -107,6 +107,36 @@
         {
           "command": "colibri-ui.models-generate",
           "when": "colibrilab.isColibriWorkspace"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "colibri-ui.create-component",
+          "when": "colibrilab.isColibriWorkspace && view == colibriUIComponents"
+        },
+        {
+          "command": "colibri-ui.create-namespace",
+          "when": "colibrilab.isColibriWorkspace && view == colibriUIComponents"
+        },
+        {
+          "command": "colibri-ui.refresh-tree",
+          "when": "colibrilab.isColibriWorkspace && view == colibriUIComponents"
+        },
+        {
+          "command": "colibri-ui.create-controller",
+          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+        },
+        {
+          "command": "colibri-ui.migrate",
+          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+        },
+        {
+          "command": "colibri-ui.models-generate",
+          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+        },
+        {
+          "command": "colibri-ui.refresh-php-tree",
+          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
         }
       ]
     },

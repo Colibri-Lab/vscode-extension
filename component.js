@@ -52,7 +52,7 @@ function createNamespaceProcess(choosedPath, context) {
 		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
 		currentNamespace = currentNamespace.split(' = class ')[0];
 
-		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
+		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', (namespaceName.indexOf(currentNamespace) !== 0 ? currentNamespace + '.' + namespaceName : namespaceName) + ' = class {};', { encoding: 'utf8', flag: 'w+' });
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 		
 		getTreeDataProvider().refresh();	
@@ -78,6 +78,9 @@ function createNamespace(context, e) {
 				createNamespaceProcess(fileUri[0].path, context);
 			}
 		});
+	}
+	else if(e instanceof Data) {
+		createNamespaceProcess(e.data.object.file, context);
 	}
 	else {
 		createNamespaceProcess(e.fsPath, context);
@@ -259,6 +262,9 @@ function createComponent(context, e) {
 				createCompnentProcess(fileUri[0].path, context);
 			}
 		});
+	}
+	else if(e instanceof Data) {
+		createCompnentProcess(e.data.object.file, context);
 	}
 	else {
 		createCompnentProcess(e.fsPath, context).then((creationContext) => {

@@ -26,7 +26,7 @@ databases:
         password: {database-password}
 
     points:
-      security: 
+      {module-name}: 
         connection: {module-name}
         database: {database-name}
 

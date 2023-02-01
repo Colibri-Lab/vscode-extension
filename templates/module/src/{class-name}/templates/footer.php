@@ -5,6 +5,7 @@ if (App::$domainKey === '{module-name}') {
     ?>
     <script>
         App.InitializeApplication(
+            '{module-name}',
             Colibri.Web.Router.RouteOnHistory,
             Colibri.IO.Request.RequestEncodeTypeEncrypted,
             true,

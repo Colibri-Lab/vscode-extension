@@ -9,8 +9,10 @@ const {
     getComponentAttributes, 
     filterCompomentNames,
     __attributesRegExp,
-    searchForCommentBlock
+    searchForCommentBlock,
+    replaceAll
 } = require('./utils');
+
 
 /**
  * 
@@ -72,7 +74,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
         for (const [attr, value] of componentAttrs) {
             const simpleCompletion = new vscode.CompletionItem(attr + '=""');
             simpleCompletion.insertText = new vscode.SnippetString(attr + '="${1}"');
-            const docs = new vscode.MarkdownString(vscode.l10n.t('Insert the attribute {0} for component {1} [link]({2}).', [attr, value.fullName, value.file]));
+            const docs = new vscode.MarkdownString(value.desc + '\n\n' + vscode.l10n.t('Insert the attribute {0} for component {1} [link]({2}).', [attr, value.fullName, value.file]));
             docs.baseUri = vscode.Uri.parse(value.file);
             simpleCompletion.documentation = docs;
             comps.push(simpleCompletion);

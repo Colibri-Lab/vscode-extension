@@ -36,6 +36,39 @@ const __langTextDecorationType = vscode.window.createTextEditorDecorationType({
 });
 
 
+function findJsDoc(lines, line) {
+	if(lines[line - 1].indexOf('*/') === -1) {
+		return '';
+	}
+	line--;
+
+	let ret = [];
+	while(lines[line].indexOf('/**') === -1) {
+		ret.push(replaceAll(replaceAll(lines[line].trim(), '* ', ''), '*/', ''));
+		line--;
+	}
+
+	return ret.reverse().join('\n');
+
+}
+
+
+function findPhpDoc(lines, line) {
+	if(lines[line - 1].indexOf('*/') === -1) {
+		return '';
+	}
+	line--;
+
+	let ret = [];
+	while(lines[line].indexOf('/**') === -1) {
+		ret.push(replaceAll(replaceAll(lines[line].trim(), '* ', ''), '*/', ''));
+		line--;
+	}
+
+	return ret.reverse().join('\n');
+
+}
+
 function cleanVariables() {
     // __openedLangDocuments.clear();
 } 
@@ -311,14 +344,18 @@ function getComponentAttributes(document, classesAndFiles) {
 
 	}
 	
+	let index = 0;
 	for(const line of content) {
 		const matches = __setAttributeRegExp.exec(line);
 		if(matches && matches.length > 0) {
+			let desc = findJsDoc(content, index);
 			attrs.set(matches[1], {
 				file: path,
-				fullName: className
+				fullName: className,
+				desc: desc
 			});
 		}
+		index++;
 	}
 	return attrs;
 	
@@ -658,5 +695,7 @@ module.exports = {
 	getWorkspacePath,
 	filterCompomentNames,
 	searchForCommentBlock,
-	openFile
+	openFile,
+	findJsDoc,
+	findPhpDoc
 };

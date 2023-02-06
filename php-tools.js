@@ -1,7 +1,7 @@
 const cp = require('child_process');
 const vscode = require('vscode');
 const fs = require('fs');
-const { __log, getWorkspacePath, replaceAll, readYaml, openFile } = require('./utils');
+const { __log, getWorkspacePath, replaceAll, readYaml, openFile, findPhpDoc } = require('./utils');
 const glob = require('glob');
 const { Data } = require('./tree');
 
@@ -494,21 +494,6 @@ function openPhpClass(context, data) {
 }
 
 
-function findPhpDoc(lines, line) {
-	if(lines[line - 1].indexOf('*/') === -1) {
-		return '';
-	}
-	line--;
-
-	let ret = [];
-	while(lines[line].indexOf('/**') === -1) {
-		ret.push(replaceAll(replaceAll(lines[line].trim(), '* ', ''), '*/', ''));
-		line--;
-	}
-
-	return ret.reverse().join('\n');
-
-}
 
 function readPhp(path) {
 

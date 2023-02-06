@@ -9,8 +9,8 @@ const __colibriUIComponents = new Map();
 
 
 const __languageMarkerRegularExpression = /#{(.*?)}/gmi;
-const __componentRegularExpression = /<[^>\/]+\/?>/ig;
-const __completionItemsRegexp = /<([A-z.]+)/i;
+const __componentRegularExpression = /<[^>]+\/?>/gmi;
+const __completionItemsRegexp = /<([A-z0-9.]+)/i;
 const __componentNameRegExp = /componentname="([^"]+)"/i;
 const __attributesRegExp = /([\w\.]+)\s+?=\s+?class extends\s+?([\w\.]+)\s*{?/gim;
 const __setAttributeRegExp = /set ([^(]+)[s+]?\(.*\)\s*[^;][{\r]?/i;

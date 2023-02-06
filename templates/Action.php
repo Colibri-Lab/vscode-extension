@@ -8,20 +8,23 @@
     public function {controller-action-name}(RequestCollection $get, RequestCollection $post, ? PayloadCopy $payload = null): object
     {
 
+        $result = [];
+        $message = 'Result message';
         try {
             
             
 
         } catch (\Throwable $e) {
             // если что то не так то выводим ошибку
-            $html = $e->getMessage() . ' ' . $e->getFile() . ' ' . $e->getLine();
+            $message = $e->getMessage() . ' ' . $e->getFile() . ' ' . $e->getLine();
+            App::$log->debug($message);
         }
 
         // финишируем контроллер
         return $this->Finish(
             200,
-            'Result message',
-            [],
+            $message,
+            $result,
             'utf-8'
         );
 

@@ -9,8 +9,7 @@ const {
     getComponentAttributes, 
     filterCompomentNames,
     __attributesRegExp,
-    searchForCommentBlock,
-    replaceAll
+    searchForCommentBlock
 } = require('./utils');
 
 

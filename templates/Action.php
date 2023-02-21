@@ -10,19 +10,22 @@
 
         $result = [];
         $message = 'Result message';
+        $code = 200;
         try {
             
             
 
         } catch (\Throwable $e) {
             // если что то не так то выводим ошибку
-            $message = $e->getMessage() . ' ' . $e->getFile() . ' ' . $e->getLine();
-            App::$log->debug($message);
+            $message = $e->getMessage();
+            $code = $e->getCode();
+            App::$log->debug($code . ': ' . $message);
+            App::$log->debug($e->getTraceAsString());
         }
 
         // финишируем контроллер
         return $this->Finish(
-            200,
+            $code,
             $message,
             $result,
             'utf-8'

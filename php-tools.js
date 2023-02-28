@@ -71,6 +71,10 @@ function runDownloadModule(context, e) {
     const workbenchConfig = vscode.workspace.getConfiguration();
     let command = workbenchConfig.get('colibrilab.download-module-command');
     
+    if(fs.existsSync(path + '/config/app.yaml')) {
+        return;
+    }
+
     const appContent = readYaml(path + '/config/app.yaml');
     let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
 
@@ -564,6 +568,10 @@ function readPhp(path) {
 function findStorageNames(path) {
 
     path = path ? path : getWorkspacePath();
+    if(fs.existsSync(path + '/config/app.yaml')) {
+        return [];
+    }
+
     const appContent = readYaml(path + '/config/app.yaml');
 
     let modules = appContent.modules;
@@ -609,6 +617,10 @@ function findStorageNames(path) {
 function findStorageModels(path) {
 
     path = path ? path : getWorkspacePath();
+    if(fs.existsSync(path + '/config/app.yaml')) {
+        return {};
+    }
+
     const appContent = readYaml(path + '/config/app.yaml');
 
     let modules = appContent.modules;

@@ -378,7 +378,7 @@ function checkForColibriProject(document) {
         projectPath = path.split('/app/')[0] + '/';
 	}
 
-	return !!(fs.existsSync(projectPath + 'App') && 
+	return !!((fs.existsSync(projectPath + 'App') || fs.existsSync(projectPath + 'app')) && 
 		fs.existsSync(projectPath + 'config') && 
 		fs.existsSync(projectPath + 'bin') && 
 		(fs.existsSync(projectPath + 'config/app.yaml') || fs.existsSync(projectPath + 'config/app.php')) && 

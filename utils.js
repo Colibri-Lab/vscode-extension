@@ -374,15 +374,17 @@ function checkForColibriProject(document) {
         projectPath = path.split('/vendor/')[0] + '/';
     } else if(path && path.indexOf('/App/') !== -1) {
         projectPath = path.split('/App/')[0] + '/';
+	} else if(path && path.indexOf('/app/') !== -1) { // laravel
+        projectPath = path.split('/app/')[0] + '/';
 	}
 
 	return !!(fs.existsSync(projectPath + 'App') && 
 		fs.existsSync(projectPath + 'config') && 
 		fs.existsSync(projectPath + 'bin') && 
-		fs.existsSync(projectPath + 'config/app.yaml') && 
-		fs.existsSync(projectPath + 'vendor/colibri/ui') && 
-		fs.existsSync(projectPath + 'vendor/colibri/core'));
+		(fs.existsSync(projectPath + 'config/app.yaml') || fs.existsSync(projectPath + 'config/app.php')) && 
+		fs.existsSync(projectPath + 'vendor/colibri/ui'));
 	
+	//  &&  fs.existsSync(projectPath + 'vendor/colibri/core')
 	//  &&  fs.existsSync(projectPath + 'vendor/colibri/lang'))
 
 }

@@ -34,7 +34,8 @@ class CodelenceProvider {
 			let text = match[1];
 			let parts = replaceAll(replaceAll(text, '#{', ''), '}', '').split(';');
 			let textKey = parts[0];
-			if(textKey.substring(0, moduleName.length + 1) !== moduleName.toLowerCase() + '-') {
+			
+            if(moduleName && textKey.substring(0, moduleName.length + 1) !== moduleName.toLowerCase() + '-') {
 				continue;
 			}
             let textValue = parts[1];

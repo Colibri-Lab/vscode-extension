@@ -376,6 +376,8 @@ function checkForColibriProject(document) {
         projectPath = path.split('/App/')[0] + '/';
 	} else if(path && path.indexOf('/app/') !== -1) { // laravel
         projectPath = path.split('/app/')[0] + '/';
+	} else if(path && path.indexOf('/.Bundle/') !== -1) {
+        projectPath = path.split('/.Bundle/')[0] + '/';
 	}
 
 	return !!((fs.existsSync(projectPath + 'App') || fs.existsSync(projectPath + 'app')) && 
@@ -389,7 +391,38 @@ function checkForColibriProject(document) {
 
 }
 
+
 function hasLanguageModule() {
+
+	const projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath + '/';
+	const workbenchConfig = vscode.workspace.getConfiguration();
+	let languageModulePath = workbenchConfig.get('colibrilab.langs-config-path');
+	if(!languageModulePath || !fs.existsSync(projectPath + languageModulePath)) {
+		
+		for(const folder of vscode.workspace.workspaceFolders) {
+			
+			const path = folder.uri.fsPath;
+	
+			let projectPath = path + '/'; 
+			if(path && path.indexOf('/vendor/') !== -1) {
+				projectPath = path.split('/vendor/')[0] + '/';
+			} else if(path && path.indexOf('/App/') !== -1) {
+				projectPath = path.split('/App/')[0] + '/';
+			} else if(path && path.indexOf('/app/') !== -1) {
+				projectPath = path.split('/app/')[0] + '/';
+			}
+	
+			return fs.existsSync(projectPath + 'vendor/colibri/lang');
+	
+		} 
+		
+		return false;
+	} 
+	
+	return true;
+}
+
+function hasColibriCore() {
 
 	for(const folder of vscode.workspace.workspaceFolders) {
 		
@@ -402,7 +435,7 @@ function hasLanguageModule() {
 			projectPath = path.split('/App/')[0] + '/';
 		}
 
-		return fs.existsSync(projectPath + 'vendor/colibri/lang');
+		return fs.existsSync(projectPath + 'vendor/colibri/core');
 
 	} 
 
@@ -595,7 +628,7 @@ function getPHPModules() {
 			}
 
 			const composer = readJson(path + '/vendor/' + moduleName + '/composer.json');
-			if(composer && !!composer.require['colibri/core'] && fs.existsSync(path + '/vendor/' + moduleName + '/deploy.yml')) {
+			if(composer && composer.require && !!composer.require['colibri/core'] && fs.existsSync(path + '/vendor/' + moduleName + '/deploy.yml')) {
 				// это вериятно модуль
 				let modulePath = '';
 				let moduleRealName = '';
@@ -699,5 +732,6 @@ module.exports = {
 	searchForCommentBlock,
 	openFile,
 	findJsDoc,
-	findPhpDoc
+	findPhpDoc,
+	hasColibriCore
 };

@@ -19,6 +19,7 @@ const {
 	hasLanguageModule,
 	getPHPModules,
 	getPhpModulesByVendor,
+	hasColibriCore,
 } = require('./utils');
 const {
 	createNamespace,
@@ -103,7 +104,7 @@ function onActiveEditorTextChanged(document) {
 		let textKey = parts[0];
 		let textDefaultLangValue = parts[1];
 
-		if(textKey.substring(0, moduleName.length + 1) !== moduleName.toLowerCase() + '-') {
+		if(moduleName && textKey.substring(0, moduleName.length + 1) !== moduleName.toLowerCase() + '-') {
 			continue;
 		}
 
@@ -333,6 +334,7 @@ function activate(context) {
 		}
 
 		vscode.commands.executeCommand('setContext', 'colibrilab.isColibriWorkspace', true);
+		vscode.commands.executeCommand('setContext', 'colibrilab.isColibriUIOnly', !hasColibriCore());
 
 		__log.appendLine('Creating components tree');
 		createTreeView(context);

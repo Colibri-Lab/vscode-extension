@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.58",
+  "version": "0.0.60",
   
   "categories": [
     "Programming Languages"
@@ -98,15 +98,15 @@
         },
         {
           "command": "colibri-ui.create-controller",
-          "when": "colibrilab.isColibriWorkspace && explorerResourceIsFolder && resourcePath =~ /Controllers/"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly && explorerResourceIsFolder && resourcePath =~ /Controllers/"
         },
         {
           "command": "colibri-ui.migrate",
-          "when": "colibrilab.isColibriWorkspace"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly"
         },
         {
           "command": "colibri-ui.models-generate",
-          "when": "colibrilab.isColibriWorkspace"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly"
         }
       ],
       "view/item/context": [
@@ -124,19 +124,19 @@
         },
         {
           "command": "colibri-ui.create-controller",
-          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly && view == colibriPHPBackend"
         },
         {
           "command": "colibri-ui.migrate",
-          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly && view == colibriPHPBackend"
         },
         {
           "command": "colibri-ui.models-generate",
-          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly && view == colibriPHPBackend"
         },
         {
           "command": "colibri-ui.refresh-php-tree",
-          "when": "colibrilab.isColibriWorkspace && view == colibriPHPBackend"
+          "when": "colibrilab.isColibriWorkspace && !colibrilab.isColibriUIOnly && view == colibriPHPBackend"
         }
       ]
     },

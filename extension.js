@@ -40,9 +40,9 @@ function triggerUpdateDecorations(activeEditor) {
 	} 
 
 	let moduleName = getModuleName(activeEditor.document);
-	if(!moduleName) {
-		return;
-	}
+	 // if(!moduleName) {
+	// 	return;
+	// }
 	let langsFileContent = loadYamlLangFile(activeEditor.document);
 	if(!langsFileContent) {
 		return;
@@ -59,9 +59,9 @@ function triggerUpdateDecorations(activeEditor) {
 		let parts = replaceAll(replaceAll(text, '#{', ''), '}', '').split(';');
 		let textKey = parts[0];
 
-		if(textKey.substring(0, moduleName.length + 1) !== moduleName.toLowerCase() + '-') {
-			continue;
-		}
+		// if(textKey.substring(0, moduleName.length + 1) !== moduleName.toLowerCase() + '-') {
+		// 	continue;
+		// }
 
 		let message = [];
 		if(langsFileContent[textKey]) {

@@ -37,22 +37,28 @@ function createNamespaceProcess(choosedPath, context) {
 
 	vscode.window.showInputBox({
 		password: false,
-		title: vscode.l10n.t('Enter namespace name in current parent'),
-		value: namespaceName + '.'
+		title: vscode.l10n.t('Enter namespace name in current namespace (without dublicating current)'),
+		value: ''
 	}).then((input) => {
 
 		namespaceName = input;
-		if(!namespaceName) {
+		if(!namespaceName || namespaceName.indexOf('.') !== -1) {
+			vscode.window.showInformationMessage(vscode.l10n.t('Attantion! Please enter the namespace name without parent or root namespace'));
 			return null;
 		}
 
-		const dirName = namespaceName.split('.').pop();
+		const dirName = namespaceName;
+		if(fs.existsSync(choosedPath + '/' + dirName)) {
+			vscode.window.showInformationMessage(vscode.l10n.t('Attantion! Namespace allready exists'));
+			return null;
+		}
+
 		fs.mkdirSync(choosedPath + '/' + dirName);
 
 		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
 		currentNamespace = currentNamespace.split(' = class ')[0];
 
-		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', (namespaceName.indexOf(currentNamespace) !== 0 ? currentNamespace + '.' + namespaceName : namespaceName) + ' = class {};', { encoding: 'utf8', flag: 'w+' });
+		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
 		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 		
 		getTreeDataProvider().refresh();	
@@ -94,11 +100,11 @@ function createNamespace(context, e) {
  * @param {vscode.ExtensionContext} context
  * @returns {Thenable|null}
  */
-function createCompnentProcess(choosedPath, context) {
+async function createCompnentProcess(choosedPath, context) {
 
 	let className = '';
 	let parentClass = '';
-	let fileIndex = 1;
+	let fileIndex = 0;
 	let isFile = false;
 
 	choosedPath = fs.realpathSync(choosedPath + '/');
@@ -108,6 +114,10 @@ function createCompnentProcess(choosedPath, context) {
 		parts.pop();
 		choosedPath = parts.join('/');
 		isFile = true;
+	}
+
+	if(choosedPath.indexOf('.Bundle/') === -1) {
+		return null
 	}
 
 	let jsFiles = [];
@@ -151,94 +161,128 @@ function createCompnentProcess(choosedPath, context) {
 		}
 	}
 
-	return vscode.window.showInputBox({
+	className = await vscode.window.showInputBox({
 		password: false,
 		title: vscode.l10n.t('Input the class name with namespace'),
 		value: className + '.'
-	}).then((input) => {
-		className = input;
-		if(!className) {
-			return null;
-		}
-
-		return vscode.window.showInputBox({
-			password: false,
-			title: vscode.l10n.t('Input the parent class name with namespace'),
-			value: 'Colibri.UI.'
-		});
-	}).then(input => {
-		parentClass = input;
-		if(!parentClass) {
-			return null;
-		}
-
-		fileIndex++;
-
-
-		const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
-		const templatesPath = extensionPath + '/templates/component/';
-		let cssClassName = replaceAll(className, /\./, '-').toLowerCase();
-		let languageTextPrefix = replaceAll(cssClassName, /app.modules./, '').toLowerCase();
-
-		let textContent = '';
-		let newTextContent = '';
-		let range, selection;
-		if (isFile) {
-			selection = vscode.window.activeTextEditor.selection;
-			range = new vscode.Range(selection.start, selection.end);
-			textContent = vscode.window.activeTextEditor.document.getText(range);
-			newTextContent = '<{class-name} shown="true" name="{new-component-object-name}" />';
-		}
-
-		let jsContent = fs.readFileSync(templatesPath + 'template.js') + '';
-		let htmlContent = fs.readFileSync(templatesPath + 'template.html') + '';
-		let scssContent = fs.readFileSync(templatesPath + 'template.scss') + '';
-		let langContent = fs.readFileSync(templatesPath + 'template.lang') + '';
-
-		jsContent = replaceAll(jsContent, /\{className\}/, className);
-		jsContent = replaceAll(jsContent, /\{parentClass\}/, parentClass);
-		jsContent = replaceAll(jsContent, /\{cssClassName\}/, cssClassName);
-		jsContent = replaceAll(jsContent, /\{languageTextPrefix\}/, languageTextPrefix);
-
-		htmlContent = replaceAll(htmlContent, /\{className\}/, className);
-		htmlContent = replaceAll(htmlContent, /\{parentClass\}/, parentClass);
-		htmlContent = replaceAll(htmlContent, /\{cssClassName\}/, cssClassName);
-		htmlContent = replaceAll(htmlContent, /\{languageTextPrefix\}/, languageTextPrefix);
-		htmlContent = replaceAll(htmlContent, /\{textContent\}/, textContent);
-
-		scssContent = replaceAll(scssContent, /\{className\}/, className);
-		scssContent = replaceAll(scssContent, /\{parentClass\}/, parentClass);
-		scssContent = replaceAll(scssContent, /\{cssClassName\}/, cssClassName);
-		scssContent = replaceAll(scssContent, /\{languageTextPrefix\}/, languageTextPrefix);
-
-		const fileName = className.split('.').pop();
-		const fileIndexText = expand(fileIndex.toFixed(0), '0', 2);
-		const componentFileName = choosedPath + '/' + fileIndexText + '.' + fileName;
-		fs.writeFileSync(componentFileName + '.js', jsContent, { encoding: 'utf8', flag: 'w+' });
-		fs.writeFileSync(componentFileName + '.html', htmlContent, { encoding: 'utf8', flag: 'w+' });
-		fs.writeFileSync(componentFileName + '.scss', scssContent, { encoding: 'utf8', flag: 'w+' });
-		fs.writeFileSync(componentFileName + '.lang', langContent, { encoding: 'utf8', flag: 'w+' });
-
-		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-		getTreeDataProvider().refresh();
-
-		vscode.window.showInformationMessage('Component created!');
-
-		if (isFile) {
-			return Promise.resolve({
-				selection: selection, text: newTextContent, className: className, componentFiles: {
-					js: componentFileName + '.js',
-					html: componentFileName + '.html',
-					scss: componentFileName + '.scss',
-					lang: componentFileName + '.lang'
-				}, textPrefix: languageTextPrefix
-			});
-		}
-		else {
-			return null;
-		}
-
 	});
+
+	if(!className) {
+		return null;
+	}
+
+	parentClass = await vscode.window.showInputBox({
+		password: false,
+		title: vscode.l10n.t('Input the parent class name with namespace'),
+		value: 'Colibri.UI.'
+	});
+
+	if(!parentClass) {
+		return null;
+	}
+
+	const parts = choosedPath.split('.Bundle/');
+	const bundlePath = parts[0] + '.Bundle/';
+	let possibleNamespace = replaceAll(className, 'App.Modules.', '');
+	const moduleName = possibleNamespace.split('.').splice(0, 1).pop();
+	if(!fs.existsSync(bundlePath + '.js')) {
+		// пишем что модуль не найден
+		vscode.window.showInformationMessage(vscode.l10n.t('Module not found'));
+		return null;
+	}
+
+	const moduleContent = fs.readFileSync(bundlePath + '.js').toString();
+	if(moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.UI.Module') === -1) {
+		// попытка создать компоненту не в своем модуле;
+		vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
+		return null;
+	}
+	
+	possibleNamespace = replaceAll(possibleNamespace, moduleName + '.', '');
+	const parts2 = possibleNamespace.split('.')
+	parts2.pop();
+	possibleNamespace = parts2.join('.');
+	possibleNamespace = replaceAll(possibleNamespace, '.', '/');
+	const possibleNamespacePath = bundlePath + possibleNamespace;
+	if(!fs.existsSync(possibleNamespacePath + '/.js')) {
+		// нет такой области
+		vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
+		return null;
+	}
+
+	const namespaceContent = fs.readFileSync(possibleNamespacePath + '/.js').toString();
+	if(namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
+		// нет такой области
+		vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
+		return null;
+	}
+
+	fileIndex++;
+
+	const fileName = className.split('.').pop();
+	const fileIndexText = expand(fileIndex.toFixed(0), '0', 2);
+	const componentFileName = possibleNamespacePath + '/' + fileIndexText + '.' + fileName;
+
+
+	const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
+	const templatesPath = extensionPath + '/templates/component/';
+	let cssClassName = replaceAll(className, /\./, '-').toLowerCase();
+	let languageTextPrefix = replaceAll(cssClassName, /app.modules./, '').toLowerCase();
+
+	let textContent = '';
+	let newTextContent = '';
+	let range, selection;
+	if (isFile) {
+		selection = vscode.window.activeTextEditor.selection;
+		range = new vscode.Range(selection.start, selection.end);
+		textContent = vscode.window.activeTextEditor.document.getText(range);
+		newTextContent = '<{class-name} shown="true" name="{new-component-object-name}" />';
+	}
+
+	let jsContent = fs.readFileSync(templatesPath + 'template.js') + '';
+	let htmlContent = fs.readFileSync(templatesPath + 'template.html') + '';
+	let scssContent = fs.readFileSync(templatesPath + 'template.scss') + '';
+	let langContent = fs.readFileSync(templatesPath + 'template.lang') + '';
+
+	jsContent = replaceAll(jsContent, /\{className\}/, className);
+	jsContent = replaceAll(jsContent, /\{parentClass\}/, parentClass);
+	jsContent = replaceAll(jsContent, /\{cssClassName\}/, cssClassName);
+	jsContent = replaceAll(jsContent, /\{languageTextPrefix\}/, languageTextPrefix);
+
+	htmlContent = replaceAll(htmlContent, /\{className\}/, className);
+	htmlContent = replaceAll(htmlContent, /\{parentClass\}/, parentClass);
+	htmlContent = replaceAll(htmlContent, /\{cssClassName\}/, cssClassName);
+	htmlContent = replaceAll(htmlContent, /\{languageTextPrefix\}/, languageTextPrefix);
+	htmlContent = replaceAll(htmlContent, /\{textContent\}/, textContent);
+
+	scssContent = replaceAll(scssContent, /\{className\}/, className);
+	scssContent = replaceAll(scssContent, /\{parentClass\}/, parentClass);
+	scssContent = replaceAll(scssContent, /\{cssClassName\}/, cssClassName);
+	scssContent = replaceAll(scssContent, /\{languageTextPrefix\}/, languageTextPrefix);
+
+	fs.writeFileSync(componentFileName + '.js', jsContent, { encoding: 'utf8', flag: 'w+' });
+	fs.writeFileSync(componentFileName + '.html', htmlContent, { encoding: 'utf8', flag: 'w+' });
+	fs.writeFileSync(componentFileName + '.scss', scssContent, { encoding: 'utf8', flag: 'w+' });
+	fs.writeFileSync(componentFileName + '.lang', langContent, { encoding: 'utf8', flag: 'w+' });
+
+	vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+	getTreeDataProvider().refresh();
+
+	vscode.window.showInformationMessage('Component created!');
+
+	if (isFile) {
+		return Promise.resolve({
+			selection: selection, text: newTextContent, className: className, componentFiles: {
+				js: componentFileName + '.js',
+				html: componentFileName + '.html',
+				scss: componentFileName + '.scss',
+				lang: componentFileName + '.lang'
+			}, textPrefix: languageTextPrefix
+		});
+	}
+	else {
+		return null;
+	}
 
 }
 

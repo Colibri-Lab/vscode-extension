@@ -1,7 +1,9 @@
 {
   "Insert the attribute {0} for component {1} [link]({2}).": "Insert the attribute {0} for component {1} [link]({2}).",
   "Insert the component {0} [link]({1}).": "Insert the component {0} [link]({1}).",
-  "Enter namespace name in current parent": "Enter namespace name in current parent",
+  "Enter namespace name in current namespace (without dublicating current)": "Enter namespace name in current namespace (without dublicating current)",
+  "Attantion! Please enter the namespace name without parent or root namespace": "Attantion! Please enter the namespace name without parent or root namespace",
+  "Attantion! Namespace allready exists": "Attantion! Namespace allready exists",
   "Namespace created!": "Namespace created!",
   "Input the class name with namespace": "Input the class name with namespace",
   "Input the parent class name with namespace": "Input the parent class name with namespace",

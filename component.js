@@ -192,7 +192,7 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	const moduleContent = fs.readFileSync(bundlePath + '.js').toString();
-	if(moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.UI.Module') === -1) {
+	if(moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
 		// попытка создать компоненту не в своем модуле;
 		vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
 		return null;
@@ -203,7 +203,33 @@ async function createCompnentProcess(choosedPath, context) {
 	parts2.pop();
 	possibleNamespace = parts2.join('.');
 	possibleNamespace = replaceAll(possibleNamespace, '.', '/');
-	const possibleNamespacePath = bundlePath + possibleNamespace;
+
+	const listDir = (path) => {
+		const dir = fs.opendirSync(path);
+		let item;
+		let ret = [];
+		while(item = dir.readSync()) {
+			ret.push(item.name);
+		}
+		return ret;
+	} 
+	
+	let possibleNamespacePath = bundlePath;
+	if(fs.existsSync(bundlePath + possibleNamespace)) {
+		possibleNamespacePath = bundlePath + possibleNamespace;
+	}
+	
+	for(const name of possibleNamespace.split('/')) {
+		const dirList = listDir(possibleNamespacePath);
+		for(const dirname of dirList) {
+			if(name === dirname || new RegExp('^[0-9]+\.' + name + '$').test(dirname)) {
+				possibleNamespacePath = possibleNamespacePath + '/' + dirname;
+				break;
+			}
+		}
+		
+	}
+
 	if(!fs.existsSync(possibleNamespacePath + '/.js')) {
 		// нет такой области
 		vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));

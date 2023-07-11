@@ -2,14 +2,14 @@
 	"AddPrivateProperty": {
 		"prefix": "child",
 		"body": [
-			"this._$1 = this.Children('${2:$1}');"
+			"this._${1:name} = this.Children('${2:$1}$0');"
 		],
 		"description": "Add event handler"
 	},
 	"AddEventHandlerReference": {
 		"prefix": "event",
 		"body": [
-			"this._$1.AddHandler('$2', (event, args) => this.__$1$2(event, args));"
+			"this._$1.AddHandler('$2', (event, args) => this.__$1$2(event, args));$0"
 		],
 		"description": "Add event handler"
 	},
@@ -18,7 +18,7 @@
 		"body": [
 			"__$1(event, args) {",
 			"\t$2",
-			"}"
+			"}$0"
 		],
 		"description": "Add event handler"
 	},
@@ -31,7 +31,7 @@
 			" */",
 			"get $1() {",
 			"\treturn this._$1;",
-			"}"
+			"}$0"
 		],
 		"description": "Add attribute get"
 	},
@@ -55,7 +55,7 @@
 			"}",
 			"_show${1/.*/${0:/capitalize}/}() {",
 			"\t$4",
-			"}"
+			"}$0"
 		],
 		"description": "Add attribute"
 	},
@@ -69,15 +69,15 @@
 			"\tif(!data) {",
 			"\t\treturn;",
 			"\t}",
-			"\t$1$0",
-			"}"
+			"\t$1",
+			"}$0"
 		],
 		"description": "Add event handler"
 	},
 	"multilangtext": {
 		"prefix": "#",
 		"body": [
-			"#{$1}"
+			"#{$1}$0"
 		],
 		"description": "Add multilangual text"
 	}

@@ -4,7 +4,7 @@
 		"body": [
 			"[data-object-name=\"$1\"] {",
 			"\t$2",
-			"}"
+			"}$0"
 		],
 		"description": "Add data-object-name reference"
 	},
@@ -13,7 +13,7 @@
 		"body": [
 			"&.app-component-shown {",
 			"\tdisplay: $1",
-			"}"
+			"}$0"
 		],
 		"description": "Add data-object-name reference"
 	}

@@ -98,7 +98,6 @@ function createNamespace(context, e) {
  * 
  * @param {string} choosedPath путь к папке где нужно создать компоненту
  * @param {vscode.ExtensionContext} context
- * @returns {Thenable|null}
  */
 async function createCompnentProcess(choosedPath, context) {
 
@@ -116,7 +115,7 @@ async function createCompnentProcess(choosedPath, context) {
 		isFile = true;
 	}
 
-	if(choosedPath.indexOf('.Bundle/') === -1) {
+	if(choosedPath.indexOf('.Bundle/') === -1 && choosedPath.indexOf('UI/') === -1) {
 		return null
 	}
 
@@ -181,8 +180,9 @@ async function createCompnentProcess(choosedPath, context) {
 		return null;
 	}
 
-	const parts = choosedPath.split('.Bundle/');
-	const bundlePath = parts[0] + '.Bundle/';
+	const parts = choosedPath.indexOf('UI/') !== -1 ? choosedPath.split('UI/') : choosedPath.split('.Bundle/');
+	const bundlePath = parts[0] + (choosedPath.indexOf('UI/') !== -1 ? 'UI/' : '.Bundle/');
+
 	let possibleNamespace = replaceAll(className, 'App.Modules.', '');
 	const moduleName = possibleNamespace.split('.').splice(0, 1).pop();
 	if(!fs.existsSync(bundlePath + '.js')) {
@@ -192,10 +192,14 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	const moduleContent = fs.readFileSync(bundlePath + '.js').toString();
-	if(moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
-		// попытка создать компоненту не в своем модуле;
-		vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
-		return null;
+	if(choosedPath.indexOf('UI/') !== -1) {
+			
+	} else {
+		if(moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
+			// попытка создать компоненту не в своем модуле;
+			vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
+			return null;
+		}	
 	}
 	
 	possibleNamespace = replaceAll(possibleNamespace, moduleName + '.', '');
@@ -237,10 +241,14 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	const namespaceContent = fs.readFileSync(possibleNamespacePath + '/.js').toString();
-	if(namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
-		// нет такой области
-		vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
-		return null;
+	if(choosedPath.indexOf('UI/') !== -1) {
+			
+	} else {
+		if(namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
+			// нет такой области
+			vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
+			return null;
+		}
 	}
 
 	fileIndex++;

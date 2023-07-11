@@ -27,7 +27,7 @@ const {
 	openComponent
 } = require('./component');
 
-const { provideHtmlCompletionItems, provideDefinitions, provideDeclarations, provideReferences, provideHover } = require('./Completion');
+const { provideDefinitions, provideDeclarations, provideReferences, provideHover, provideHtmlCompletionItems } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 
@@ -397,16 +397,13 @@ function activate(context) {
 		reloadCompletionItems();
 		
 		__log.appendLine('Registering completion, definitions and declarations...');
+		vscode.languages.setLanguageConfiguration('html', {wordPattern: /[^<\s]+/});
 		vscode.languages.registerCompletionItemProvider('html', {provideCompletionItems: provideHtmlCompletionItems});
 		vscode.languages.registerDefinitionProvider('html', {provideDefinition: provideDefinitions});
 		vscode.languages.registerDeclarationProvider('html', {provideDeclaration: provideDeclarations});
 		vscode.languages.registerReferenceProvider('html', {provideReferences: provideReferences});
 		vscode.languages.registerHoverProvider('html', {provideHover: provideHover});
-		vscode.languages.setLanguageConfiguration('html', {
-			wordPattern: /[^<\s]+/
-		});
 		
-
 		__log.appendLine('Success...');
 	}
 	catch(e) {

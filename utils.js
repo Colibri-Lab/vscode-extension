@@ -250,12 +250,12 @@ function getBundlePaths(workspacePath = null, returnRealPath = false) {
 			}
 			
 			if(item.isDirectory() || item.isSymbolicLink()) {
-				if(item.name === '.Bundle') {
+				if(item.name === '.Bundle' || item.name === 'UI') {
 					let p = replaceAll(workspacePath + '/' + item.name, '//', '/');
 					if(returnRealPath) {
 						p = fs.realpathSync(p);
 					}
-					return [p];
+					items = [...items, p];
 				}
 				else {
 					// if(item.isSymbolicLink()) {

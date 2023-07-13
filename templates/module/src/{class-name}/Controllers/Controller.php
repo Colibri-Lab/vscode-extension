@@ -34,7 +34,7 @@ class Controller extends WebController
     public function Index(RequestCollection $get, RequestCollection $post, ?PayloadCopy $payload = null): object
     {
 
-        $module = App::$moduleManager->{class-name};
+        $module = App::$moduleManager->{'{class-name}'};
 
         $view = View::Create();
         $template = PhpTemplate::Create($module->modulePath . 'templates/index');
@@ -125,14 +125,16 @@ class Controller extends WebController
             $themeKey = md5($themeFile);
         }
 
-        if (!App::$request->server->commandline) {
+        if (!App::$request->server->{'commandline'}) {
             $jsBundle = Bundle::Automate(App::$domainKey, ($langModule ? $langModule->current . '.' : '') . 'assets.bundle.js', 'js', [
-                ['path' => App::$moduleManager->auth->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
+                App::$moduleManager->Get('{class-name}')->GetPathsFromModuleConfig(['exts' => ['js', 'html']]),
+                ['path' => App::$moduleManager->{'{class-name}'}->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
             ]);
             $cssBundle = Bundle::Automate(App::$domainKey, ($langModule ? $langModule->current . '.' : '') . ($themeKey ? $themeKey . '.' : '') . 'assets.bundle.css', 'scss', [
-                ['path' => App::$moduleManager->auth->modulePath . 'web/res/css/'],
-                ['path' => App::$moduleManager->auth->modulePath . '.Bundle/'],
+                ['path' => App::$moduleManager->{'{class-name}'}->modulePath . 'web/res/css/'],
+                ['path' => App::$moduleManager->{'{class-name}'}->modulePath . '.Bundle/'],
                 ['path' => $themeFile],
+                App::$moduleManager->Get('{class-name}')->GetPathsFromModuleConfig(),
             ], 'https://' . App::$request->host);
 
             return $this->Finish(
@@ -151,12 +153,14 @@ class Controller extends WebController
             foreach ($langs as $langKey => $langData) {
                 $langModule->InitCurrent($langKey);
                 Bundle::Automate(App::$domainKey, ($langKey . '.') . 'assets.bundle.js', 'js', [
-                    ['path' => App::$moduleManager->auth->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
+                    App::$moduleManager->Get('{class-name}')->GetPathsFromModuleConfig(['exts' => ['js', 'html']]),
+                    ['path' => App::$moduleManager->{'{class-name}'}->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
                 ]);
                 Bundle::Automate(App::$domainKey, ($langKey . '.') . ($themeKey ? $themeKey . '.' : '') . 'assets.bundle.css', 'scss', [
-                    ['path' => App::$moduleManager->auth->modulePath . 'web/res/css/'],
-                    ['path' => App::$moduleManager->auth->modulePath . '.Bundle/'],
+                    ['path' => App::$moduleManager->{'{class-name}'}->modulePath . 'web/res/css/'],
+                    ['path' => App::$moduleManager->{'{class-name}'}->modulePath . '.Bundle/'],
                     ['path' => $themeFile],
+                    App::$moduleManager->Get('{class-name}')->GetPathsFromModuleConfig(),
                 ], 'https://' . App::$request->host);
 
             }
@@ -164,15 +168,18 @@ class Controller extends WebController
             exit;
         } else {
             Bundle::Automate(App::$domainKey, 'assets.bundle.js', 'js', [
-                ['path' => App::$moduleManager->auth->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
+                App::$moduleManager->Get('{class-name}')->GetPathsFromModuleConfig(['exts' => ['js', 'html']]),
+                ['path' => App::$moduleManager->{'{class-name}'}->modulePath . '.Bundle/', 'exts' => ['js', 'html']],
             ]);
             Bundle::Automate(App::$domainKey, ($themeKey ? $themeKey . '.' : '') . 'assets.bundle.css', 'scss', [
-                ['path' => App::$moduleManager->auth->modulePath . 'web/res/css/'],
-                ['path' => App::$moduleManager->auth->modulePath . '.Bundle/'],
+                ['path' => App::$moduleManager->{'{class-name}'}->modulePath . 'web/res/css/'],
+                ['path' => App::$moduleManager->{'{class-name}'}->modulePath . '.Bundle/'],
                 ['path' => $themeFile],
+                App::$moduleManager->Get('{class-name}')->GetPathsFromModuleConfig(),
             ], 'https://' . App::$request->host);
             exit;
         }
+
     }
 
 

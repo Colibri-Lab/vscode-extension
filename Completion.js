@@ -42,6 +42,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
 
         const text = line.text;
         const character = position.character;
+        const nextChar = text.charAt(character);
 
 
         let tagName = '';
@@ -74,7 +75,7 @@ function provideHtmlCompletionItems(document, position, token, context) {
         if (componentAttrs.size > 0) {
             for (const [attr, value] of componentAttrs) {
                 const simpleCompletion = new vscode.CompletionItem(attr + '=""');
-                simpleCompletion.insertText = new vscode.SnippetString(attr + '="$1"$0');
+                simpleCompletion.insertText = new vscode.SnippetString(attr + '="$1"$0' + nextChar);
                 const docs = new vscode.MarkdownString(value.desc + '\n\n' + vscode.l10n.t('Insert the attribute {0} for component {1} [link]({2}).', [attr, value.fullName, value.file]));
                 docs.baseUri = vscode.Uri.parse(value.file);
                 simpleCompletion.documentation = docs;
@@ -82,19 +83,19 @@ function provideHtmlCompletionItems(document, position, token, context) {
             }
         }
 
-        if (comps.length > 0) {
-            return comps;
+        if (comps.length === 0) {
+            
+            for (let [componentName, value] of classesAndFiles) {
+                const simpleCompletion = new vscode.CompletionItem(componentName);
+                simpleCompletion.insertText = new vscode.SnippetString(isTag ? componentName : '<' + componentName + ' shown="true" name="$1">$0</' + componentName + '>' + nextChar);
+                const docs = new vscode.MarkdownString(vscode.l10n.t('Insert the component {0} [link]({1}).', [value.fullName, value.file]));
+                docs.baseUri = vscode.Uri.parse(value.file);
+                simpleCompletion.documentation = docs;
+                comps.push(simpleCompletion);
+            }    
         }
 
-        for (let [componentName, value] of classesAndFiles) {
-            const simpleCompletion = new vscode.CompletionItem(componentName);
-            simpleCompletion.insertText = new vscode.SnippetString(isTag ? componentName : '<' + componentName + ' shown="true" name="$1">$0</' + componentName + '>');
-            const docs = new vscode.MarkdownString(vscode.l10n.t('Insert the component {0} [link]({1}).', [value.fullName, value.file]));
-            docs.baseUri = vscode.Uri.parse(value.file);
-            simpleCompletion.documentation = docs;
-            comps.push(simpleCompletion);
-        }
-        console.log(comps);
+
         resolve(comps);
     });
     

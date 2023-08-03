@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const yaml = require('yaml');
+const { type } = require('os');
 
 const __langFilter = ['html', 'javascript', 'php', 'scss'];
 const __log = vscode.window.createOutputChannel("Colibri UI");
@@ -52,6 +53,63 @@ function findJsDoc(lines, line) {
 
 }
 
+function findType(text) {
+	const types = {
+		'String': 'String',
+		'string': 'String',
+		'Number': 'Number',
+		'number': 'Number',
+		'Bigint': 'Bigint',
+		'bigint': 'Bigint',
+		'Boolean': 'Boolean',
+		'boolean': 'Boolean',
+		'Bool': 'Boolean',
+		'bool': 'Boolean',
+		'Undefined': 'Undefined',
+		'undefined': 'Undefined',
+		'Null': 'Null',
+		'null': 'Null',
+		'Symbol': 'Symbol',
+		'symbol': 'Symbol',
+		'Object': 'Object',
+		'object': 'Object',
+		'Array': 'Array',
+		'array': 'Array',
+		'Date': 'Date',
+		'date': 'Date',
+		'Iterable': 'Iterable',
+		'iterable': 'Iterable',
+		'Function': 'Function',
+		'function': 'Function'
+	};
+	const choices = {
+		'String': [''],
+		'Number': ['0'],
+		'Bigint': ['0'],
+		'Boolean': ['true', 'false'],
+		'Bool': ['true', 'false'],
+		'Undefined': [],
+		'Null': [],
+		'Symbol': [],
+		'Object': ['{}'],
+		'Array': ['[]'],
+		'Date': [''],
+		'Iterable': ['[]'],
+		'Function': ['() => {}'],
+	};
+	let type = '';
+	let choice = '';
+	const lines = text.split('\n');
+	for(let line of lines) {
+		if(line.indexOf('@type') !== -1) {
+			const typeMatch = /\{(.*)\}/.exec(line);
+			type = types[typeMatch[1]] || 'String';
+			choice = choices[type];
+			break;
+		}
+	}
+	return [type, choice];
+}
 
 function findPhpDoc(lines, line) {
 	if(lines[line - 1].indexOf('*/') === -1) {
@@ -349,8 +407,11 @@ function getComponentAttributes(document, classesAndFiles) {
 		const matches = __setAttributeRegExp.exec(line);
 		if(matches && matches.length > 0) {
 			let desc = findJsDoc(content, index);
+			let foundTypeAndChoice = desc ? findType(desc) : ['String', ['']];
 			attrs.set(matches[1], {
 				file: path,
+				type: foundTypeAndChoice[0],
+				choices: foundTypeAndChoice[1],
 				fullName: className,
 				desc: desc
 			});
@@ -732,6 +793,7 @@ module.exports = {
 	searchForCommentBlock,
 	openFile,
 	findJsDoc,
+	findType,
 	findPhpDoc,
 	hasColibriCore
 };

@@ -75,7 +75,11 @@ function provideHtmlCompletionItems(document, position, token, context) {
         if (componentAttrs.size > 0) {
             for (const [attr, value] of componentAttrs) {
                 const simpleCompletion = new vscode.CompletionItem(attr + '=""');
-                simpleCompletion.insertText = new vscode.SnippetString(attr + '="$1"$0' + nextChar);
+                let c = '';
+                if(value.choices) {
+                    c = value.choices.join(',');
+                }
+                simpleCompletion.insertText = new vscode.SnippetString(attr + '="' + (c ? '${1|' + c + '|}' : '$1') + '"$0' + nextChar);
                 const docs = new vscode.MarkdownString(value.desc + '\n\n' + vscode.l10n.t('Insert the attribute {0} for component {1} [link]({2}).', [attr, value.fullName, value.file]));
                 docs.baseUri = vscode.Uri.parse(value.file);
                 simpleCompletion.documentation = docs;

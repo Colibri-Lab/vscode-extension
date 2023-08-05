@@ -98,13 +98,18 @@ function findType(text) {
 		'Function': ['() => {}'],
 	};
 	let type = '';
-	let choice = '';
+	let choice = [];
 	const lines = text.split('\n');
 	for(let line of lines) {
 		if(line.indexOf('@type') !== -1) {
 			const typeMatch = /\{(.*)\}/.exec(line);
-			type = types[typeMatch[1]] || 'String';
-			choice = choices[type];
+			const tp = typeMatch[1];
+			if(tp.indexOf(',') !== -1) {
+				choice = tp.split(',');
+			} else {
+				type = types[tp] || 'String';
+				choice = choices[type];
+			}
 			break;
 		}
 	}

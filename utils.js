@@ -105,6 +105,7 @@ function findType(text) {
 			const typeMatch = /\{(.*)\}/.exec(line);
 			const tp = typeMatch[1];
 			if(tp.indexOf(',') !== -1) {
+				type = 'String';
 				choice = tp.split(',');
 			} else {
 				type = types[tp] || 'String';

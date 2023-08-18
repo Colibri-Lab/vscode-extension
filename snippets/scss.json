@@ -16,5 +16,14 @@
 			"}$0"
 		],
 		"description": "Add data-object-name reference"
+	},
+	"FromTheme": {
+		"prefix": "theme",
+		"body": [
+			"@if variable-exists($$name: theme) and $$theme == \"${1||}\" {",
+			"\t$2",
+			"}$0"
+		],
+		"description": "Theme prefix"
 	}
 }

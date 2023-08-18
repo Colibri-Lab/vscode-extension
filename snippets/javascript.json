@@ -2,7 +2,7 @@
 	"AddPrivateProperty": {
 		"prefix": "child",
 		"body": [
-			"this._${1:name} = this.Children('${2:$1}$0');"
+			"this._${1/.*/${0:/camelcase}/} = this.Children('${2:$1}$0');"
 		],
 		"description": "Add event handler"
 	},
@@ -59,6 +59,30 @@
 		],
 		"description": "Add attribute"
 	},
+	"AddAttributeValue": {
+		"prefix": "attrval",
+		"body": [
+			"/**",
+			" * Value ${2:$1}",
+			" * @type {${1|Object,Array,Number,String|}}",
+			" */",
+			"get value() {",
+			"\treturn this._value;",
+			"}",
+			"/**",
+			" * Value ${2:$1}",
+			" * @type {${1|Object,Array,Number,String|}}",
+			" */",
+			"set value(value) {",
+			"\tthis._value = value;",
+			"\tthis._showValue();",
+			"}",
+			"_showValue() {",
+			"\t$3",
+			"}$0"
+		],
+		"description": "Add attribute"
+	},
 	"AddBinding": {
 		"prefix": "binding",
 		"body": [
@@ -80,5 +104,18 @@
 			"#{$1}$0"
 		],
 		"description": "Add multilangual text"
+	},
+	"registerEventsMethod": {
+		"prefix": "regm",
+		"body": [
+			"/**",
+			" * Register events",
+			" */",
+			"__registerEvents() {",
+			"\tsuper._registerEvents();",
+			"\tthis.RegisterEvent(\"$1\", ${2|false,true|}, '$3'});",
+			"}$0"
+		],
+		"description": "Add register events method"
 	}
 }

@@ -27,7 +27,7 @@ const {
 	openComponent
 } = require('./component');
 
-const { provideDefinitions, provideDeclarations, provideReferences, provideHover, provideHtmlCompletionItems } = require('./Completion');
+const { provideDefinitions, provideDeclarations, provideReferences, provideHover, provideHtmlCompletionItems, provideJavascriptCompletionItems, provideScssCompletionItems } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 
@@ -403,6 +403,9 @@ function activate(context) {
 		vscode.languages.registerDeclarationProvider('html', {provideDeclaration: provideDeclarations});
 		vscode.languages.registerReferenceProvider('html', {provideReferences: provideReferences});
 		vscode.languages.registerHoverProvider('html', {provideHover: provideHover});
+		
+		vscode.languages.registerCompletionItemProvider('javascript', {provideCompletionItems: provideJavascriptCompletionItems});
+		vscode.languages.registerCompletionItemProvider('scss', {provideCompletionItems: provideScssCompletionItems});
 		
 		__log.appendLine('Success...');
 	}

@@ -9,9 +9,12 @@ const {
     getComponentAttributes, 
     filterCompomentNames,
     __attributesRegExp,
-    searchForCommentBlock
+    searchForCommentBlock,
+    replaceAll,
+    getWorkspacePath
 } = require('./utils');
 const { log } = require('console');
+const { xml2json } = require('xml-js');
 
 
 /**
@@ -103,6 +106,163 @@ function provideHtmlCompletionItems(document, position, token, context) {
         resolve(comps);
     });
     
+}
+
+function jsonToPaths(object, prefix = '', callback = null) {
+
+    let list = [];
+
+    for(const o of (object.elements || [])) {
+        if(o.attributes && o.attributes.name) {
+            list.push(callback ? callback(prefix + o.attributes.name) : prefix + o.attributes.name);
+            list = list.concat(jsonToPaths(o, prefix + o.attributes.name + '/', callback));
+        }
+    }
+    return list;
+    
+}
+
+function provideJavascriptCompletionItems(document, position, token, context) {
+    return new Promise((resolve, reject) => {
+        __log.appendLine('Code completetion... ');
+        
+        // position.character
+        // position.line
+        
+        const line = document.lineAt(position.line);    
+        const text = line.text;
+        if(text.trim() == 'child') {
+
+            const fileName = replaceAll(document.fileName, '.js', '.html');
+            const htmlContent = fs.readFileSync(fileName).toString();
+
+            const json = xml2json(htmlContent, {
+                ignoreComment: true,
+                ignoreDoctype: true
+            });
+            
+            let object = JSON.parse(json);
+            object = object.elements[0];
+            
+            let list = jsonToPaths(object, '', (path) => {
+                let name = replaceAll(path, '/', '_');
+                name = name.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+                const simpleCompletion = new vscode.CompletionItem('child ' + path);
+                simpleCompletion.insertText = 'this._' + name + ' = this.Children(\'' + path + '\');\n';
+                return simpleCompletion;
+            });
+            
+            resolve(list);
+        } else {
+            reject([]);
+        }
+
+    });
+}
+
+function provideScssCompletionItems(document, position, token, context) {
+    return new Promise((resolve, reject) => {
+        __log.appendLine('Code completetion... ');
+        const line = document.lineAt(position.line);    
+        const text = line.text;
+        if(text.trim() == 'theme') {
+            const list = [];
+            const workspacePath = getWorkspacePath();
+            const themesPath = workspacePath + '/web/res/themes/';
+            const content = fs.readdirSync(themesPath, {encoding: 'utf-8', withFileTypes: true});
+            for(const item of content) {
+                if(item.isDirectory() || item.isSymbolicLink()) {
+                    continue;
+                }
+                
+				if(item.name.indexOf('.scss') !== -1) {
+                    const fileContent = fs.readFileSync(themesPath + item.name).toString();
+                    const matches = /\$theme: "(.*)"/g.exec(fileContent);
+                    const themeName = matches[1];
+                    const simpleCompletion = new vscode.CompletionItem('theme ' + themeName);
+                    simpleCompletion.insertText = '@if variable-exists($name: theme) and $theme == "' + themeName + '" {\n\t\n}\n';
+                    list.push(simpleCompletion);
+                }
+            }    
+
+            resolve(list);
+        } else if(text.trim().substring(text.trim().length-1) === '$') {
+            const list = [];
+            let lindex = position.line;
+            let l = document.lineAt(lindex).text;
+            while(l && l.indexOf('@if variable-exists($name: theme) and $theme') === -1) {
+                lindex--;
+                l = document.lineAt(lindex).text;
+            }
+
+            let matches = /\$theme == "(.*)" \{/g.exec(l);
+            let themeName = matches[1];
+
+            const workspacePath = getWorkspacePath();
+            let themeNameParts = themeName.split('-');
+            const themeType = themeNameParts[themeNameParts.length - 1];
+            themeNameParts.pop();
+            themeName = themeNameParts.join('-');
+
+            const themesPath = workspacePath + '/web/res/themes/' + themeName + '.' + themeType + '.scss';
+            const content = fs.readFileSync(themesPath).toString();
+            const lines = content.split('\n');
+            for(const ll of lines) {
+                if(ll.trim().startsWith('$')) {
+                    // переменная
+                    const matches = /\$(.*):.*/g.exec(ll);
+                    if(matches[1] != 'theme') {
+                        const simpleCompletion = new vscode.CompletionItem('$' + matches[1]);
+                        simpleCompletion.insertText = '$' + matches[1] + ';';
+                        list.push(simpleCompletion);
+                    }
+
+                }
+            }
+
+            resolve(list);
+        } else if(text.indexOf('@include ') !== -1) {
+            const list = [];
+            let lindex = position.line;
+            let l = document.lineAt(lindex).text;
+            while(l && l.indexOf('@if variable-exists($name: theme) and $theme') === -1) {
+                lindex--;
+                l = document.lineAt(lindex).text;
+            }
+
+            let matches = /\$theme == "(.*)" \{/g.exec(l);
+            let themeName = matches[1];
+
+            const workspacePath = getWorkspacePath();
+            let themeNameParts = themeName.split('-');
+            const themeType = themeNameParts[themeNameParts.length - 1];
+            themeNameParts.pop();
+            themeName = themeNameParts.join('-');
+
+            const themesPath = workspacePath + '/web/res/themes/' + themeName + '.' + themeType + '.scss';
+            const content = fs.readFileSync(themesPath).toString();
+            const lines = content.split('\n');
+            for(const ll of lines) {
+                if(ll.trim().startsWith('@mixin')) {
+                    // переменная
+                    const matches = /@mixin (.*)\{/g.exec(ll);
+
+                    const simpleCompletion = new vscode.CompletionItem('@include ' + matches[1]);
+                    simpleCompletion.insertText = matches[1] + ';';
+                    list.push(simpleCompletion);
+
+                }
+            }
+
+            resolve(list);
+
+        } else {
+            reject([]);
+        }
+
+
+
+    });
 }
 
 /**
@@ -227,6 +387,8 @@ function provideHover(document, position, token) {
 
 module.exports = {
     provideHtmlCompletionItems,
+    provideJavascriptCompletionItems,
+    provideScssCompletionItems,
     provideDefinitions,
     provideDeclarations,
     provideReferences,

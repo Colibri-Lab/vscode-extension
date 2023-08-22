@@ -111,9 +111,9 @@
 			"/**",
 			" * Register events",
 			" */",
-			"__registerEvents() {",
+			"_registerEvents() {",
 			"\tsuper._registerEvents();",
-			"\tthis.RegisterEvent(\"$1\", ${2|false,true|}, '$3'});",
+			"\tthis.RegisterEvent('$1', ${2|false,true|}, '$3');",
 			"}$0"
 		],
 		"description": "Add register events method"

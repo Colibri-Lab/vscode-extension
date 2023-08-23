@@ -113,9 +113,13 @@ function jsonToPaths(object, prefix = '', callback = null) {
     let list = [];
 
     for(const o of (object.elements || [])) {
-        if(o.attributes && o.attributes.name) {
-            list.push(callback ? callback(prefix + o.attributes.name) : prefix + o.attributes.name);
-            list = list.concat(jsonToPaths(o, prefix + o.attributes.name + '/', callback));
+        if(o.type === 'element') {
+            const n = (o.attributes && o.attributes.name ? o.attributes.name : '');
+            const p = (o.attributes && o.attributes.name ? o.attributes.name + '/' : '');
+            if(prefix + n) {
+                list.push(callback ? callback(prefix + n) : prefix + n);
+            }
+            list = list.concat(jsonToPaths(o, prefix + p, callback));
         }
     }
     return list;

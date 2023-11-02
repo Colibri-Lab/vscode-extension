@@ -11,7 +11,8 @@ const {
     __attributesRegExp,
     searchForCommentBlock,
     replaceAll,
-    getWorkspacePath
+    getWorkspacePath,
+    trim
 } = require('./utils');
 const { log } = require('console');
 const { xml2json } = require('xml-js');
@@ -117,7 +118,10 @@ function jsonToPaths(object, prefix = '', callback = null) {
             const n = (o.attributes && o.attributes.name ? o.attributes.name : '');
             const p = (o.attributes && o.attributes.name ? o.attributes.name + '/' : '');
             if(prefix + n) {
-                list.push(callback ? callback(prefix + n) : prefix + n);
+                const ret = callback ? callback(prefix + n) : prefix + n;
+                if(ret) {
+                    list.push(ret);
+                }
             }
             list = list.concat(jsonToPaths(o, prefix + p, callback));
         }
@@ -133,9 +137,10 @@ function provideJavascriptCompletionItems(document, position, token, context) {
         // position.character
         // position.line
         
+        const exists = [];
         const line = document.lineAt(position.line);    
         const text = line.text;
-        if(text.trim() == 'child') {
+        if(text.trim().indexOf('child') === 0) {
 
             const fileName = replaceAll(document.fileName, '.js', '.html');
             const htmlContent = fs.readFileSync(fileName).toString();
@@ -149,6 +154,11 @@ function provideJavascriptCompletionItems(document, position, token, context) {
             object = object.elements[0];
             
             let list = jsonToPaths(object, '', (path) => {
+                path = trim(path, '/');
+                if(exists.indexOf(path) !== -1) {
+                    return null;
+                }
+                exists.push(path);
                 let name = replaceAll(path, '/', '_');
                 name = name.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
                 const simpleCompletion = new vscode.CompletionItem('child ' + path);
@@ -349,6 +359,7 @@ function provideReferences(document, position, context, token) {
     }
     return locations;
 }
+
 function provideHover(document, position, token) {
     const range = document.getWordRangeAtPosition(position);
     const text = document.getText(range);

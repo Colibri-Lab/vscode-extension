@@ -53,6 +53,11 @@ function findJsDoc(lines, line) {
 
 }
 
+const ltrim = function (string, c) { return string.replace(new RegExp('^' + (c != undefined ? c : '\\s') + '+'), ""); }
+const rtrim = function (string, c) { return string.replace(new RegExp((c != undefined ? c : '\\s') + '+$'), ""); }
+const trimString = function (string, c) { return string.replace(new RegExp('^' + (c != undefined ? c : '\\s') + '*(.*?)' + (c != undefined ? c : '\\s') + '*$'), '$1'); }
+const trim = function (string, c) { return trimString(string, c); }
+
 function findType(text) {
 	const types = {
 		'String': 'String',
@@ -801,5 +806,8 @@ module.exports = {
 	findJsDoc,
 	findType,
 	findPhpDoc,
-	hasColibriCore
+	hasColibriCore,
+	trim,
+	ltrim,
+	rtrim
 };

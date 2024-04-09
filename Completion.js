@@ -179,7 +179,7 @@ function provideScssCompletionItems(document, position, token, context) {
         __log.appendLine('Code completetion... ');
         const line = document.lineAt(position.line);    
         const text = line.text;
-        if(text.trim() == 'theme') {
+        if(text.trim().indexOf('theme') === 0) {
             const list = [];
             const workspacePath = getWorkspacePath();
             const themesPath = workspacePath + '/web/res/themes/';

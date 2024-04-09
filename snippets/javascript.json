@@ -4,7 +4,7 @@
 		"body": [
 			"this._${1/.*/${0:/camelcase}/} = this.Children('${2:$1}$0');"
 		],
-		"description": "Add event handler"
+		"description": "Add private property"
 	},
 	"AddEventHandlerReference": {
 		"prefix": "event",
@@ -16,6 +16,10 @@
 	"AddEventHandler": {
 		"prefix": "handler",
 		"body": [
+			"/**",
+			" * @private",
+			" * $3",
+			" */",
 			"__$1(event, args) {",
 			"\t$2",
 			"}$0"
@@ -88,6 +92,7 @@
 		"body": [
 			"/**",
 			" * Обработка binding",
+			" * @protected",
 			" */",
 			"__renderBoundedValues(data, path) {",
 			"\tif(!data) {",
@@ -110,6 +115,7 @@
 		"body": [
 			"/**",
 			" * Register events",
+			" * @protected",
 			" */",
 			"_registerEvents() {",
 			"\tsuper._registerEvents();",

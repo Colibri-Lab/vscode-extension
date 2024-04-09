@@ -103,6 +103,7 @@ async function createCompnentProcess(choosedPath, context) {
 
 	let className = '';
 	let parentClass = '';
+	let description = '';
 	let fileIndex = 0;
 	let isFile = false;
 
@@ -170,10 +171,24 @@ async function createCompnentProcess(choosedPath, context) {
 		return null;
 	}
 
+	let namespaceNames = className.split('.');
+	namespaceNames.splice(namespaceNames.length - 1, 1);
+	let namespaceName = namespaceNames.join('.');
+
 	parentClass = await vscode.window.showInputBox({
 		password: false,
 		title: vscode.l10n.t('Input the parent class name with namespace'),
 		value: 'Colibri.UI.'
+	});
+
+	if(!parentClass) {
+		return null;
+	}
+
+	description = await vscode.window.showInputBox({
+		password: false,
+		title: vscode.l10n.t('Enter the description of class'),
+		value: ''
 	});
 
 	if(!parentClass) {
@@ -279,7 +294,9 @@ async function createCompnentProcess(choosedPath, context) {
 	let langContent = fs.readFileSync(templatesPath + 'template.lang') + '';
 
 	jsContent = replaceAll(jsContent, /\{className\}/, className);
+	jsContent = replaceAll(jsContent, /\{description\}/, description);
 	jsContent = replaceAll(jsContent, /\{parentClass\}/, parentClass);
+	jsContent = replaceAll(jsContent, /\{namespaceName\}/, namespaceName);
 	jsContent = replaceAll(jsContent, /\{cssClassName\}/, cssClassName);
 	jsContent = replaceAll(jsContent, /\{languageTextPrefix\}/, languageTextPrefix);
 

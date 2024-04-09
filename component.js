@@ -58,12 +58,26 @@ function createNamespaceProcess(choosedPath, context) {
 		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
 		currentNamespace = currentNamespace.split(' = class ')[0];
 
-		fs.writeFileSync(choosedPath + '/' + dirName + '/.js', currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
-		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-		
-		getTreeDataProvider().refresh();	
+		vscode.window.showInputBox({
+			password: false,
+			title: vscode.l10n.t('Enter the description of class'),
+			value: ''
+		}).then(description => {
+			
+			fs.writeFileSync(choosedPath + '/' + dirName + '/.js', 
+				'/**\n' + 
+				' * ' + description + '\n' +
+				' * @namespace\n' + 
+				' * @memberof ' + currentNamespace + '\n' +
+				' */\n' + 
+				currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
+			vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
+			
+			getTreeDataProvider().refresh();	
+	
+			vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
+		});
 
-		vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
 
 	});
 }
@@ -161,6 +175,8 @@ async function createCompnentProcess(choosedPath, context) {
 		}
 	}
 
+	className = className.split('\n').pop();
+	
 	className = await vscode.window.showInputBox({
 		password: false,
 		title: vscode.l10n.t('Input the class name with namespace'),

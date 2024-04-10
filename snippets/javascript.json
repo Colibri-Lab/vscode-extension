@@ -91,8 +91,10 @@
 		"prefix": "binding",
 		"body": [
 			"/**",
-			" * Обработка binding",
+			" * Render bounded to component data",
 			" * @protected",
+			" * @param {*} data ",
+			" * @param {String} path ",
 			" */",
 			"__renderBoundedValues(data, path) {",
 			"\tif(!data) {",

@@ -4,21 +4,23 @@ Colibri UI Extension
 
 The application was created to help work with the Colibri engine and Colibri UI Bundler.
 
+[Core documentation](https://docs.colibrilab.pro/php/core/)
+
 # Before start
 
 First of all, you need to register at https://gitlab.colibrilab.pro/users/sign_up and get an access key
 
 # Create a project
 
-composer create-project colibri/blank-project:dev-master ./«path to application»/ --repository="{\"url\": \"https://gitlab.repeatme.online/api/v4 /group/7/-/packages/composer/packages.json\", \"type\": \"composer\"}" --stability=dev --remove-vcs
+composer create-project colibri/blank-project:dev-master ./«path to application»/ --repository="{\"url\": \"https://gitlab.colibrilab.pro/api/v4/group/7/-/packages/composer/packages.json\", \"type\": \"composer\"}" --stability=dev --remove-vcs
 
 # Adding modules
 
-composer require <module name> --repository="{\"url\": \"https://git:V5P3EvURpCR4yS_aecbh@gitlab.repeatme.online/"module path"\", \"type\": \"vcs \"}"
+composer require <module name> --repository="{\"url\": \"https://git:V5P3EvURpCR4yS_aecbh@gitlab.colibrilab.pro/"module path"\", \"type\": \"vcs \"}"
 
 # Setting up Nginx
 
-[Documentation](https://gitlab.repeatme.online/colibrilab/blank)
+[Documentation](https://gitlab.colibrilab.pro/colibrilab/blank)
 
 # Colibri-UI Extension
 

@@ -56,7 +56,7 @@ function createNamespaceProcess(choosedPath, context) {
 		fs.mkdirSync(choosedPath + '/' + dirName);
 
 		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
-		currentNamespace = currentNamespace.split(' = class ')[0];
+		currentNamespace = replaceAll(currentNamespace.split(' = class ')[0], '\n', '');
 
 		vscode.window.showInputBox({
 			password: false,
@@ -160,12 +160,14 @@ async function createCompnentProcess(choosedPath, context) {
 		lastFileData = fs.readFileSync(choosedPath + '/' + firstFile, { encoding: 'utf8', flag: 'r' });
 		lastFileData = lastFileData.split(' = class ')[0];
 		lastFileData = lastFileData.trim();
+		lastFileData = replaceAll(lastFileData, '\n', '');
 		className = lastFileData;
 	}
 	else {
 		lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, { encoding: 'utf8', flag: 'r' });
 		lastFileData = lastFile === '.js' ? lastFileData.split(' = class ')[0] : lastFileData.split(' = class extends ')[0];
 		lastFileData = lastFileData.trim();
+		lastFileData = replaceAll(lastFileData, '\n', '');
 		if (lastFileData && lastFile !== '.js') {
 			let lastFileDataParts = lastFileData.split('.');
 			lastFileDataParts.pop();

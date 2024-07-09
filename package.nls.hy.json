@@ -3,6 +3,7 @@
 	"extension.createComponent.title": "Ստեղծել Colibri.UI կոմպոնենտ",
     "extension.settings.title": "Colibri․UI կարգավորումներ",
     "extension.settings.langs-config-path-description": "Լեզվի կազմաձևման ֆայլի ուղին Lang մոդուլում",
+    "extension.settings.cloud-translate-key-description": "Google Cloud Translate գախտնաբառը",
     "extension.settings-migrate-command.description": "Միգրացիաի հրաման",
     "extension.settings-models-generate-command.description": "Մոդելների գենեռացման հրաման",     
 	"extension.migrate.title": "Գործարկել պահեստների միգրացիան",

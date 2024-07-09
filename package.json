@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.83",
+  "version": "0.0.84",
   "categories": [
     "Programming Languages"
   ],
@@ -32,30 +32,37 @@
             "default": "vendor/colibri/lang/src/Lang/config-template/lang-langs.yaml",
             "additionalProperties": false
           },
-          "colibrilab.migrate-command": {
+          "colibrilab.cloud-translate-key": {
             "type": "string",
             "order": 2,
+            "description": "%extension.settings.cloud-translate-key-description%",
+            "default": "",
+            "additionalProperties": false
+          },
+          "colibrilab.migrate-command": {
+            "type": "string",
+            "order": 3,
             "description": "%extension.settings-migrate-command.description%",
             "default": "cd {app-root}/web && /usr/bin/php index.php localhost / command=migrate log=yes",
             "additionalProperties": false
           },
           "colibrilab.models-generate-command": {
             "type": "string",
-            "order": 3,
+            "order": 4,
             "description": "%extension.settings-models-generate-command.description%",
             "default": "cd {app-root}/web && /usr/bin/php index.php localhost / command=models-generate storage={storage-name} log=no",
             "additionalProperties": false
           },
           "colibrilab.create-project-command": {
             "type": "string",
-            "order": 3,
+            "order": 5,
             "description": "%extension.settings-create-project-command.description%",
             "default": "export COLIBRI_MODE=\"local\" && composer create-project colibri/blank-project:dev-master {project-dir} --repository=\"{\\\"url\\\": \\\"https://gitlab.repeatme.online/api/v4/group/7/-/packages/composer/packages.json\\\", \\\"type\\\": \\\"composer\\\"}\" --stability=dev --remove-vcs",
             "additionalProperties": false
           },
           "colibrilab.download-module-command": {
             "type": "string",
-            "order": 3,
+            "order": 6,
             "description": "%extension.settings-download-module-command.description%",
             "default": "composer require {module-vendor-and-name}",
             "additionalProperties": false
@@ -301,6 +308,7 @@
     "typescript": "^4.5.5"
   },
   "dependencies": {
+    "@google-cloud/translate": "^8.3.0",
     "@vscode/l10n": "^0.0.10",
     "@vscode/vsce": "^2.19.0",
     "glob": "^7.2.3",

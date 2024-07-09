@@ -20,12 +20,15 @@ const {
 	getPHPModules,
 	getPhpModulesByVendor,
 	hasColibriCore,
+	getLanguages,
 } = require('./utils');
 const {
 	createNamespace,
     createComponent,
 	openComponent
 } = require('./component');
+
+const {Translate} = require('@google-cloud/translate').v2;
 
 const { provideDefinitions, provideDeclarations, provideReferences, provideHover, provideHtmlCompletionItems, provideJavascriptCompletionItems, provideScssCompletionItems } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
@@ -293,6 +296,57 @@ function changeLangFile(langFile, langKey, text, textKey, textValue) {
 	});
 }
 
+function translateLangFile(langFile, text, textKey, textObject) {
+
+	const workbenchConfig = vscode.workspace.getConfiguration();
+	let keyOfCloudTranslate = workbenchConfig.get('colibrilab.cloud-translate-key');
+	if(!keyOfCloudTranslate) {
+		vscode.window.showInformationMessage('Please provide google-translate key in your settings');
+		return;
+	}
+
+	const yamlObject = loadYamlLangFile(langFile);
+	if(!yamlObject) {
+		return;
+	}
+
+	let languages = getLanguages();
+	let list = [];
+
+	const langKeys = Object.keys(languages);
+	for(const l of langKeys) {
+		for(const ll of langKeys) {
+			list.push(l + ' -> ' + ll);
+		}
+	}
+
+	vscode.window.showQuickPick(list).then(function(selection) {
+
+		const langs = selection.split(' -> ');
+		const lFrom = langs[0];
+		const lTo = langs[1];
+
+		const translate = new Translate({
+			key: keyOfCloudTranslate
+		});		
+
+		const text = textObject[lFrom];
+		const target = lTo;
+
+		// Translates some text into Russian
+		translate.translate(text, target).then(translations => {
+			const [translation] = translations;
+
+			yamlObject[textKey][lTo] = translation;
+			saveYamlLangFile(langFile, yamlObject);
+			onChangeActiveTextEditor(vscode.window.activeTextEditor);
+	
+		});
+
+	});
+
+}
+
 function onFileSystemChanged(e, context) {
 	if(e.files) {
 		for(const f of e.files) {
@@ -377,6 +431,7 @@ function activate(context) {
 		if(hasLanguageModule()) {
 			
 			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.edit-lang-file', (langFile, langKey, text, textKey, textValue) => changeLangFile(langFile, langKey, text, textKey, textValue)));
+			context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-lang-file', (langFile, text, textKey, textObject) => translateLangFile(langFile, text, textKey, textObject)));
 			context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => onActivateEditorTextChangedEventHandler(event)));
 			vscode.window.onDidChangeActiveTextEditor((editor) => onChangeActiveTextEditor(editor));
 			vscode.window.onDidChangeTextEditorSelection((e) => selectComponentInTree(e.textEditor.document.uri.fsPath, e.selections.length > 0 ? e.selections[0].start.line : null));

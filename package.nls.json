@@ -3,6 +3,7 @@
 	"extension.createComponent.title": "Create Colibri.UI Component",
 	"extension.settings.title": "Colibri UI Settings",
     "extension.settings.langs-config-path-description": "Path to configuration file in Lang module",
+    "extension.settings.cloud-translate-key-description": "Google Cloud Translate key",
     "extension.settings-migrate-command.description": "Command to execute for migrate",
     "extension.settings-models-generate-command.description": "Command to execute for models generate",
 	"extension.migrate.title": "Migrate storages",

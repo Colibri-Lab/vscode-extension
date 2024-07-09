@@ -77,7 +77,16 @@ class CodelenceProvider {
                     arguments: [range.langFile, langKey, range.text, range.textKey, range.valueObject[langKey] ? range.valueObject[langKey] : '']
                 }));	
             }
+
+            this.codeLenses.push(new vscode.CodeLens(range.range, {
+                title: 'Translate',
+                tooltip: "Translate «" + range.textKey + "»",
+                command: "colibri-ui.translate-lang-file",
+                arguments: [range.langFile, range.text, range.textKey, range.valueObject]
+            }));
+
         }
+        
 		return this.codeLenses;
 	}
 }

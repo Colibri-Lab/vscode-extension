@@ -1,6 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
+const {
+	getCopilotCompletion
+} = require('./copilot');
 
 const { CodelenceProvider } = require('./CodeLenseProvider');
 const {
@@ -33,6 +36,7 @@ const {Translate} = require('@google-cloud/translate').v2;
 const { provideDefinitions, provideDeclarations, provideReferences, provideHover, provideHtmlCompletionItems, provideJavascriptCompletionItems, provideScssCompletionItems } = require('./Completion');
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
+const { default: axios } = require('axios');
 
 
 function triggerUpdateDecorations(activeEditor) {
@@ -315,6 +319,7 @@ function translateLangFile(langFile, text, textKey, textObject) {
 
 	const langKeys = Object.keys(languages);
 	for(const l of langKeys) {
+		list.push(l + ' -> ALL');
 		for(const ll of langKeys) {
 			list.push(l + ' -> ' + ll);
 		}
@@ -333,15 +338,38 @@ function translateLangFile(langFile, text, textKey, textObject) {
 		const text = textObject[lFrom];
 		const target = lTo;
 
-		// Translates some text into Russian
-		translate.translate(text, target).then(translations => {
-			const [translation] = translations;
+		if(target === 'ALL') {
+			const promises = [];
+			const langs = [];
+			for(const ll of langKeys) {
+				if(ll != lFrom) {
+					langs.push(ll);
+					promises.push(translate.translate(text, ll));
+				}
+			}
+			Promise.all(promises).then(responses => {
+				let index = 0;
+				for(const response of responses) {
+					const [translation] = response;
+					yamlObject[textKey][langs[index]] = translation;
+					index++;
+				}
+				saveYamlLangFile(langFile, yamlObject);
+				onChangeActiveTextEditor(vscode.window.activeTextEditor);
+			});
+		} else {
 
-			yamlObject[textKey][lTo] = translation;
-			saveYamlLangFile(langFile, yamlObject);
-			onChangeActiveTextEditor(vscode.window.activeTextEditor);
-	
-		});
+			// Translates some text into Russian
+			translate.translate(text, target).then(translations => {
+				const [translation] = translations;
+
+				yamlObject[textKey][lTo] = translation;
+				saveYamlLangFile(langFile, yamlObject);
+				onChangeActiveTextEditor(vscode.window.activeTextEditor);
+		
+			});
+		}
+
 
 	});
 

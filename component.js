@@ -32,6 +32,7 @@ function createNamespaceProcess(choosedPath, context) {
 		let lastFileData = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
 		lastFileData = lastFileData.split(' = class ')[0];
 		lastFileData = lastFileData.trim();
+		lastFileData = lastFileData.split('\n').pop();
 		namespaceName = lastFileData;	
 	}
 
@@ -56,7 +57,9 @@ function createNamespaceProcess(choosedPath, context) {
 		fs.mkdirSync(choosedPath + '/' + dirName);
 
 		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
-		currentNamespace = replaceAll(currentNamespace.split(' = class ')[0], '\n', '');
+		currentNamespace = currentNamespace.split(' = class ')[0];
+		currentNamespace = currentNamespace.split('\n').pop();
+		currentNamespace = replaceAll(currentNamespace, '\n', '');
 
 		vscode.window.showInputBox({
 			password: false,
@@ -160,7 +163,6 @@ async function createCompnentProcess(choosedPath, context) {
 		lastFileData = fs.readFileSync(choosedPath + '/' + firstFile, { encoding: 'utf8', flag: 'r' });
 		lastFileData = lastFileData.split(' = class ')[0];
 		lastFileData = lastFileData.trim();
-		lastFileData = replaceAll(lastFileData, '\n', '');
 		className = lastFileData;
 	}
 	else {
@@ -178,7 +180,8 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	className = className.split('\n').pop();
-	
+	className = replaceAll(className, '\n', '');
+
 	className = await vscode.window.showInputBox({
 		password: false,
 		title: vscode.l10n.t('Input the class name with namespace'),

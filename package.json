@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.85",
+  "version": "0.0.87",
   "categories": [
     "Programming Languages"
   ],
@@ -311,6 +311,7 @@
     "@google-cloud/translate": "^8.3.0",
     "@vscode/l10n": "^0.0.10",
     "@vscode/vsce": "^2.19.0",
+    "axios": "^1.8.1",
     "glob": "^7.2.3",
     "vsce": "^2.15.0",
     "xml-js": "^1.6.11",

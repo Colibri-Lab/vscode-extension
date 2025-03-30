@@ -282,6 +282,20 @@ function getThemes() {
 function provideScssCompletionItems(document, position, token, context) {
     return new Promise((resolve, reject) => {
         __log.appendLine('Code completetion... ');
+
+        const findThemeLine = (position) => {
+            let lindex = position.line;
+            let l = document.lineAt(lindex).text;
+            while(l.indexOf('@if variable-exists($name: theme) and') === -1) {
+                lindex--;
+                if(lindex < 0) {
+                    break;
+                }
+                l = document.lineAt(lindex).text;
+            }
+            return l;
+        }
+
         const line = document.lineAt(position.line);    
         const text = line.text;
         if(text.trim().indexOf('theme') === 0) {
@@ -300,20 +314,14 @@ function provideScssCompletionItems(document, position, token, context) {
                     simpleCompletion.insertText = '@if variable-exists($name: theme) and $theme == "' + (themeName + '-' + tp) + '" {\n\t\n}\n';
                     list.push(simpleCompletion);
                 }
-                
+
             });
             
 
             resolve(list);
         } else if(text.trim().substring(text.trim().length-1) === '$') {
             const list = [];
-            let lindex = position.line;
-            let l = document.lineAt(lindex).text;
-            while(l && l.indexOf('@if variable-exists($name: theme) and') === -1) {
-                lindex--;
-                l = document.lineAt(lindex).text;
-            }
-
+            let l = findThemeLine(position);
             let matches = /\$theme == "(.*)" \{/g.exec(l);
             let themeName = matches ? matches[1] : null;
             if(!themeName) {
@@ -321,7 +329,6 @@ function provideScssCompletionItems(document, position, token, context) {
                 themeName = matches ? matches[1] : null;
             }
 
-            const workspacePath = getWorkspacePath();
             let themeNameParts = themeName.split('-');
             const themeType = themeNameParts[themeNameParts.length - 1];
             themeNameParts.pop();
@@ -336,13 +343,7 @@ function provideScssCompletionItems(document, position, token, context) {
             resolve(list);
         } else if(text.indexOf('@include ') !== -1) {
             const list = [];
-            let lindex = position.line;
-            let l = document.lineAt(lindex).text;
-            while(l && l.indexOf('@if variable-exists($name: theme) and') === -1) {
-                lindex--;
-                l = document.lineAt(lindex).text;
-            }
-
+            let l = findThemeLine(position);
             let matches = /\$theme == "(.*)" \{/g.exec(l);
             let themeName = matches ? matches[1] : null;
             if(!themeName) {
@@ -350,7 +351,6 @@ function provideScssCompletionItems(document, position, token, context) {
                 themeName = matches ? matches[1] : null;
             }
 
-            const workspacePath = getWorkspacePath();
             let themeNameParts = themeName.split('-');
             const themeType = themeNameParts[themeNameParts.length - 1];
             themeNameParts.pop();

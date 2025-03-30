@@ -174,6 +174,111 @@ function provideJavascriptCompletionItems(document, position, token, context) {
     });
 }
 
+function getMixins(themeName, themeType) {
+    const workspacePath = getWorkspacePath();
+
+    let files = [];
+    if(themeType) {
+        files.push(workspacePath + '/web/res/themes/' + themeName + '.' + themeType + '.scss');
+    } else {
+        fs.readdirSync(workspacePath + '/web/res/themes/', {encoding: 'utf-8', withFileTypes: true}).forEach((item) => {
+            if(item.isDirectory() || item.isSymbolicLink()) {
+                return;
+            }
+            
+            if(item.name.indexOf('.scss') !== -1 && item.name.indexOf(themeName + '.') !== -1) {
+                files.push(workspacePath + '/web/res/themes/' + item.name);
+            }
+        });
+    }
+
+    let mixins = {};
+    for(const file of files) {
+        const content = fs.readFileSync(file).toString();
+        const lines = content.split('\n');
+        for(const ll of lines) {
+            if(ll.trim().startsWith('@mixin')) {
+                // переменная
+                const matches = /@mixin (.*)\{/g.exec(ll);
+
+                mixins['@include ' + matches[1]] = matches[1] + ';';
+
+            }
+        }
+    }
+
+    return mixins;
+
+}
+
+function getVars(themeName, themeType) {
+    const workspacePath = getWorkspacePath();
+
+    let files = [];
+    if(themeType) {
+        files.push(workspacePath + '/web/res/themes/' + themeName + '.' + themeType + '.scss');
+    } else {
+        fs.readdirSync(workspacePath + '/web/res/themes/', {encoding: 'utf-8', withFileTypes: true}).forEach((item) => {
+            if(item.isDirectory() || item.isSymbolicLink()) {
+                return;
+            }
+            
+            if(item.name.indexOf('.scss') !== -1 && item.name.indexOf(themeName + '.') !== -1) {
+                files.push(workspacePath + '/web/res/themes/' + item.name);
+            }
+        });
+    }
+
+    let vars = {};
+    for(const file of files) {
+
+        const content = fs.readFileSync(file).toString();
+        const lines = content.split('\n');
+        for(const ll of lines) {
+            if(ll.trim().startsWith('$')) {
+                // переменная
+                const matches = /\$(.*):.*/g.exec(ll);
+                if(matches[1] != 'theme') {
+                    vars['$' + matches[1]] = '$' + matches[1] + ';';
+                }
+
+            }
+        }
+    }
+
+    return vars;
+
+}
+
+function getThemes() {
+    const workspacePath = getWorkspacePath();
+    const themesPath = workspacePath + '/web/res/themes/';
+    const content = fs.readdirSync(themesPath, {encoding: 'utf-8', withFileTypes: true});
+    let themes = {};
+    for(const item of content) {
+        if(item.isDirectory() || item.isSymbolicLink()) {
+            continue;
+        }
+        
+        if(item.name.indexOf('.scss') !== -1) {
+            const fileContent = fs.readFileSync(themesPath + item.name).toString();
+            const matches = /\$theme: "(.*)"/g.exec(fileContent);
+            let themeNameParts = matches[1].split('-');
+            
+            const themeType = themeNameParts[themeNameParts.length - 1];
+            themeNameParts.pop();
+            const themeName = themeNameParts.join('-');
+
+            if(!themes[themeName]) {
+                themes[themeName] = [];
+            }
+
+            themes[themeName].push(themeType);
+        }
+    }
+    return themes;    
+}
+
 function provideScssCompletionItems(document, position, token, context) {
     return new Promise((resolve, reject) => {
         __log.appendLine('Code completetion... ');
@@ -181,36 +286,40 @@ function provideScssCompletionItems(document, position, token, context) {
         const text = line.text;
         if(text.trim().indexOf('theme') === 0) {
             const list = [];
-            const workspacePath = getWorkspacePath();
-            const themesPath = workspacePath + '/web/res/themes/';
-            const content = fs.readdirSync(themesPath, {encoding: 'utf-8', withFileTypes: true});
-            for(const item of content) {
-                if(item.isDirectory() || item.isSymbolicLink()) {
-                    continue;
-                }
-                
-				if(item.name.indexOf('.scss') !== -1) {
-                    const fileContent = fs.readFileSync(themesPath + item.name).toString();
-                    const matches = /\$theme: "(.*)"/g.exec(fileContent);
-                    const themeName = matches[1];
+            const themes = getThemes();
+            Object.keys(themes).forEach((themeName) => {
+                const themeTypes = themes[themeName];
+
+                if(themeTypes.length > 1) {
                     const simpleCompletion = new vscode.CompletionItem('theme ' + themeName);
-                    simpleCompletion.insertText = '@if variable-exists($name: theme) and $theme == "' + themeName + '" {\n\t\n}\n';
+                    simpleCompletion.insertText = '@if variable-exists($name: theme) and str-index($theme, "' + themeName + '-") {\n\t\n}\n';
                     list.push(simpleCompletion);
                 }
-            }    
+                for(const tp of themeTypes) {
+                    const simpleCompletion = new vscode.CompletionItem('theme ' + themeName + '-' + tp);
+                    simpleCompletion.insertText = '@if variable-exists($name: theme) and $theme == "' + (themeName + '-' + tp) + '" {\n\t\n}\n';
+                    list.push(simpleCompletion);
+                }
+                
+            });
+            
 
             resolve(list);
         } else if(text.trim().substring(text.trim().length-1) === '$') {
             const list = [];
             let lindex = position.line;
             let l = document.lineAt(lindex).text;
-            while(l && l.indexOf('@if variable-exists($name: theme) and $theme') === -1) {
+            while(l && l.indexOf('@if variable-exists($name: theme) and') === -1) {
                 lindex--;
                 l = document.lineAt(lindex).text;
             }
 
             let matches = /\$theme == "(.*)" \{/g.exec(l);
-            let themeName = matches[1];
+            let themeName = matches ? matches[1] : null;
+            if(!themeName) {
+                let matches = /\$theme, "(.*)"\) \{/g.exec(l);
+                themeName = matches ? matches[1] : null;
+            }
 
             const workspacePath = getWorkspacePath();
             let themeNameParts = themeName.split('-');
@@ -218,34 +327,28 @@ function provideScssCompletionItems(document, position, token, context) {
             themeNameParts.pop();
             themeName = themeNameParts.join('-');
 
-            const themesPath = workspacePath + '/web/res/themes/' + themeName + '.' + themeType + '.scss';
-            const content = fs.readFileSync(themesPath).toString();
-            const lines = content.split('\n');
-            for(const ll of lines) {
-                if(ll.trim().startsWith('$')) {
-                    // переменная
-                    const matches = /\$(.*):.*/g.exec(ll);
-                    if(matches[1] != 'theme') {
-                        const simpleCompletion = new vscode.CompletionItem('$' + matches[1]);
-                        simpleCompletion.insertText = '$' + matches[1] + ';';
-                        list.push(simpleCompletion);
-                    }
-
-                }
-            }
-
+            const vars = getVars(themeName, themeType);
+            Object.keys(vars).forEach((key) => {
+                const simpleCompletion = new vscode.CompletionItem(key);
+                simpleCompletion.insertText = vars[key];
+                list.push(simpleCompletion);
+            });
             resolve(list);
         } else if(text.indexOf('@include ') !== -1) {
             const list = [];
             let lindex = position.line;
             let l = document.lineAt(lindex).text;
-            while(l && l.indexOf('@if variable-exists($name: theme) and $theme') === -1) {
+            while(l && l.indexOf('@if variable-exists($name: theme) and') === -1) {
                 lindex--;
                 l = document.lineAt(lindex).text;
             }
 
             let matches = /\$theme == "(.*)" \{/g.exec(l);
-            let themeName = matches[1];
+            let themeName = matches ? matches[1] : null;
+            if(!themeName) {
+                let matches = /\$theme, "(.*)"\) \{/g.exec(l);
+                themeName = matches ? matches[1] : null;
+            }
 
             const workspacePath = getWorkspacePath();
             let themeNameParts = themeName.split('-');
@@ -253,21 +356,12 @@ function provideScssCompletionItems(document, position, token, context) {
             themeNameParts.pop();
             themeName = themeNameParts.join('-');
 
-            const themesPath = workspacePath + '/web/res/themes/' + themeName + '.' + themeType + '.scss';
-            const content = fs.readFileSync(themesPath).toString();
-            const lines = content.split('\n');
-            for(const ll of lines) {
-                if(ll.trim().startsWith('@mixin')) {
-                    // переменная
-                    const matches = /@mixin (.*)\{/g.exec(ll);
-
-                    const simpleCompletion = new vscode.CompletionItem('@include ' + matches[1]);
-                    simpleCompletion.insertText = matches[1] + ';';
-                    list.push(simpleCompletion);
-
-                }
-            }
-
+            const mixins = getMixins(themeName, themeType);
+            Object.keys(mixins).forEach((key) => {
+                const simpleCompletion = new vscode.CompletionItem(key);
+                simpleCompletion.insertText = mixins[key];
+                list.push(simpleCompletion);
+            });
             resolve(list);
 
         } else {

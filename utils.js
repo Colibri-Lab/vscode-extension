@@ -730,9 +730,6 @@ function openFile(path, selectLine = null) {
 function getPHPModules() {
 	const ret = {};
 	const path = getWorkspacePath();
-	if(fs.existsSync(path + '/yaml/lang-config.yaml')) {
-		return readYaml(path + '/yaml/lang-config.yaml');
-	}
 	
 	let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
 	if(composerContent.require) {
@@ -769,9 +766,7 @@ function getPHPModules() {
 function getPhpModulesByVendor() {
 	const ret = {};
 	const path = getWorkspacePath();
-	if(fs.existsSync(path + '/yaml/lang-config.yaml')) {
-		return readYaml(path + '/yaml/lang-config.yaml');
-	}
+	
 	let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
 	if(composerContent.require) {
 		const modules = Object.keys(composerContent.require);

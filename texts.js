@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const { getWorkspacePath, getLanguages, enumFiles, getPHPModules, readYaml, getPhpModulesByVendor, replaceAll } = require("./utils");
 const yamlO = require('yaml');
+const fs = require('fs');
 
 function exportTextsAction(context, e) {
     
@@ -18,7 +19,12 @@ function exportTextsAction(context, e) {
             title: vscode.l10n.t('Insert the language key you want to add'),
         }).then(langTo => {
 
-            let modules = getPHPModules();
+            let modules = {};
+            if(fs.existsSync(path + '/yaml/lang-config.yaml')) {
+                modules = readYaml(path + '/yaml/lang-config.yaml');
+            } else {
+                modules = getPHPModules();
+            }
             vscode.window.showQuickPick(Object.keys(modules), {
                 ignoreFocusOut: true, canPickMany: true,
                 placeHolder: vscode.l10n.t('Select the modules you want to export'),
@@ -27,6 +33,7 @@ function exportTextsAction(context, e) {
                 for(const m of selectedModules) {
                     
                     let modulePath = modules[m];
+                    modulePath = modulePath.slice(-1) === '/' ? modulePath.slice(0, -1) : modulePath;
                     modulePath = modulePath.slice(0, 2) === './' ? path + modulePath.slice(1) : modulePath;
 
                     let files = enumFiles(modulePath, 'lang', true);

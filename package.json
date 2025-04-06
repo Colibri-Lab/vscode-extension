@@ -275,11 +275,13 @@
       "colibri-explorer": [
         {
           "id": "colibriUIComponents",
-          "name": "Colibri: UI Components"
+          "name": "Colibri: UI Components",
+          "icon": ""
         },
         {
           "id": "colibriPHPBackend",
-          "name": "Colibri: PHP Backend"
+          "name": "Colibri: PHP Backend",
+          "icon": ""
         }
       ]
     },

@@ -15,5 +15,7 @@
 	"extension.open-component.title": "Բացել կոմպոնենտը",
 	"extension.open-phpclass.title": "Բացել PHP ֆայլը",
 	"extension.create-controller.title": "Ստեղձել վերահսկիչ",
-	"extension.create-controller-action.title": "Ստեղծեք վերահսկիչի գործողություն"
+	"extension.create-controller-action.title": "Ստեղծեք վերահսկիչի գործողություն",
+	"extension.export-texts.title": "Արտահանել տեքստերը",
+	"extension.import-texts.title": "Ներմուծել տեքստերը"
 }

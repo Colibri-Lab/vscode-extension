@@ -343,6 +343,45 @@ function getBundlePaths(workspacePath = null, returnRealPath = false) {
 	}
 }
 
+function enumFiles(workspacePath = null, extension = 'lang', returnRealPath = false) {
+	try {
+		
+		workspacePath = workspacePath ? workspacePath : getWorkspacePath();
+		workspacePath = workspacePath.slice(-1) === '/' ? workspacePath.slice(0, -1) : workspacePath;
+		workspacePath = workspacePath.slice(0, 2) === './' ? getWorkspacePath() + workspacePath.slice(1) : workspacePath;
+		// ищем папки .Bundle 
+		let items = [];
+
+		const linkStat = fs.statSync(workspacePath);
+		if(linkStat.isSymbolicLink()) {
+			workspacePath = fs.readlinkSync(workspacePath);
+			items = [...items, ...enumFiles(workspacePath, extension, returnRealPath)];		
+		}
+		else if(linkStat.isFile()) {
+			return [];
+		}
+
+		const content = fs.readdirSync(workspacePath, {encoding: 'utf-8', withFileTypes: true});
+		for(const item of content) {
+			if(item.name === '.git') {
+				continue;
+			}
+
+			if(item.isFile() && item.name.endsWith('.' + extension)) {
+				items = [	...items, ...[workspacePath + '/' + item.name]];
+			}
+			
+			if(item.isDirectory() || item.isSymbolicLink()) {
+				items = [	...items, ...enumFiles(workspacePath + '/' + item.name, extension, returnRealPath)];
+			}
+		}
+		return items;
+	}
+	catch(e) {
+		return [];		
+	}
+}
+
 function extractNames(componentName, currentComponentName) {
 	let currentComponentNameParts = currentComponentName.split('.');
 	while(currentComponentNameParts.length > 0) {
@@ -691,6 +730,10 @@ function openFile(path, selectLine = null) {
 function getPHPModules() {
 	const ret = {};
 	const path = getWorkspacePath();
+	if(fs.existsSync(path + '/yaml/lang-config.yaml')) {
+		return readYaml(path + '/yaml/lang-config.yaml');
+	}
+	
 	let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
 	if(composerContent.require) {
 		const modules = Object.keys(composerContent.require);
@@ -726,6 +769,9 @@ function getPHPModules() {
 function getPhpModulesByVendor() {
 	const ret = {};
 	const path = getWorkspacePath();
+	if(fs.existsSync(path + '/yaml/lang-config.yaml')) {
+		return readYaml(path + '/yaml/lang-config.yaml');
+	}
 	let composerContent = JSON.parse(fs.readFileSync(path + '/composer.json').toString());
 	if(composerContent.require) {
 		const modules = Object.keys(composerContent.require);
@@ -809,5 +855,6 @@ module.exports = {
 	hasColibriCore,
 	trim,
 	ltrim,
-	rtrim
+	rtrim,
+	enumFiles
 };

@@ -12,10 +12,10 @@ function runMigrationScript(context, e) {
     command = replaceAll(command, '{app-root}', path);
 	cp.exec(command, (err, stdout, stderr) => {
         if (stdout.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
-            stdout = replaceAll(stdout, '\033[0m\n', '');
-            stdout = replaceAll(stdout, '\033[31m', '');
-            stdout = replaceAll(stdout, '\033[32m', '');
-            stdout = replaceAll(stdout, '\033[36m', '');
+            stdout = replaceAll(stdout, '\x1b[0m\n', '');
+            stdout = replaceAll(stdout, '\x1b[31m', '');
+            stdout = replaceAll(stdout, '\x1b[32m', '');
+            stdout = replaceAll(stdout, '\x1b[36m', '');
             stdout = replaceAll(stdout, '\n\n', '\n');
             __log.appendLine(stdout);
         }
@@ -46,10 +46,10 @@ function runModelsGenerator(context, e) {
         cp.exec(command, (err, stdout, stderr) => {
             
             if (stdout.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
-                stdout = replaceAll(stdout, '\033[0m\n', '');
-                stdout = replaceAll(stdout, '\033[31m', '');
-                stdout = replaceAll(stdout, '\033[32m', '');
-                stdout = replaceAll(stdout, '\033[36m', '');
+                stdout = replaceAll(stdout, '\x1b[0m\n', '');
+                stdout = replaceAll(stdout, '\x1b[31m', '');
+                stdout = replaceAll(stdout, '\x1b[32m', '');
+                stdout = replaceAll(stdout, '\x1b[36m', '');
                 stdout = replaceAll(stdout, '\n\n', '\n');
                 __log.appendLine(stdout);
             }
@@ -126,10 +126,10 @@ function runDownloadModule(context, e) {
                 const process = cp.exec(command, (err, stdout, stderr) => {
                     
                     if (stdout.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
-                        stdout = replaceAll(stdout, '\033[0m\n', '');
-                        stdout = replaceAll(stdout, '\033[31m', '');
-                        stdout = replaceAll(stdout, '\033[32m', '');
-                        stdout = replaceAll(stdout, '\033[36m', '');
+                        stdout = replaceAll(stdout, '\x1b[0m\n', '');
+                        stdout = replaceAll(stdout, '\x1b[31m', '');
+                        stdout = replaceAll(stdout, '\x1b[32m', '');
+                        stdout = replaceAll(stdout, '\x1b[36m', '');
                         stdout = replaceAll(stdout, '\n\n', '\n');
                         __log.appendLine(stdout);
                     }
@@ -465,10 +465,10 @@ function runCreateProject(context, e) {
         const process = cp.exec(command, (err, stdout, stderr) => {
             
             if (stdout.substring(0, 'Xdebug:'.length) !== 'Xdebug:') {
-                stdout = replaceAll(stdout, '\033[0m\n', '');
-                stdout = replaceAll(stdout, '\033[31m', '');
-                stdout = replaceAll(stdout, '\033[32m', '');
-                stdout = replaceAll(stdout, '\033[36m', '');
+                stdout = replaceAll(stdout, '\x1b[0m\n', '');
+                stdout = replaceAll(stdout, '\x1b[31m', '');
+                stdout = replaceAll(stdout, '\x1b[32m', '');
+                stdout = replaceAll(stdout, '\x1b[36m', '');
                 stdout = replaceAll(stdout, '\n\n', '\n');
                 __log.appendLine(stdout);
             }
@@ -496,7 +496,6 @@ function openPhpClass(context, data) {
     }
 
 }
-
 
 
 function readPhp(path) {

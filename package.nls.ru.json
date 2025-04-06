@@ -15,5 +15,7 @@
 	"extension.open-component.title": "Открыть компоненту",
 	"extension.open-phpclass.title": "Открыть класс PHP",
 	"extension.create-controller.title": "Создать новый контроллер",
-	"extension.create-controller-action.title": "Создать новый экшен"
+	"extension.create-controller-action.title": "Создать новый экшен",
+	"extension.export-texts.title": "Выгрузить тексты",
+	"extension.import-texts.title": "Загрузить тексты"
 }

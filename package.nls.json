@@ -15,5 +15,8 @@
 	"extension.open-component.title": "Open selected component",
 	"extension.open-phpclass.title": "Open selected php class",
 	"extension.create-controller.title": "Create new controller",
-	"extension.create-controller-action.title": "Create controller action"
+	"extension.create-controller-action.title": "Create controller action",
+	"extension.export-texts.title": "Export texts",
+	"extension.import-texts.title": "Import texts"
+
 }

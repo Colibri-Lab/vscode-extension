@@ -259,15 +259,27 @@ function loadYamlLangFile(document) {
 	return langsFileContent;
 }
 
+function addQuotesToYesAndNo(yamlObject) {
+	for (const langKey in yamlObject) {
+		for(const key in yamlObject[langKey]) {
+			if (yamlObject[langKey][key] === 'yes' || yamlObject[langKey][key] === 'no' || yamlObject[langKey][key] === 'Yes' || yamlObject[langKey][key] === 'No') {
+				const sc = new yaml.Scalar(yamlObject[langKey][key]);
+				sc.type = yaml.Scalar.QUOTE_DOUBLE;
+				yamlObject[langKey][key] = sc;
+			}
+		}
+	}
+	return yamlObject;
+}
+
 /**
  * @param {vscode.TextDocument|string} document 
  * @param {Object} yamlObject 
  */
 function saveYamlLangFile(document, yamlObject) {
 	let langFile = typeof document === 'string' ? document : getLangFilePath(document);
-	// __openedLangDocuments.set(langFile, yamlObject);
 	if(Object.keys(yamlObject).length > 0) {
-		let yamlContent = yaml.stringify(yamlObject);
+		let yamlContent = yaml.stringify(addQuotesToYesAndNo(yamlObject));
 		fs.writeFileSync(langFile, yamlContent, {encoding:'utf8', flag:'w+'});
 		return true;
 	}

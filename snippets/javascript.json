@@ -9,9 +9,16 @@
 	"AddEventHandlerReference": {
 		"prefix": "event",
 		"body": [
-			"this._$1.AddHandler('$2', (event, args) => this.__$1$2(event, args));$0"
+			"this._$1.AddHandler('$2', this.__$1$2, false, this);$0"
 		],
 		"description": "Add event handler"
+	},
+	"AddEvent2HandlerReference": {
+		"prefix": "eventthis",
+		"body": [
+			"this.AddHandler('$1', this.__this$1);$0"
+		],
+		"description": "Add event handler to this"
 	},
 	"AddEventHandler": {
 		"prefix": "handler",

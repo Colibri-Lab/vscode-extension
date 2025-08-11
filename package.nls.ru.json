@@ -11,11 +11,16 @@
 	"extension.create-project.title": "Создать пустой проект Colibri",
 	"extension.settings-create-project-command.description": "Команда для выполнения создание пустого проекта",
 	"extension.settings-download-module-command.description": "Команда для загрузки модуля",
+	"extension.settings-openai-api-key.description": "OpenAI API ключ",
+	"extension.settings-github-api-key.description": "GitHub API ключ",
 	"extension.download-module.title": "Загрузить модуль",
 	"extension.open-component.title": "Открыть компоненту",
 	"extension.open-phpclass.title": "Открыть класс PHP",
 	"extension.create-controller.title": "Создать новый контроллер",
 	"extension.create-controller-action.title": "Создать новый экшен",
 	"extension.export-texts.title": "Выгрузить тексты",
-	"extension.import-texts.title": "Загрузить тексты"
+	"extension.import-texts.title": "Загрузить тексты",
+	"extension.find-not-translated.title": "Найти все языковые файлы без перевода на указанный язык",
+	"extension.translate-byopenai.title": "Перевести тексты с помощью OpenAI",
+	"extension.translate-bycopilot.title": "Перевести тексты с помощью GitHub Copilot"
 }

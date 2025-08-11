@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.96",
+  "version": "0.0.98",
   "categories": [
     "Programming Languages"
   ],
@@ -16,6 +16,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "extensionKind": ["ui", "workspace"],
   "main": "./extension.js",
   "l10n": "./l10n",
   "contributes": {
@@ -194,6 +195,10 @@
       {
         "command": "colibri-ui.import-texts",
         "title": "%extension.import-texts.title%"
+      },
+      {
+        "command": "colibri-ui.find-not-translated",
+        "title": "%extension.find-not-translated.title%"
       },
       {
         "command": "colibri-ui.refresh-tree",

@@ -11,12 +11,17 @@
 	"extension.create-project.title": "Create the blank Colibri project",
 	"extension.settings-create-project-command.description": "Command to execute for create project",
 	"extension.settings-download-module-command.description": "Command for download module",
+	"extension.settings-openai-api-key.description": "OpenAI API key",
+	"extension.settings-github-api-key.description": "GitHub API key",
 	"extension.download-module.title": "Download module",
 	"extension.open-component.title": "Open selected component",
 	"extension.open-phpclass.title": "Open selected php class",
 	"extension.create-controller.title": "Create new controller",
 	"extension.create-controller-action.title": "Create controller action",
 	"extension.export-texts.title": "Export texts",
-	"extension.import-texts.title": "Import texts"
+	"extension.import-texts.title": "Import texts",
+	"extension.find-not-translated.title": "Find all lang files without translation to specified language",
+	"extension.translate-byopenai.title": "Translate texts with OpenAI",
+	"extension.translate-bycopilot.title": "Translate texts with GitHub Copilot"
 
 }

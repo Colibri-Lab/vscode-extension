@@ -739,7 +739,7 @@ function openFile(path, selectLine = null) {
 	});
 }
 
-function getPHPModules() {
+function getPHPModules(getpaths = false) {
 	const ret = {};
 	const path = getWorkspacePath();
 	
@@ -769,9 +769,29 @@ function getPHPModules() {
 					// это точно модуль
 					ret[moduleRealName] = path + '/vendor/' + moduleName + '/' + modulePath;
 				}
+			} else if(moduleName === 'colibri/ui' && getpaths) {
+				ret['Colibri.UI'] = path + '/vendor/colibri/ui';
 			}
 		}
 	}
+
+	if(getpaths) {
+		const modulesConfig = readYaml(path + '/config/modules.yaml');
+		if(modulesConfig) {
+	
+			for(const moduleConfig of modulesConfig.entries) {
+				const moduleConfigYaml = readYaml(path + replaceAll(replaceAll(moduleConfig.config, 'include(', ''), ')', ''));
+				if(moduleConfigYaml.paths) {
+					for(const key in moduleConfigYaml.paths) {
+						for(const pp of moduleConfigYaml.paths[key]) {
+							ret[pp.root] = path + '/' + pp.path;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return ret;
 }
 

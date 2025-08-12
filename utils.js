@@ -831,6 +831,18 @@ function getPhpModulesByVendor() {
 	return ret;
 }
 
+let statusBarItem = null;
+function showStatusBarSpinner(text) {
+	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+	statusBarItem.text = '$(sync~spin) ' + text;
+	statusBarItem.show();
+}
+
+function hideStatusBarSpinner() {
+	statusBarItem.hide();
+	statusBarItem.dispose();
+}
+
 module.exports = {
 	__langFilter,
     __languageMarkerRegularExpression,
@@ -883,5 +895,7 @@ module.exports = {
 	trim,
 	ltrim,
 	rtrim,
-	enumFiles
+	enumFiles,
+	showStatusBarSpinner,
+	hideStatusBarSpinner
 };

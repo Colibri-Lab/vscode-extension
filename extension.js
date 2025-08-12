@@ -25,6 +25,8 @@ const {
 	hasColibriCore,
 	getLanguages,
 	getBundlePaths,
+	hideStatusBarSpinner,
+	showStatusBarSpinner,
 } = require('./utils');
 const {
 	createNamespace,
@@ -38,7 +40,7 @@ const { provideDefinitions, provideDeclarations, provideReferences, provideHover
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 const { default: axios } = require('axios');
-const { exportTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot } = require('./texts');
+const { exportTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot, translateText } = require('./texts');
 
 const fs = require('fs');
 const path = require('path');
@@ -308,8 +310,9 @@ function translateLangFile(langFile, text, textKey, textObject) {
 
 	const workbenchConfig = vscode.workspace.getConfiguration();
 	let keyOfCloudTranslate = workbenchConfig.get('colibrilab.cloud-translate-key');
-	if (!keyOfCloudTranslate) {
-		vscode.window.showInformationMessage('Please provide google-translate key in your settings');
+	let openaiApiKey = workbenchConfig.get('colibrilab.openai-api-key');
+	if (!keyOfCloudTranslate && !openaiApiKey) {
+		vscode.window.showInformationMessage('Please provide google-translate key or OpenAI Api Key in your settings');
 		return;
 	}
 
@@ -342,42 +345,75 @@ function translateLangFile(langFile, text, textKey, textObject) {
 		const text = textObject[lFrom];
 		const target = lTo;
 
+		showStatusBarSpinner('Translating in progress, please wait...');
 		if (target === 'ALL') {
 			const promises = [];
 			const langs = [];
-			for (const ll of langKeys) {
-				if (ll != lFrom) {
-					langs.push(ll);
-					promises.push(translate.translate(text, ll));
+			if(openaiApiKey) {
+
+				langKeys.splice(langKeys.indexOf(lFrom), 1);
+				translateText(langKeys, text).then((responses) => {
+					for(const lang in responses) {
+						yamlObject[textKey][lang] = responses[lang];
+					}
+					
+					saveYamlLangFile(langFile, yamlObject);
+					onChangeActiveTextEditor(vscode.window.activeTextEditor);
+					hideStatusBarSpinner();
+				});
+
+			} else {
+				for (const ll of langKeys) {
+					if (ll != lFrom) {
+						langs.push(ll);
+						promises.push(translate.translate(text, ll));
+					}
 				}
+				Promise.all(promises).then(responses => {
+					let index = 0;
+					for (const response of responses) {
+						const [translation] = response;
+						yamlObject[textKey][langs[index]] = translation;
+						index++;
+					}
+					saveYamlLangFile(langFile, yamlObject);
+					onChangeActiveTextEditor(vscode.window.activeTextEditor);
+					hideStatusBarSpinner();
+				});
 			}
-			Promise.all(promises).then(responses => {
-				let index = 0;
-				for (const response of responses) {
-					const [translation] = response;
-					yamlObject[textKey][langs[index]] = translation;
-					index++;
-				}
-				saveYamlLangFile(langFile, yamlObject);
-				onChangeActiveTextEditor(vscode.window.activeTextEditor);
-			});
 		} else {
 
-			// Translates some text into Russian
-			translate.translate(text, target).then(translations => {
-				const [translation] = translations;
+			if(openaiApiKey) {
 
-				yamlObject[textKey][lTo] = translation;
-				saveYamlLangFile(langFile, yamlObject);
-				onChangeActiveTextEditor(vscode.window.activeTextEditor);
+				translateText(target, text).then(responses => {
+					yamlObject[textKey][target] = responses[target];
+					
+					saveYamlLangFile(langFile, yamlObject);
+					onChangeActiveTextEditor(vscode.window.activeTextEditor);
+					hideStatusBarSpinner();
+				});
 
-			});
+			} else {
+
+				// Translates some text into Russian
+				translate.translate(text, target).then(translations => {
+					const [translation] = translations;
+
+					yamlObject[textKey][lTo] = translation;
+					saveYamlLangFile(langFile, yamlObject);
+					onChangeActiveTextEditor(vscode.window.activeTextEditor);
+					hideStatusBarSpinner();
+
+				});
+
+			}
 		}
 
 
 	});
 
 }
+
 
 function onFileSystemChanged(e, context) {
 	if (e.files) {
@@ -493,7 +529,7 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.export-texts', (e) => exportTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.import-texts', (e) => importTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.find-not-translated', (e) => findFilesWithoutLanguage(context, e)));
-		// context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-byopenai', (e) => translateAllTextsFromOneLangToAnother(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-byopenai', (e) => translateAllTextsFromOneLangToAnother(context, e)));
 		// context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-bycopilot', (e) => translateAllWithCopilot(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-tree', (e) => getTreeDataProvider().refresh()));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-php-tree', (e) => getPHPTreeDataProvider().refresh()));

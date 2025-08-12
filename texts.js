@@ -1,5 +1,5 @@
 const vscode = require('vscode');
-const { getWorkspacePath, getLanguages, enumFiles, getPHPModules, readYaml, getPhpModulesByVendor, replaceAll, __log, saveYamlLangFile, loadYamlLangFile } = require("./utils");
+const { getWorkspacePath, getLanguages, enumFiles, getPHPModules, readYaml, getPhpModulesByVendor, replaceAll, __log, saveYamlLangFile, loadYamlLangFile, showStatusBarSpinner, hideStatusBarSpinner } = require("./utils");
 const yamlO = require('yaml');
 const fs = require('fs');
 const OpenAI = require('openai').default;
@@ -33,14 +33,27 @@ async function translateText(language, text) {
 
     const client = new OpenAI({apiKey: openaiApiKey});
     try {
+
+        let languages = '';
+        if(Array.isArray(language)) {
+            const ll = [];
+            for(const l of language) {
+                ll.push(l);
+            }
+            languages = ll.join(',');
+        } else {
+            languages = language;
+        }
+
         const response = await client.chat.completions.create({
-          model: "gpt-5-nano",
+          model: "gpt-5",
           messages: [
             { role: "system", content: "You are a helpful translator." },
-            { role: "user", content: "Translate " + text + " to language " + language }
+            { role: "user", content: "Translate " + text + " to language " + languages + ". Answer in JSON format, where key is the language, value is a translation. " + 
+                "For example: {\"en\": \"...\", \"hy\": \"...\"}."}
           ]
         });
-        return response.choices[0].message.content;
+        return JSON.parse(response.choices[0].message.content);
     } catch(e) {
         __log.appendLine('Error during translation: ' + e.message);
         return null;
@@ -60,6 +73,7 @@ async function translateAllTextsFromOneLangToAnother(context, e) {
     }
 
     let files = enumFiles(path, 'lang', true);
+	showStatusBarSpinner('Translating in progress, please wait...');
 
     for (const f of files) {
         const filecontent = readYaml(f);
@@ -79,12 +93,14 @@ async function translateAllTextsFromOneLangToAnother(context, e) {
                 if(!newText) {
                     break;
                 }
-                filecontent[key][langTo] = newText
+                filecontent[key][langTo] = newText;
 
             }
+            saveYamlLangFile(f, filecontent)
         }
-        saveYamlLangFile(f, filecontent)
     }
+
+    hideStatusBarSpinner();
 
 }
 
@@ -167,14 +183,17 @@ function exportTextsAction(context, e) {
 
     let yaml = {};
 
+    showStatusBarSpinner('Exporting translations, please wait...');
+
     const langKeys = Object.keys(languages);
     vscode.window.showQuickPick(langKeys, {
         placeHolder: vscode.l10n.t('Select the language you want to export'),
     }).then(function (langFrom) {
 
-        vscode.window.showInputBox({
-            title: vscode.l10n.t('Insert the language key you want to add'),
-        }).then(langTo => {
+        vscode.window.showQuickPick(langKeys, {
+            placeHolder: vscode.l10n.t('Select the languages you want to add'),
+            ignoreFocusOut: true, canPickMany: true,
+        }).then(function (langTo) {
 
             let modules = {};
             if (fs.existsSync(path + '/yaml/lang-config.yaml')) {
@@ -182,6 +201,7 @@ function exportTextsAction(context, e) {
             } else {
                 modules = getPHPModules(true);
             }
+
             vscode.window.showQuickPick(Object.keys(modules), {
                 ignoreFocusOut: true, canPickMany: true,
                 placeHolder: vscode.l10n.t('Select the modules you want to export'),
@@ -204,7 +224,9 @@ function exportTextsAction(context, e) {
                                 if(filecontent[key][langFrom]) {
                                     extracted[key] = {};
                                     extracted[key][langFrom] = filecontent[key][langFrom];
-                                    extracted[key][langTo] = filecontent[key][langTo] ?? '';
+                                    for(const l of langTo) {
+                                        extracted[key][l] = filecontent[key][l] ?? '';
+                                    }
                                 }
                             }
                             const relativePath = replaceAll(f, path + moduleRelativePath, '');
@@ -217,6 +239,8 @@ function exportTextsAction(context, e) {
                     language: 'yaml',
                     content: yamlO.stringify(yaml)
                 });
+
+                hideStatusBarSpinner();
 
             });
 
@@ -246,6 +270,8 @@ async function importTextsAction(context, e) {
 
     const file = files[0];
     const yamlContent = loadYamlLangFile(file.fsPath);
+        
+    showStatusBarSpinner('Importing translations, please wait...');
 
     for(const modulePath in yamlContent) {
 
@@ -264,14 +290,14 @@ async function importTextsAction(context, e) {
                     } else {
                         const langs = Object.keys(yamlContent[modulePath][filePath][key]);
                         const langFrom = langs[0];
-                        const langTo = langs[1];
-
-                        if(yamlFileContent[key][langFrom] === yamlContent[modulePath][filePath][key][langFrom]) {
-                            yamlFileContent[key][langTo] = yamlContent[modulePath][filePath][key][langTo];
-                        } else {
-                            __log.appendLine('Key ' + key + ' in language ' + langFrom + ' in file ' + fileCompletePath + ' does not match with the imported file, skipping...');
+                        for(let i=1; i<langs.length; i++) {
+                            const langTo = langs[i];
+                            if(yamlFileContent[key][langFrom] === yamlContent[modulePath][filePath][key][langFrom]) {
+                                yamlFileContent[key][langTo] = yamlContent[modulePath][filePath][key][langTo];
+                            } else {
+                                __log.appendLine('Key ' + key + ' in language ' + langFrom + ' in file ' + fileCompletePath + ' does not match with the imported file, skipping...');
+                            }
                         }
-
                     }
 
                 }
@@ -287,7 +313,8 @@ async function importTextsAction(context, e) {
         }
 
     }
-    
+
+    hideStatusBarSpinner();
 
 
 }
@@ -298,5 +325,6 @@ module.exports = {
     importTextsAction,
     findFilesWithoutLanguage,
     translateAllTextsFromOneLangToAnother,
-    translateAllWithCopilot
+    translateAllWithCopilot,
+    translateText
 };

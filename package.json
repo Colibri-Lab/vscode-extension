@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.0.98",
+  "version": "0.1.1",
   "categories": [
     "Programming Languages"
   ],
@@ -16,7 +16,6 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "extensionKind": ["ui", "workspace"],
   "main": "./extension.js",
   "l10n": "./l10n",
   "contributes": {
@@ -66,6 +65,13 @@
             "order": 6,
             "description": "%extension.settings-download-module-command.description%",
             "default": "composer require {module-vendor-and-name}",
+            "additionalProperties": false
+          },
+          "colibrilab.openai-api-key": {
+            "type": "string",
+            "order": 7,
+            "description": "%extension.settings-openai-api-key.description%",
+            "default": "",
             "additionalProperties": false
           }
         }
@@ -207,6 +213,10 @@
           "light": "./images/refresh-light.svg",
           "dark": "./images/refresh-dark.svg"
         }
+      },
+      {
+        "command": "colibri-ui.translate-byopenai",
+        "title": "%extension.translate-byopenai.title%"
       },
       {
         "command": "colibri-ui.refresh-php-tree",

@@ -40,7 +40,7 @@ const { provideDefinitions, provideDeclarations, provideReferences, provideHover
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 const { default: axios } = require('axios');
-const { exportTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot, translateText } = require('./texts');
+const { exportTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot, translateText, translateCurrentFileFromOneLangToAnother } = require('./texts');
 
 const fs = require('fs');
 const path = require('path');
@@ -530,6 +530,7 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.import-texts', (e) => importTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.find-not-translated', (e) => findFilesWithoutLanguage(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-byopenai', (e) => translateAllTextsFromOneLangToAnother(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-byopenai.file', (e) => translateCurrentFileFromOneLangToAnother(context, e)));
 		// context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-bycopilot', (e) => translateAllWithCopilot(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-tree', (e) => getTreeDataProvider().refresh()));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.refresh-php-tree', (e) => getPHPTreeDataProvider().refresh()));

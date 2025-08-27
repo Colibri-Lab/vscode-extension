@@ -22,6 +22,7 @@
 	"extension.import-texts.title": "Ներմուծել տեքստերը",
 	"extension.find-not-translated.title": "Գտնել բոլոր լեզվաբառարանային ֆայլերը, որոնք չունեն թարգմանություն նշված լեզվով",
 	"extension.translate-byopenai.title": "Թարգմանել տեքստերը OpenAI-ի միջոցով",
+	"extension.translate-byopenai.file.title": "Թարգմանել ընթացիկ ֆայլը OpenAI-ի միջոցով",
 	"extension.translate-bycopilot.title": "Թարգմանել տեքստերը GitHub Copilot-ի միջոցով"
 
 }

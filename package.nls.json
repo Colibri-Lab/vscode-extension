@@ -22,6 +22,7 @@
 	"extension.import-texts.title": "Import texts",
 	"extension.find-not-translated.title": "Find all lang files without translation to specified language",
 	"extension.translate-byopenai.title": "Translate texts with OpenAI",
+	"extension.translate-byopenai.file.title": "Translate current file with OpenAI",
 	"extension.translate-bycopilot.title": "Translate texts with GitHub Copilot"
 
 }

@@ -22,5 +22,6 @@
 	"extension.import-texts.title": "Загрузить тексты",
 	"extension.find-not-translated.title": "Найти все языковые файлы без перевода на указанный язык",
 	"extension.translate-byopenai.title": "Перевести тексты с помощью OpenAI",
+	"extension.translate-byopenai.file.title": "Перевести текущий файл с помощью OpenAI",
 	"extension.translate-bycopilot.title": "Перевести тексты с помощью GitHub Copilot"
 }

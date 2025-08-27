@@ -1,5 +1,5 @@
 const vscode = require('vscode');
-const { getWorkspacePath, getLanguages, enumFiles, getPHPModules, readYaml, getPhpModulesByVendor, replaceAll, __log, saveYamlLangFile, loadYamlLangFile, showStatusBarSpinner, hideStatusBarSpinner } = require("./utils");
+const { getWorkspacePath, getLanguages, enumFiles, getPHPModules, readYaml, getPhpModulesByVendor, replaceAll, __log, saveYamlLangFile, loadYamlLangFile, showStatusBarSpinner, hideStatusBarSpinner, readYamlText, saveYamlLangText } = require("./utils");
 const yamlO = require('yaml');
 const fs = require('fs');
 const OpenAI = require('openai').default;
@@ -31,13 +31,13 @@ async function translateText(language, text) {
         return;
     }
 
-    const client = new OpenAI({apiKey: openaiApiKey});
+    const client = new OpenAI({ apiKey: openaiApiKey });
     try {
 
         let languages = '';
-        if(Array.isArray(language)) {
+        if (Array.isArray(language)) {
             const ll = [];
-            for(const l of language) {
+            for (const l of language) {
                 ll.push(l);
             }
             languages = ll.join(',');
@@ -46,18 +46,63 @@ async function translateText(language, text) {
         }
 
         const response = await client.chat.completions.create({
-          model: "gpt-5",
-          messages: [
-            { role: "system", content: "You are a helpful translator." },
-            { role: "user", content: "Translate " + text + " to language " + languages + ". Answer in JSON format, where key is the language, value is a translation. " + 
-                "For example: {\"en\": \"...\", \"hy\": \"...\"}."}
-          ]
+            model: "gpt-5",
+            messages: [
+                { role: "system", content: "You are a helpful translator." },
+                {
+                    role: "user", content: "Translate " + text + " to language " + languages + ". Answer in JSON format, where key is the language, value is a translation. " +
+                        "For example: {\"en\": \"...\", \"hy\": \"...\"}."
+                }
+            ]
         });
         return JSON.parse(response.choices[0].message.content);
-    } catch(e) {
+    } catch (e) {
         __log.appendLine('Error during translation: ' + e.message);
         return null;
     }
+}
+
+async function translateCurrentFileFromOneLangToAnother(context, e) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+
+    const document = editor.document;
+    const text = document.getText();
+    const yaml = readYamlText(text);
+    let languages = getLanguages();
+    const langKeys = Object.keys(languages);
+
+    const langFrom = await vscode.window.showQuickPick(langKeys, { placeHolder: 'Select the language you want to translate from' });
+    const langTo = await vscode.window.showQuickPick(langKeys, { placeHolder: 'Select the languages you want to translate to', canPickMany: true });
+
+    if (!langFrom || !langTo) {
+        return;
+    }
+    
+    showStatusBarSpinner('Translating in progress, please wait...');
+
+    for (const key in yaml) {
+        showStatusBarSpinner('Translating key ' + key + ', please wait...');
+        const responses = await translateText(langTo, yaml[key][langFrom]);
+        for (const lang in responses) {
+            yaml[key][lang] = responses[lang];
+        }
+    }
+
+    hideStatusBarSpinner();
+
+    editor.edit(editBuilder => {
+        const lastLine = editor.document.lineCount - 1;
+        const fullRange = new vscode.Range(
+            0, 0,
+            lastLine,
+            editor.document.lineAt(lastLine).text.length
+        );
+        editBuilder.replace(fullRange, saveYamlLangText(yaml));
+    });
+
 }
 
 async function translateAllTextsFromOneLangToAnother(context, e) {
@@ -68,29 +113,29 @@ async function translateAllTextsFromOneLangToAnother(context, e) {
     const langFrom = await vscode.window.showQuickPick(langKeys, { placeHolder: vscode.l10n.t('Select the language you want translate from') });
     const langTo = await vscode.window.showQuickPick(langKeys, { placeHolder: vscode.l10n.t('Select the language you want to translate to') });
 
-    if(!langFrom || !langTo) {
+    if (!langFrom || !langTo) {
         return;
     }
 
     let files = enumFiles(path, 'lang', true);
-	showStatusBarSpinner('Translating in progress, please wait...');
+    showStatusBarSpinner('Translating in progress, please wait...');
 
     for (const f of files) {
         const filecontent = readYaml(f);
         if (filecontent) {
             for (const key in filecontent) {
                 if (filecontent[key][langFrom] === undefined) {
-		            __log.appendLine('Language ' + langFrom + ' not found in file ' + f + ' for key ' + key);
+                    __log.appendLine('Language ' + langFrom + ' not found in file ' + f + ' for key ' + key);
                     continue;
                 }
 
-                if(filecontent[key][langTo] !== undefined) {
+                if (filecontent[key][langTo] !== undefined) {
                     __log.appendLine('Language ' + langTo + ' already exists in file ' + f + ' for key ' + key);
                     continue;
                 }
 
                 const newText = await translateText(langTo, filecontent[key][langFrom]);
-                if(!newText) {
+                if (!newText) {
                     break;
                 }
                 filecontent[key][langTo] = newText;
@@ -113,7 +158,7 @@ async function translateAllWithCopilot(context, e) {
     const langFrom = await vscode.window.showQuickPick(langKeys, { placeHolder: vscode.l10n.t('Select the language you want translate from') });
     const langTo = await vscode.window.showQuickPick(langKeys, { placeHolder: vscode.l10n.t('Select the language you want to translate to') });
 
-    if(!langFrom || !langTo) {
+    if (!langFrom || !langTo) {
         return;
     }
 
@@ -124,17 +169,17 @@ async function translateAllWithCopilot(context, e) {
         if (filecontent) {
             for (const key in filecontent) {
                 if (filecontent[key][langFrom] === undefined) {
-		            __log.appendLine('Language ' + langFrom + ' not found in file ' + f + ' for key ' + key);
+                    __log.appendLine('Language ' + langFrom + ' not found in file ' + f + ' for key ' + key);
                     continue;
                 }
 
-                if(filecontent[key][langTo] !== undefined) {
+                if (filecontent[key][langTo] !== undefined) {
                     __log.appendLine('Language ' + langTo + ' already exists in file ' + f + ' for key ' + key);
                     continue;
                 }
 
                 const newText = await translateWithCopilot(langTo, filecontent[key][langFrom]);
-                if(!newText) {
+                if (!newText) {
                     break;
                 }
                 filecontent[key][langTo] = newText
@@ -151,6 +196,10 @@ async function findFilesWithoutLanguage(context, e) {
 
     const langKeys = Object.keys(languages);
     const langFrom = await vscode.window.showQuickPick(langKeys, { placeHolder: vscode.l10n.t('Select the language you want to search') });
+
+    if(!langFrom) {
+        return;
+    }
 
     let files = enumFiles(path, 'lang', true);
 
@@ -221,10 +270,10 @@ function exportTextsAction(context, e) {
                         if (filecontent) {
                             const extracted = {};
                             for (const key in filecontent) {
-                                if(filecontent[key][langFrom]) {
+                                if (filecontent[key][langFrom]) {
                                     extracted[key] = {};
                                     extracted[key][langFrom] = filecontent[key][langFrom];
-                                    for(const l of langTo) {
+                                    for (const l of langTo) {
                                         extracted[key][l] = filecontent[key][l] ?? '';
                                     }
                                 }
@@ -263,36 +312,36 @@ async function importTextsAction(context, e) {
             'Yaml files': ['lang', 'yaml', 'yml'],
         }
     });
-    
-    if(!files) {
+
+    if (!files) {
         return;
     }
 
     const file = files[0];
     const yamlContent = loadYamlLangFile(file.fsPath);
-        
+
     showStatusBarSpinner('Importing translations, please wait...');
 
-    for(const modulePath in yamlContent) {
+    for (const modulePath in yamlContent) {
 
         const moduleCompletePath = path + modulePath;
-        for(const filePath in yamlContent[modulePath]) {
+        for (const filePath in yamlContent[modulePath]) {
 
             const fileCompletePath = moduleCompletePath + filePath;
-            if(fs.existsSync(fileCompletePath)) {
+            if (fs.existsSync(fileCompletePath)) {
 
                 const yamlFileContent = loadYamlLangFile(fileCompletePath);
-                
-                for(const key in yamlContent[modulePath][filePath]) {
 
-                    if(!yamlFileContent[key]) {
+                for (const key in yamlContent[modulePath][filePath]) {
+
+                    if (!yamlFileContent[key]) {
                         __log.appendLine('Key ' + key + ' not found in file ' + fileCompletePath + ', skipping...');
                     } else {
                         const langs = Object.keys(yamlContent[modulePath][filePath][key]);
                         const langFrom = langs[0];
-                        for(let i=1; i<langs.length; i++) {
+                        for (let i = 1; i < langs.length; i++) {
                             const langTo = langs[i];
-                            if(yamlFileContent[key][langFrom] === yamlContent[modulePath][filePath][key][langFrom]) {
+                            if (yamlFileContent[key][langFrom] === yamlContent[modulePath][filePath][key][langFrom]) {
                                 yamlFileContent[key][langTo] = yamlContent[modulePath][filePath][key][langTo];
                             } else {
                                 __log.appendLine('Key ' + key + ' in language ' + langFrom + ' in file ' + fileCompletePath + ' does not match with the imported file, skipping...');
@@ -326,5 +375,6 @@ module.exports = {
     findFilesWithoutLanguage,
     translateAllTextsFromOneLangToAnother,
     translateAllWithCopilot,
-    translateText
+    translateText,
+    translateCurrentFileFromOneLangToAnother
 };

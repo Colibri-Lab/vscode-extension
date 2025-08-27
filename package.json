@@ -4,7 +4,7 @@
   "author": "Vahan P. Grigoryan",
   "publisher": "colibrilab",
   "description": "Tools for working with Colibri engine and Colibri UI Bundler",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "categories": [
     "Programming Languages"
   ],
@@ -217,6 +217,10 @@
       {
         "command": "colibri-ui.translate-byopenai",
         "title": "%extension.translate-byopenai.title%"
+      },
+      {
+        "command": "colibri-ui.translate-byopenai.file",
+        "title": "%extension.translate-byopenai.file.title%"
       },
       {
         "command": "colibri-ui.refresh-php-tree",

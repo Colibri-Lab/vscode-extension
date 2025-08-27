@@ -285,6 +285,13 @@ function saveYamlLangFile(document, yamlObject) {
 	}
 	return false;
 }
+function saveYamlLangText(yamlObject) {
+	if(Object.keys(yamlObject).length > 0) {
+		let yamlContent = yaml.stringify(addQuotesToYesAndNo(yamlObject));
+		return yamlContent;
+	}
+	return null;
+}
 
 /**
  * Получает список языков
@@ -705,6 +712,9 @@ function readYaml(path) {
 	const content = fs.readFileSync(path).toString();
     return yaml.parse(content);
 }
+function readYamlText(content) {
+    return yaml.parse(content);
+}
 function readJson(path) {
 	const content = fs.readFileSync(path).toString();
     return JSON.parse(content);
@@ -833,7 +843,9 @@ function getPhpModulesByVendor() {
 
 let statusBarItem = null;
 function showStatusBarSpinner(text) {
-	statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+	if(!statusBarItem) {
+		statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+	}
 	statusBarItem.text = '$(sync~spin) ' + text;
 	statusBarItem.show();
 }
@@ -841,6 +853,7 @@ function showStatusBarSpinner(text) {
 function hideStatusBarSpinner() {
 	statusBarItem.hide();
 	statusBarItem.dispose();
+	statusBarItem = null;
 }
 
 module.exports = {
@@ -868,6 +881,7 @@ module.exports = {
     replaceAll,
     expand,
     saveYamlLangFile,
+	saveYamlLangText,
     loadYamlLangFile,
     getModuleName,
 	getPhpModulesByVendor,
@@ -897,5 +911,6 @@ module.exports = {
 	rtrim,
 	enumFiles,
 	showStatusBarSpinner,
-	hideStatusBarSpinner
+	hideStatusBarSpinner,
+	readYamlText
 };

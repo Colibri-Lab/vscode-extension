@@ -124,7 +124,7 @@ async function createCompnentProcess(choosedPath, context) {
 	let fileIndex = 0;
 	let isFile = false;
 
-	choosedPath = fs.realpathSync(choosedPath + '/');
+	choosedPath = fs.realpathSync(choosedPath + '/') + '/';
 	const stat = fs.statSync(choosedPath);
 	if (!stat.isDirectory()) {
 		const parts = choosedPath.split('/');
@@ -133,7 +133,7 @@ async function createCompnentProcess(choosedPath, context) {
 		isFile = true;
 	}
 
-	if(choosedPath.indexOf('/.Bundle') === -1 && choosedPath.indexOf('/UI') === -1) {
+	if(choosedPath.indexOf('.Bundle/') === -1 && choosedPath.indexOf('UI/') === -1) {
 		return null
 	}
 
@@ -279,7 +279,7 @@ async function createCompnentProcess(choosedPath, context) {
 	const namespaceContent = fs.readFileSync(possibleNamespacePath + '/.js').toString();
 	if(choosedPath.indexOf('UI/') !== -1) {
 			
-	} else {
+	} else if(possibleNamespace) {
 		if(namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
 			// нет такой области
 			vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));

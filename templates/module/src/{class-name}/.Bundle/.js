@@ -30,7 +30,11 @@ App.Modules.{class-name} = class extends Colibri.Modules.Module {
 
     }
 
-    Render() {
+    /**
+     * Renders a module UI
+     * @param {object} domainSettings domain settings of module
+     */
+    Render(domainSettings) {
         console.log('Rendering Module {class-name}');    
 
         // Render module content

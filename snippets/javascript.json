@@ -112,6 +112,20 @@
 		],
 		"description": "Add event handler"
 	},
+	"AddRouteMatch": {
+		"prefix": "match",
+		"body": [
+			"/**",
+			" * Called when raised the route pattern of component",
+			" * @protected",
+			" * @param {Array} match ",
+			" */",
+			"__processChangeOnRouteSwitch(data, path) {",
+			"\t$1",
+			"}$0"
+		],
+		"description": "Add event handler"
+	},
 	"multilangtext": {
 		"prefix": "#",
 		"body": [

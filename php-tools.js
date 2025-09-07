@@ -262,6 +262,8 @@ async function createNewModule(context) {
         __log.appendLine(cp.execSync(commandCopy).toString());
 
         const replacements = {
+            '{year}': new Date().getFullYear(),
+            '{vendor}': moduleVendorName,
             '{vendor-name}': moduleVendorName,
             '{module-name}': moduleName,
             '{module-description}': moduleDescription,
@@ -329,8 +331,9 @@ async function createNewModule(context) {
             }
          
             __log.appendLine('Making changes to module files...');
+            __log.appendLine(JSON.stringify(data, null, 2));
             replaceInFiles(modulePath, data);
-            
+            __log.appendLine('Changes made to module files.');
         }
 
         const commitResults = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {title: vscode.l10n.t('Commit changes?'), placeHolder: vscode.l10n.t('Do you wish to commit changes now'), ignoreFocusOut: true});

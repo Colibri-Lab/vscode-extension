@@ -133,7 +133,7 @@ async function createCompnentProcess(choosedPath, context) {
 		isFile = true;
 	}
 
-	if(choosedPath.indexOf('.Bundle/') === -1 && choosedPath.indexOf('UI/') === -1) {
+	if(choosedPath.indexOf('/.Bundle') === -1 && choosedPath.indexOf('/UI') === -1) {
 		return null
 	}
 

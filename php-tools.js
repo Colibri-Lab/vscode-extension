@@ -213,7 +213,7 @@ async function createNewModule(context) {
     let [moduleVendorName, moduleName] = moduleVendorAndName.split('/');    
     let moduleDescription = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the module description:'),placeHolder: vscode.l10n.t('Full description for your module'), ignoreFocusOut: true});
     let moduleClassName = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the module class Name:'), placeHolder: vscode.l10n.t('Without namespace, for example: MyClass, or Example. Please dont use the word «Module» in name...'), ignoreFocusOut: true});
-    let moduleRepo = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the gitlab.colibrilab.pro repo url:'), placeHolder: vscode.l10n.t('Just the pathname, dont enter the domain name'), ignoreFocusOut: true});
+    let moduleRepo = await vscode.window.showInputBox({title: vscode.l10n.t('Enter the repo url:'), placeHolder: vscode.l10n.t('Full path name, with domain and user'), ignoreFocusOut: true});
     const result = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {title: vscode.l10n.t('Is your module represents a website/application?'), placeHolder: vscode.l10n.t('Choose Yes if you plan to use module as startup for the application or website, No if your module will provide some functionality'), ignoreFocusOut: true});
     let projectStartsUp = result === vscode.l10n.t('Yes');
 
@@ -238,7 +238,7 @@ async function createNewModule(context) {
         vscode.window.showInformationMessage('Please enter the all properties');
     } else {
         
-        moduleRepo = 'git@gitlab.colibrilab.pro:' + moduleRepo;
+        // moduleRepo = 'git@gitlab.colibrilab.pro:' + moduleRepo;
         let templatesPath = extensionPath + '/templates/module';
         
         let commandClone = 'cd ' + modulePath + ' && git clone ' + moduleRepo + ' ./';

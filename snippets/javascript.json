@@ -120,11 +120,11 @@
 			" * @protected",
 			" * @param {Array} match ",
 			" */",
-			"__processChangeOnRouteSwitch(data, path) {",
+			"__processChangeOnRouteSwitch(match) {",
 			"\t$1",
 			"}$0"
 		],
-		"description": "Add event handler"
+		"description": "Add event handler"ibril
 	},
 	"multilangtext": {
 		"prefix": "#",

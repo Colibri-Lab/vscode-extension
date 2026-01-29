@@ -25,19 +25,11 @@ class Module extends BaseModule
 {
 
     /**
-     * Singleton
-     *
-     * @var Module
-     */
-    public static ? Module $instance = null;
-
-    /**
      * Module initialization
      * @return void
      */
     public function InitializeModule(): void
     {
-        self::$instance = $this;
 
     }
 

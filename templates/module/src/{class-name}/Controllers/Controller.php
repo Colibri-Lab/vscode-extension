@@ -65,7 +65,7 @@ class Controller extends WebController
      */
     private function _initDefaultBundleHandlers() 
     {
-        App::$instance->HandleEvent(EventsContainer::BundleComplete, function ($event, $args) {
+        App::Instance()->HandleEvent(EventsContainer::BundleComplete, function ($event, $args) {
             try {
                 if (in_array('scss', $args->exts)) {
                     $scss = new Compiler();
@@ -80,7 +80,7 @@ class Controller extends WebController
             return true;
         });
 
-        App::$instance->HandleEvent(EventsContainer::BundleFile, function ($event, $args) {
+        App::Instance()->HandleEvent(EventsContainer::BundleFile, function ($event, $args) {
             $file = new File($args->file);
             if ($file->extension !== 'html') {
                 return true;

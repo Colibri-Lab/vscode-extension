@@ -60,6 +60,7 @@ function createNamespaceProcess(choosedPath, context) {
 		currentNamespace = currentNamespace.split(' = class ')[0];
 		currentNamespace = currentNamespace.split('\n').pop();
 		currentNamespace = replaceAll(currentNamespace, '\n', '');
+		currentNamespace = replaceAll(currentNamespace, 'const ', '');
 
 		vscode.window.showInputBox({
 			password: false,

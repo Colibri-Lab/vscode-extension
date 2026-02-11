@@ -1,10 +1,18 @@
+variables:
+  GIT_STRATEGY: none
+
 stages:
-  - build
-  - deploy
+  - publish
+  - playbook
+  - build-and-deploy
+
+before_script:
+  - git clone git@$CI_SERVER_HOST:$CI_PROJECT_PATH.git . || true
+  - git pull --no-ff origin $CI_COMMIT_REF_NAME
 
 publish:
   image: curlimages/curl:latest
-  stage: build
+  stage: publish
   variables:
     URL: "$CI_SERVER_PROTOCOL://$CI_SERVER_HOST:$CI_SERVER_PORT/api/v4/projects/$CI_PROJECT_ID/packages/composer?job_token=$CI_JOB_TOKEN"
   script:
@@ -12,72 +20,88 @@ publish:
     - insecure=$([ "$CI_SERVER_PROTOCOL" = "http" ] && echo "--insecure" || echo "")
     - response=$(curl -s -w "\n%{http_code}" $insecure --data $version $URL)
     - code=$(echo "$response" | tail -n 1)
-    - body=$(echo "$response" | head -n 1)
+    - body=$(echo "$response" | head -n 1) 
     # Output state information
     - if [ $code -eq 201 ]; then
-        echo "Package created - Code $code - $body"; 
+        echo "Package created - Code $code - $body";
       else
         echo "Could not create package - Code $code - $body";
         exit 1;
       fi
   tags:
     - gitlab
- 
-production:
-  stage: deploy
+
+playbook:
+  stage: playbook
   script:
-     
-    # host= host
-    # mode= prod, test, dev
-    # module_name=
-    # project_dir= target directory
-    # folder= temporary directory
-    # modules= moudules that composer will install (all modules in one line without spaces)
-    # php= php version 8.0, 7.4
-    # composer= composer version 2
-    - ansible-playbook ./deploy.yml
-      -e host="$COLIBRI_PROD_DOMAIN"
-      -e mode="prod"
-      -e ui_version="master" 
-      -e module_name="{module-name}"
-      -e project_dir="{project-prod-domain}"
-      -e folder="{module-name}_dist"
-      -e "modules=['colibri/security:dev-master','colibri/mainframe:dev-master','colibri/manage:dev-master','colibri/lang:dev-master','colibri/sites:dev-master','colibri/tools:dev-master','{vendor-name}/{module-name}:$CI_COMMIT_REF_NAME']"
-      -e "bin_scripts=['{module-name}-migrate.sh','{module-name}-bundle.sh {project-prod-domain}','{module-name}-bundle.sh {project-prod-domain} bundle']"
-      -e php=8.0
-      -e composer=2
- 
-  when: manual
-  only:
-    - tags
-  tags:
-    - gitlab
- 
+    - git clone https://gitlab.colibrilab.pro/colibrilab/recipes.git playbook
+  artifacts:
+    paths:
+      - playbook/
+    expire_in: 1 hour  
+
 test:
-  stage: deploy
+  stage: build-and-deploy
   script:
- 
+  
     # host= host
     # mode= prod, test, dev
     # module_name=
     # project_dir= target directory
     # folder= temporary directory
-    # modules= moudules that composer will install (all modules in one line without spaces)
+    # modules= moudules that composer will install (все модули в одну строку, через пробел, как в композере)
     # php= php version 8.0, 7.4
     # composer= composer version 2
-    - ansible-playbook ./deploy.yml
-      -e host="$COLIBRI_TEST_DOMAIN"
+    - ansible-playbook ./playbook/colibri-deploy.yml 
+      -e host="$COLIBRI_TESTS"
       -e mode="test"
       -e ui_version="master" 
       -e module_name="{module-name}"
-      -e project_dir="{project-test-domain}"
-      -e folder="{module-name}_dist"
+      -e project_dir="/var/www/{project-test-domain}"
+      -e folder="law_dist"
+      -e "repositories=[]"
       -e "modules=['colibri/security:dev-master','colibri/mainframe:dev-master','colibri/manage:dev-master','colibri/lang:dev-master','colibri/sites:dev-master','colibri/tools:dev-master','{vendor-name}/{module-name}:dev-$CI_COMMIT_REF_NAME']"
-      -e "bin_scripts=['{module-name}-migrate.sh','{module-name}-bundle.sh {project-test-domain}','{module-name}-bundle.sh {project-test-domain} bundle']"
-      -e php=8.0
+      -e "php_scripts=[]"
+      -e "bin_scripts=['migrate','{module-name}-bundle.sh {project-test-domain}','{module-name}-bundle.sh {project-test-domain} bundle']"
+      -e "queues=[]"
+      -e php=8.3
       -e composer=2
+
   when: always
   only:
     - dev
+  tags:
+    - gitlab
+
+production:
+  stage: build-and-deploy
+  script:
+  
+    # host= host
+    # mode= prod, test, dev
+    # module_name=
+    # project_dir= target directory
+    # folder= temporary directory
+    # modules= moudules that composer will install (все модули в одну строку, через пробел, как в композере)
+    # php= php version 8.0, 7.4
+    # composer= composer version 2
+    - ansible-playbook ./playbook/colibri-deploy.yml 
+      -e host="$COLIBRI_PRODS"
+      -e mode="test"
+      -e ui_version="master" 
+      -e module_name="{module-name}"
+      -e project_dir="/var/www/{project-prod-domain}"
+      -e folder="law_dist"
+      -e "repositories=[]"
+      -e "modules=['colibri/security:dev-master','colibri/mainframe:dev-master','colibri/manage:dev-master','colibri/lang:dev-master','colibri/sites:dev-master','colibri/tools:dev-master','{vendor-name}/{module-name}:$CI_COMMIT_REF_NAME']"
+      -e "php_scripts=[]"
+      -e "bin_scripts=['migrate','{module-name}-bundle.sh {project-prod-domain}','{module-name}-bundle.sh {project-prod-domain} bundle']"
+      -e "queues=[]"
+      -e php=8.3
+      -e composer=2
+
+  when: manual
+  only:
+    - tags
   tags:
     - gitlab

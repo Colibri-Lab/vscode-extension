@@ -34,7 +34,7 @@ publish:
 playbook:
   stage: playbook
   script:
-    - git clone https://gitlab.colibrilab.pro/colibrilab/recipes.git playbook
+    - git clone https://gitlab.colibrilab.pro/colibrilab/recipes.git playbook || true
   artifacts:
     paths:
       - playbook/

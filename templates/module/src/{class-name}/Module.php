@@ -30,7 +30,16 @@ class Module extends BaseModule
      */
     public function InitializeModule(): void
     {
+        if(App::$domainKey === '{module-name}') {
 
+            // Setting a language settings
+            if(App::$moduleManager->{'lang'}) {
+                App::$moduleManager->{'lang'}->InitCurrent(App::$request->cookie->{'{module-name}-lang'});
+                App::$moduleManager->{'lang'}->SetUseCookie(false);    
+                App::$moduleManager->{'lang'}->SetCookieDomain($this->Config('lang-cookie-domain', App::$request->host)->GetValue());
+            }
+
+        }
     }
 
     /**
@@ -67,5 +76,27 @@ class Module extends BaseModule
         // $table->ExportJson($modulePath . '{storage-name}.json');
 
     }
+
+    public function GetSettings(): array
+    {
+        $ret = [];
+
+        /** @var \App\Modules\Lang\Module $lang */
+        $lang = App::$moduleManager->Get('lang');
+        if($lang) {
+    
+            $langs = $lang->Langs();
+            $ret['langs'] = $langs;
+            $ret['lang-cookie-name'] = '{module-name}-lang';
+            $ret['lang-cookie-domain'] = $lang->GetCookieDomain();
+    
+            $currentLang = $langs->{$lang->current};
+            $ret['lang'] = (object) array_merge(['name' => $lang->current], (array) $currentLang);
+
+        }
+
+        return $ret;
+    }
+    
 
 }

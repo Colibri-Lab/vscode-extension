@@ -1,3 +1,5 @@
+# lang-cookie-domain: domain.tld
+
 texts: include({module-name}-langtexts.yaml)
 
 databases:

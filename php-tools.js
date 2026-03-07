@@ -40,6 +40,8 @@ function runModelsGenerator(context, e) {
         if(!storageName) {
             return;
         }
+        storageName = storageName.split(': ');
+        storageName = storageName[0] + '.' + storageName[1];
         __log.appendLine('Choosed: ' + storageName);
         __log.appendLine('Generating models...');
         command = replaceAll(command, '{storage-name}', storageName);
@@ -503,67 +505,72 @@ function openPhpClass(context, data) {
 
 function readPhp(path) {
 
-	const content = fs.readFileSync(path).toString();
-	const lines = content.split('\n');
+    try {
 
-	let className = '';
-	let classParent = '';
-	let classNameIndex = 0;
-    let classDesc = '';
-	let methods = {public: {}, private: {}, static: {}};
-	let index = 0;
-	for(const line of lines) {
-
-		let match = /class\s([^\s]+)\sextends\s([^\s]+)/igm.exec(line);
-		if(match && match.length > 0) {
-			className = match[1];
-			classParent = match[2];
-			classNameIndex = index;
-            classDesc = findPhpDoc(lines, index);
-		}
-
-		match = /static\sfunction\s([^\s\(]+).*/igm.exec(line);
-		if(match && match.length > 0) {
-			methods.static[match[1]] = {
-				line: index,
-				path: path,
-				row: match[0],
-				desc: findPhpDoc(lines, index)
-			};
-		}
-		match = /private\sfunction\s([^\s\(]+).*/igm.exec(line);
-		if(match && match.length > 0) {
-			methods.private[match[1]] = {
-				line: index,
-				path: path,
-				row: match[0],
-				desc: findPhpDoc(lines, index)
-			};
-		}
-		match = /public\sfunction\s([^\s\(]+).*/igm.exec(line);
-		if(match && match.length > 0) {
-			methods.public[match[1]] = {
-				line: index,
-				path: path,
-				row: match[0],
-				desc: findPhpDoc(lines, index)
-			};
-		}
-
-		index++;
-	}
-	
-	const ret = {};
-	ret[className] = {
-		name: className,
-		path: path,
-        desc: classDesc,
-		line: classNameIndex,
-		parent: classParent,
-		methods: methods
-	};
-
-	return ret;
+        const content = fs.readFileSync(path).toString();
+        const lines = content.split('\n');
+    
+        let className = '';
+        let classParent = '';
+        let classNameIndex = 0;
+        let classDesc = '';
+        let methods = {public: {}, private: {}, static: {}};
+        let index = 0;
+        for(const line of lines) {
+    
+            let match = /class\s([^\s]+)\sextends\s([^\s]+)/igm.exec(line);
+            if(match && match.length > 0) {
+                className = match[1];
+                classParent = match[2];
+                classNameIndex = index;
+                classDesc = findPhpDoc(lines, index);
+            }
+    
+            match = /static\sfunction\s([^\s\(]+).*/igm.exec(line);
+            if(match && match.length > 0) {
+                methods.static[match[1]] = {
+                    line: index,
+                    path: path,
+                    row: match[0],
+                    desc: findPhpDoc(lines, index)
+                };
+            }
+            match = /private\sfunction\s([^\s\(]+).*/igm.exec(line);
+            if(match && match.length > 0) {
+                methods.private[match[1]] = {
+                    line: index,
+                    path: path,
+                    row: match[0],
+                    desc: findPhpDoc(lines, index)
+                };
+            }
+            match = /public\sfunction\s([^\s\(]+).*/igm.exec(line);
+            if(match && match.length > 0) {
+                methods.public[match[1]] = {
+                    line: index,
+                    path: path,
+                    row: match[0],
+                    desc: findPhpDoc(lines, index)
+                };
+            }
+    
+            index++;
+        }
+        
+        const ret = {};
+        ret[className] = {
+            name: className,
+            path: path,
+            desc: classDesc,
+            line: classNameIndex,
+            parent: classParent,
+            methods: methods
+        };
+    
+        return ret;
+    } catch(e) {
+        return [];
+    }
 
 }
 
@@ -601,7 +608,10 @@ function findStorageNames(path) {
                         module.config.databases.storages = readYaml(path + '/config/' + module.config.databases.storages);
                     }
         
-                    storages = [...storages, ...Object.keys(module.config.databases.storages)];
+                    let x = Object.keys(module.config.databases.storages);
+                    x = x.map(v => module.name + ': ' + v);
+
+                    storages = [...storages, ...x];
                 }    
             }
             catch(e) {}
@@ -610,7 +620,7 @@ function findStorageNames(path) {
     
     let list = [];
     for(const storage of storages) {
-        if(storage.substring(0, 2) !== '__') {
+        if(storage.indexOf('__') === -1) {
             list.push(storage);
         }
     }

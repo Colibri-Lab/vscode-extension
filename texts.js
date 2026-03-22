@@ -341,11 +341,11 @@ async function importTextsAction(context, e) {
                         const langFrom = langs[0];
                         for (let i = 1; i < langs.length; i++) {
                             const langTo = langs[i];
-                            if (yamlFileContent[key][langFrom] === yamlContent[modulePath][filePath][key][langFrom]) {
-                                yamlFileContent[key][langTo] = yamlContent[modulePath][filePath][key][langTo];
-                            } else {
-                                __log.appendLine('Key ' + key + ' in language ' + langFrom + ' in file ' + fileCompletePath + ' does not match with the imported file, skipping...');
+                            if (yamlFileContent[key][langFrom] !== yamlContent[modulePath][filePath][key][langFrom]) {
+                                __log.appendLine('Key ' + key + ' in language ' + langFrom + ' in file ' + fileCompletePath + ' does not match with the imported file, changing...');
+                                yamlFileContent[key][langFrom] = yamlContent[modulePath][filePath][key][langFrom];
                             }
+                            yamlFileContent[key][langTo] = yamlContent[modulePath][filePath][key][langTo];
                         }
                     }
 

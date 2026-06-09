@@ -762,7 +762,7 @@ function getPHPModules(getpaths = false) {
 			}
 
 			const composer = readJson(path + '/vendor/' + moduleName + '/composer.json');
-			if(composer && composer.require && !!composer.require['colibri/core'] && fs.existsSync(path + '/vendor/' + moduleName + '/deploy.yml')) {
+			if(composer && composer.require && !!composer.require['colibri/core']) {
 				// это вериятно модуль
 				let modulePath = '';
 				let moduleRealName = '';

@@ -28,6 +28,7 @@ class Controller extends WebController
 
     /**
      * Default action
+     * @public
      * @param RequestCollection $get данные GET
      * @param RequestCollection $post данные POST
      * @param mixed $payload данные payload обьекта переданного через POST/PUT

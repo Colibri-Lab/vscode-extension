@@ -19,10 +19,12 @@
 	"extension.create-controller.title": "Ստեղձել վերահսկիչ",
 	"extension.create-controller-action.title": "Ստեղծեք վերահսկիչի գործողություն",
 	"extension.export-texts.title": "Արտահանել տեքստերը",
+	"extension.export-storages-texts.title": "Արտահանել պահեստների տեքստերը",
 	"extension.import-texts.title": "Ներմուծել տեքստերը",
+	"extension.import-storages-texts.title": "Ներմուծել պահեստների տեքստերը",
 	"extension.find-not-translated.title": "Գտնել բոլոր լեզվաբառարանային ֆայլերը, որոնք չունեն թարգմանություն նշված լեզվով",
-	"extension.translate-byopenai.title": "Թարգմանել տեքստերը OpenAI-ի միջոցով",
-	"extension.translate-byopenai.file.title": "Թարգմանել ընթացիկ ֆայլը OpenAI-ի միջոցով",
+	"extension.translate-byopenai.title": "Թարգմանել տեքստերը AI-ի միջոցով",
+	"extension.translate-byopenai.file.title": "Թարգմանել ընթացիկ ֆայլը AI-ի միջոցով",
 	"extension.translate-bycopilot.title": "Թարգմանել տեքստերը GitHub Copilot-ի միջոցով"
 
 }

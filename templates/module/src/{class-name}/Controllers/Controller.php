@@ -20,6 +20,8 @@ use Colibri\Utils\Minifiers\Javascript as Minifier;
 
 /**
  * Default controller
+ * @class
+ * @extends WebController
  */
 class Controller extends WebController
 {

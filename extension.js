@@ -40,7 +40,7 @@ const { provideDefinitions, provideDeclarations, provideReferences, provideHover
 const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 const { default: axios } = require('axios');
-const { exportTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot, translateText, translateCurrentFileFromOneLangToAnother } = require('./texts');
+const { exportTextsAction, exportStoragesTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot, translateText, translateCurrentFileFromOneLangToAnother, importStoragesTextsAction } = require('./texts');
 
 const fs = require('fs');
 const path = require('path');
@@ -527,7 +527,9 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e) => createController(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller-action', (e) => createControllerAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.export-texts', (e) => exportTextsAction(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.export-storages-texts', (e) => exportStoragesTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.import-texts', (e) => importTextsAction(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.import-storages-texts', (e) => importStoragesTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.find-not-translated', (e) => findFilesWithoutLanguage(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-byopenai', (e) => translateAllTextsFromOneLangToAnother(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.translate-byopenai.file', (e) => translateCurrentFileFromOneLangToAnother(context, e)));

@@ -19,10 +19,12 @@
 	"extension.create-controller.title": "Create new controller",
 	"extension.create-controller-action.title": "Create controller action",
 	"extension.export-texts.title": "Export texts",
+	"extension.export-storages-texts.title": "Export storages texts",
 	"extension.import-texts.title": "Import texts",
+	"extension.import-storages-texts.title": "Import storages texts",
 	"extension.find-not-translated.title": "Find all lang files without translation to specified language",
-	"extension.translate-byopenai.title": "Translate texts with OpenAI",
-	"extension.translate-byopenai.file.title": "Translate current file with OpenAI",
+	"extension.translate-byopenai.title": "Translate texts with AI",
+	"extension.translate-byopenai.file.title": "Translate current file with AI",
 	"extension.translate-bycopilot.title": "Translate texts with GitHub Copilot"
 
 }

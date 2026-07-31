@@ -19,9 +19,11 @@
 	"extension.create-controller.title": "Создать новый контроллер",
 	"extension.create-controller-action.title": "Создать новый экшен",
 	"extension.export-texts.title": "Выгрузить тексты",
+	"extension.export-storages-texts.title": "Выгрузить тексты хранилищ",
 	"extension.import-texts.title": "Загрузить тексты",
+	"extension.import-storages-texts.title": "Загрузить тексты хранилищ",
 	"extension.find-not-translated.title": "Найти все языковые файлы без перевода на указанный язык",
-	"extension.translate-byopenai.title": "Перевести тексты с помощью OpenAI",
-	"extension.translate-byopenai.file.title": "Перевести текущий файл с помощью OpenAI",
+	"extension.translate-byopenai.title": "Перевести тексты с помощью AI",
+	"extension.translate-byopenai.file.title": "Перевести текущий файл с помощью AI",
 	"extension.translate-bycopilot.title": "Перевести тексты с помощью GitHub Copilot"
 }

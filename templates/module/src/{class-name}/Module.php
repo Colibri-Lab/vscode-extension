@@ -17,8 +17,8 @@ use Colibri\Utils\Logs\Logger;
 
 /**
  * {module-description}
- * @package App\Modules\{class-name}
- *
+ * @class
+ * @extends BaseModule
  *
  */
 class Module extends BaseModule

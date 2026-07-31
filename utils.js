@@ -401,6 +401,36 @@ function enumFiles(workspacePath = null, extension = 'lang', returnRealPath = fa
 	}
 }
 
+function toPlain(value, exceptObjectsContainsingKeys = [], prefix = '') {
+	const ret = {};
+
+	if(exceptObjectsContainsingKeys.every(k => (value && typeof value === 'object' && Object.keys(value).includes(k))) && prefix) {
+		let r = {};
+		for(const k of exceptObjectsContainsingKeys) {
+			r[k] = value[k];
+		}
+		ret[prefix] = r;
+		return ret;
+	}
+
+	if((value === null || value === undefined || (typeof value === 'object' && Object.keys(value).length === 0)) && !!prefix) {
+		return ret;
+	}
+
+	for(const [key, item] of Object.entries(value || {})) {
+		const isNumericKey = /^\d+$/.test(key);
+		const k = prefix ? (isNumericKey ? '[' + key + ']' : '.' + key) : key;
+
+		if(item !== null && typeof item === 'object') {
+			Object.assign(ret, toPlain(item, exceptObjectsContainsingKeys, prefix + k));
+		} else if(exceptObjectsContainsingKeys.length === 0) {
+			ret[prefix + k] = item;
+		}
+	}
+
+	return ret;
+}
+
 function extractNames(componentName, currentComponentName) {
 	let currentComponentNameParts = currentComponentName.split('.');
 	while(currentComponentNameParts.length > 0) {
@@ -712,6 +742,10 @@ function readYaml(path) {
 	const content = fs.readFileSync(path).toString();
     return yaml.parse(content);
 }
+function saveYaml(path, yamlObject) {
+	let yamlContent = yaml.stringify(addQuotesToYesAndNo(yamlObject));
+	fs.writeFileSync(path, yamlContent, {encoding:'utf8', flag:'w+'});
+}
 function readYamlText(content) {
     return yaml.parse(content);
 }
@@ -875,6 +909,7 @@ module.exports = {
 	__staticMethodsRegExp,
 	getPHPModules,
 	readYaml,
+	saveYaml,
 	readJson,
 	reloadCompletionItems,
 	hasLanguageModule,
@@ -912,5 +947,6 @@ module.exports = {
 	enumFiles,
 	showStatusBarSpinner,
 	hideStatusBarSpinner,
-	readYamlText
+	readYamlText,
+	toPlain
 };

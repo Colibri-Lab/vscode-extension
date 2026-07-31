@@ -2,16 +2,16 @@
 
 namespace App\Modules\{class-name}\Controllers;
 
-use App\Modules\CallCenter\Module;
+use App\Modules\{class-name}\Module;
 use Colibri\App;
 use Colibri\Web\Controller as WebController;
 use Colibri\Web\PayloadCopy;
 use Colibri\Web\RequestCollection;
 
 /**
- * Call center main controller
- * @author self
- * @package App\Modules\CallCenter\Controllers
+ * {class-name} main controller
+ * @class
+ * @extends WebController
  */
 class {class-name}Controller extends WebController
 {

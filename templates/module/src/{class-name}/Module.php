@@ -27,6 +27,7 @@ class Module extends BaseModule
     /**
      * Module initialization
      * @return void
+     * @public
      */
     public function InitializeModule(): void
     {
@@ -44,6 +45,9 @@ class Module extends BaseModule
 
     /**
      * Used in backend to generate menu items
+     * @param bool $hideExecuteCommand
+     * @return Item|array
+     * @public
      */
     public function GetTopmostMenu(bool $hideExecuteCommand = true): Item|array
     {
@@ -54,7 +58,9 @@ class Module extends BaseModule
     }
 
     /**
-     * Used in backend to get permissions
+     * Used in backend to get permissions tree
+     * @return array
+     * @public
      */
     public function GetPermissions(): array
     {
@@ -64,7 +70,11 @@ class Module extends BaseModule
     }
 
     /**
-     * Used in Storages to backup data
+     * Used to backup data in module
+     * @param Logger $logger
+     * @param string $path
+     * @return void
+     * @public
      */
     public function Backup(Logger $logger, string $path)
     {
@@ -77,6 +87,11 @@ class Module extends BaseModule
 
     }
 
+    /**
+     * Gets the settings of the module
+     * @return array
+     * @public
+     */
     public function GetSettings(): array
     {
         $ret = [];

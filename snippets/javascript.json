@@ -24,6 +24,9 @@
 		"prefix": "handler",
 		"body": [
 			"/**",
+			" * Event handler for $1",
+			" * @param {Colibri.UI.Event} event event object",
+			" * @param {object} args event arguments",	
 			" * @private",
 			" * $3",
 			" */",
@@ -64,6 +67,9 @@
 			"\tthis._$1 = value;",
 			"\tthis._show${1/.*/${0:/capitalize}/}();",
 			"}",
+			"/**",
+			" * @ignore",
+			" */",
 			"_show${1/.*/${0:/capitalize}/}() {",
 			"\t$4",
 			"}$0"
@@ -88,6 +94,9 @@
 			"\tthis._value = value;",
 			"\tthis._showValue();",
 			"}",
+			"/**",
+			" * @ignore",
+			" */",
 			"_showValue() {",
 			"\t$3",
 			"}$0"

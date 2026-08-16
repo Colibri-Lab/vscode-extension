@@ -112,6 +112,9 @@ function findType(text) {
 			if(tp.indexOf(',') !== -1) {
 				type = 'String';
 				choice = tp.split(',');
+			} else if(tp.indexOf('|') !== -1) {
+				type = 'String';
+				choice = tp.split('|');
 			} else {
 				type = types[tp] || 'String';
 				choice = choices[type];

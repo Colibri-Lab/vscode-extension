@@ -273,10 +273,8 @@ class Installer
         }
 
         print_r('Installing scripts'."\n");
-        self::_copyOrSymlink($mode, $path.'/src/{class-name}/bin/', './bin/', '{module-name}-migrate.sh', '{module-name}-migrate.sh');
         self::_copyOrSymlink($mode, $path.'/src/{class-name}/bin/', './bin/', '{module-name}-bundle.sh', '{module-name}-bundle.sh');
-        self::_copyOrSymlink($mode, $path.'/src/{class-name}/bin/', './bin/', '{module-name}-models-generate.sh', '{module-name}-models-generate.sh');
-
+ 
         print_r('Installing styles'."\n");
         // self::_copyOrSymlink($mode, $path.'/src/{class-name}/web/res/css/', './'.$webRoot.'/res/css/', '{module-name}-fonts.scss', '{module-name}-fonts.scss');
         // self::_copyOrSymlink($mode, $path.'/src/{class-name}/web/res/css/', './'.$webRoot.'/res/css/', '{module-name}-styles.scss', '{module-name}-styles.scss');

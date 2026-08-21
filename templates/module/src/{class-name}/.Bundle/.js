@@ -17,6 +17,10 @@ App.Modules.{class-name} = class extends Colibri.Modules.Module {
 
     }
 
+    /**
+     * Initializes the module
+     * @public
+     */
     InitializeModule() {
         super.InitializeModule();
 
@@ -39,6 +43,7 @@ App.Modules.{class-name} = class extends Colibri.Modules.Module {
     /**
      * Renders a module UI
      * @param {object} domainSettings domain settings of module
+     * @public
      */
     Render(domainSettings) {
         console.log('Rendering Module {class-name}');    
@@ -56,15 +61,33 @@ App.Modules.{class-name} = class extends Colibri.Modules.Module {
         // });
     }
 
+    /**
+     * Registers module events
+     * @protected
+     */
     RegisterEvents() {
         console.log('Registering module events for {class-name}');
     }
 
+    /**
+     * Registers module event handlers
+     * @protected
+     */
     RegisterEventHandlers() {
         console.log('Registering event handlers for {class-name}');
     }
 
     // Sample: 
+    // /**
+    //  * Load credits from server
+    //  * @param {number} page page number
+    //  * @param {number} pagesize page size
+    //  * @param {object} params additional parameters for request
+    //  * @param {boolean} returnPromise if true, returns promise instead of storing data in storage
+    //  * @returns {Promise|undefined} returns promise if returnPromise is true, otherwise undefined
+    //  * @public
+    //  * @async
+    //  */
     // Credits(page = 1, pagesize = 20, params = {}, returnPromise = false) {
     //     const promise = this.Call('Controller', 'Action', Object.assign(params, {page: page, pagesize: pagesize}));
     //     if(returnPromise) {

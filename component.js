@@ -131,11 +131,8 @@ function createNamespace(context, e, namespaceName = '', namespaceDescription = 
  * @param {string} choosedPath путь к папке где нужно создать компоненту
  * @param {vscode.ExtensionContext} context
  */
-async function createCompnentProcess(choosedPath, context) {
-
-	let className = '';
-	let parentClass = '';
-	let description = '';
+async function createComponentProcess(choosedPath, context, className = '', parentClass = '', description = '') {
+	
 	let fileIndex = 0;
 	let isFile = false;
 
@@ -149,7 +146,7 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	if (choosedPath.indexOf('.Bundle/') === -1 && choosedPath.indexOf('UI/') === -1) {
-		return null
+		return null;
 	}
 
 	let jsFiles = [];
@@ -173,12 +170,15 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	let lastFileData = '';
+	let namespaceName = '';
 	if (firstFile === '.js') {
 		// namespace exists
 		lastFileData = fs.readFileSync(choosedPath + '/' + firstFile, { encoding: 'utf8', flag: 'r' });
 		lastFileData = lastFileData.split(' = class ')[0];
 		lastFileData = lastFileData.trim();
-		className = lastFileData;
+		namespaceName = lastFileData;
+		namespaceName = namespaceName.split('\n').pop();
+		namespaceName = replaceAll(namespaceName, '\n', '');
 	}
 	else {
 		lastFileData = fs.readFileSync(choosedPath + '/' + lastFile, { encoding: 'utf8', flag: 'r' });
@@ -188,46 +188,44 @@ async function createCompnentProcess(choosedPath, context) {
 		if (lastFileData && lastFile !== '.js') {
 			let lastFileDataParts = lastFileData.split('.');
 			lastFileDataParts.pop();
-			className = lastFileDataParts.join('.');
+			namespaceName = lastFileDataParts.join('.');
 		} else {
-			className = lastFileData;
+			namespaceName = lastFileData;
 		}
+		namespaceName = namespaceName.split('\n').pop();
+		namespaceName = replaceAll(namespaceName, '\n', '');
 	}
 
-	className = className.split('\n').pop();
-	className = replaceAll(className, '\n', '');
-
-	className = await vscode.window.showInputBox({
-		password: false,
-		title: vscode.l10n.t('Input the class name with namespace'),
-		value: className + '.'
-	});
-
+	if(!className || typeof className !== 'string') { 
+		className = await vscode.window.showInputBox({
+			password: false,
+			title: vscode.l10n.t('Input the class name with namespace'),
+			value: namespaceName + '.'
+		});
+	}
 	if (!className) {
 		return null;
 	}
 
-	let namespaceNames = className.split('.');
-	namespaceNames.splice(namespaceNames.length - 1, 1);
-	let namespaceName = namespaceNames.join('.');
-
-	parentClass = await vscode.window.showInputBox({
-		password: false,
-		title: vscode.l10n.t('Input the parent class name with namespace'),
-		value: 'Colibri.UI.'
-	});
-
+	if(!parentClass || typeof parentClass !== 'string') {
+		parentClass = await vscode.window.showInputBox({
+			password: false,
+			title: vscode.l10n.t('Input the parent class name with namespace'),
+			value: 'Colibri.UI.'
+		});
+	}
 	if (!parentClass) {
 		return null;
 	}
 
-	description = await vscode.window.showInputBox({
-		password: false,
-		title: vscode.l10n.t('Enter the description of class'),
-		value: ''
-	});
-
-	if (!parentClass) {
+	if(!description || typeof description !== 'string') {
+		description = await vscode.window.showInputBox({
+			password: false,
+			title: vscode.l10n.t('Enter the description of class'),
+			value: ''
+		});
+	}
+	if (!description) {
 		return null;
 	}
 
@@ -243,14 +241,10 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	const moduleContent = fs.readFileSync(bundlePath + '.js').toString();
-	if (choosedPath.indexOf('UI/') !== -1) {
-
-	} else {
-		if (moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
-			// попытка создать компоненту не в своем модуле;
-			vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
-			return null;
-		}
+	if (choosedPath.indexOf('UI/') === -1 && moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
+		// попытка создать компоненту не в своем модуле;
+		vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
+		return null;
 	}
 
 	possibleNamespace = replaceAll(possibleNamespace, moduleName + '.', '');
@@ -292,14 +286,9 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	const namespaceContent = fs.readFileSync(possibleNamespacePath + '/.js').toString();
-	if (choosedPath.indexOf('UI/') !== -1) {
-
-	} else if (possibleNamespace) {
-		if (namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
-			// нет такой области
-			vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
-			return null;
-		}
+	if (choosedPath.indexOf('UI/') === -1 && possibleNamespace && namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
+		vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
+		return null;
 	}
 
 	fileIndex++;
@@ -378,7 +367,7 @@ async function createCompnentProcess(choosedPath, context) {
  * Create a component
  * @param {vscode.ExtensionContext} context 
  */
-function createComponent(context, e) {
+function createComponent(context, e, className = '', parentClass = '', description = '') {
 	// The code you place here will be executed every time your command is executed
 
 
@@ -390,15 +379,18 @@ function createComponent(context, e) {
 			canSelectFolders: true
 		}).then(fileUri => {
 			if (fileUri && fileUri[0]) {
-				createCompnentProcess(fileUri[0].path, context);
+				createComponentProcess(fileUri[0].path, context, className, parentClass, description);
 			}
 		});
 	}
 	else if (e instanceof Data) {
-		createCompnentProcess(e.data.object.file, context);
+		createComponentProcess(e.data.object.file, context, className, parentClass, description);
+	}
+	else if (typeof e === 'string') {
+		createComponentProcess(e, context, className, parentClass, description);
 	}
 	else {
-		createCompnentProcess(e.fsPath, context).then((creationContext) => {
+		createComponentProcess(e.fsPath, context, className, parentClass, description).then((creationContext) => {
 			if (!creationContext) {
 				return;
 			}

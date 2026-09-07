@@ -517,7 +517,7 @@ function activate(context) {
 
 		__log.appendLine('Registering events');
 
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-component', (e) => createComponent(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-component', (e, className, parentClass, description) => createComponent(context, e, className, parentClass, description)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-namespace', (e, namespaceName, namespaceDescription) => createNamespace(context, e, namespaceName, namespaceDescription)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (storage) => runModelsGenerator(context, storage)));

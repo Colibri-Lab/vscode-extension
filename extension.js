@@ -518,14 +518,14 @@ function activate(context) {
 		__log.appendLine('Registering events');
 
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-component', (e) => createComponent(context, e)));
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-namespace', (e) => createNamespace(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-namespace', (e, namespaceName, namespaceDescription) => createNamespace(context, e, namespaceName, namespaceDescription)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (e) => runModelsGenerator(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (storage) => runModelsGenerator(context, storage)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-phpclass', (e) => openPhpClass(context, e)));
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e) => createController(context, e)));
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller-action', (e) => createControllerAction(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e, controllerName, controllerDescription) => createController(context, e, controllerName, controllerDescription)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller-action', (e, controllerActionName, controllerActionDescription) => createControllerAction(context, e, controllerActionName, controllerActionDescription)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.export-texts', (e) => exportTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.export-storages-texts', (e) => exportStoragesTextsAction(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.import-texts', (e) => importTextsAction(context, e)));

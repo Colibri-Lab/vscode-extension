@@ -28,15 +28,21 @@ function runMigrationScript(context, e) {
     });
 }
 
-function runModelsGenerator(context, e) {
+function runModelsGenerator(context, storage) {
 
     const path = getWorkspacePath();
     const workbenchConfig = vscode.workspace.getConfiguration();
     let command = workbenchConfig.get('colibrilab.models-generate-command');
     command = replaceAll(command, '{app-root}', path);
-    let list = findStorageNames(path);
+    
+    let promise = null;
+    if(storage) {
+        promise = Promise.resolve(storage);
+    } else {
+        promise = vscode.window.showQuickPick(findStorageNames(path));
+    }
 
-    vscode.window.showQuickPick(list).then(function (storageName) {
+    promise.then(function (storageName) {
         if (!storageName) {
             return;
         }
@@ -357,8 +363,6 @@ async function createController(context, e, controllerName = null, controllerDes
     }
 
     let moduleName = '';
-    let controllerName = '';
-    let controllerDescription = '';
     const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
     const templatesPath = extensionPath + '/templates/';
 

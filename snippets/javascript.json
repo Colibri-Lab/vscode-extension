@@ -136,7 +136,7 @@
 			"\t$1",
 			"}$0"
 		],
-		"description": "Add event handler"ibril
+		"description": "Add event handler"
 	},
 	"multilangtext": {
 		"prefix": "#",

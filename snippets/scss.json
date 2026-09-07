@@ -20,7 +20,7 @@
 	"FromTheme": {
 		"prefix": "theme",
 		"body": [
-			"@if variable-exists($$name: theme) and $$theme == \"${1||}\" {",
+			"@if variable-exists(\\$name: theme) and \\$theme == \"$1\" {",
 			"\t$2",
 			"}$0"
 		],

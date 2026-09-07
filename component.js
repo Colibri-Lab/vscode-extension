@@ -17,8 +17,7 @@ const { Data, getTreeDataProvider } = require('./tree');
  * @param {string} choosedPath путь к папке где нужно создать компоненту
  * @param {vscode.ExtensionContext} context
  */
-function createNamespaceProcess(choosedPath, context) {
-	let namespaceName = '';
+function createNamespaceProcess(choosedPath, context, namespaceName = '', namespaceDescription = '') {
 
 	choosedPath = fs.realpathSync(choosedPath + '/');
 	const stat = fs.statSync(choosedPath);
@@ -28,68 +27,81 @@ function createNamespaceProcess(choosedPath, context) {
 		choosedPath = parts.join('/');
 	}
 
-	if(fs.existsSync(choosedPath + '/.js')) {
-		let lastFileData = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
-		lastFileData = lastFileData.split(' = class ')[0];
-		lastFileData = lastFileData.trim();
-		lastFileData = lastFileData.split('\n').pop();
-		namespaceName = lastFileData;	
+	if (!fs.existsSync(choosedPath + '/.js')) {
+		vscode.window.showInformationMessage(vscode.l10n.t('Attantion! Current namespace does not exists!'));
+		return null;
+	}
+	
+	let lastFileData = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
+	lastFileData = lastFileData.split(' = class ')[0];
+	lastFileData = lastFileData.trim();
+	lastFileData = lastFileData.split('\n').pop();
+	let currentNamespace = lastFileData;
+	currentNamespace = replaceAll(currentNamespace, '\n', '');
+	currentNamespace = replaceAll(currentNamespace, 'const ', '');
+
+	if(!currentNamespace) {
+		vscode.window.showInformationMessage(vscode.l10n.t('Attantion! Can not find current namespace name!'));
+		return null;
+	}
+	
+	let promise = null;
+	let descPromise = null;
+
+	if (namespaceName) {
+		promise = Promise.resolve(namespaceName);
+	} else {
+		promise = vscode.window.showInputBox({
+			password: false,
+			title: vscode.l10n.t('Enter namespace name in current namespace (without dublicating current)'),
+			value: ''
+		});
 	}
 
-	vscode.window.showInputBox({
-		password: false,
-		title: vscode.l10n.t('Enter namespace name in current namespace (without dublicating current)'),
-		value: ''
-	}).then((input) => {
+	if (namespaceDescription) {
+		descPromise = Promise.resolve(namespaceDescription);
+	} else {
+		descPromise = vscode.window.showInputBox({
+			password: false,
+			title: vscode.l10n.t('Enter the description of namespace'),
+			value: ''
+		});
+	}
 
-		namespaceName = input;
-		if(!namespaceName || namespaceName.indexOf('.') !== -1) {
+	Promise.all([promise, descPromise]).then(([namespaceName, namespaceDescription]) => {
+		if (!namespaceName || namespaceName.indexOf('.') !== -1) {
 			vscode.window.showInformationMessage(vscode.l10n.t('Attantion! Please enter the namespace name without parent or root namespace'));
 			return null;
 		}
 
 		const dirName = namespaceName;
-		if(fs.existsSync(choosedPath + '/' + dirName)) {
+		if (fs.existsSync(choosedPath + '/' + dirName)) {
 			vscode.window.showInformationMessage(vscode.l10n.t('Attantion! Namespace allready exists'));
 			return null;
 		}
 
 		fs.mkdirSync(choosedPath + '/' + dirName);
 
-		let currentNamespace = fs.readFileSync(choosedPath + '/.js', { encoding: 'utf8', flag: 'r' });
-		currentNamespace = currentNamespace.split(' = class ')[0];
-		currentNamespace = currentNamespace.split('\n').pop();
-		currentNamespace = replaceAll(currentNamespace, '\n', '');
-		currentNamespace = replaceAll(currentNamespace, 'const ', '');
+		fs.writeFileSync(choosedPath + '/' + dirName + '/.js',
+			'/**\n' +
+			' * ' + namespaceDescription + '\n' +
+			' * @namespace\n' +
+			' * @memberof ' + currentNamespace + '\n' +
+			' */\n' +
+			currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
+		vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
 
-		vscode.window.showInputBox({
-			password: false,
-			title: vscode.l10n.t('Enter the description of class'),
-			value: ''
-		}).then(description => {
-			
-			fs.writeFileSync(choosedPath + '/' + dirName + '/.js', 
-				'/**\n' + 
-				' * ' + description + '\n' +
-				' * @namespace\n' + 
-				' * @memberof ' + currentNamespace + '\n' +
-				' */\n' + 
-				currentNamespace + '.' + namespaceName + ' = class {};', { encoding: 'utf8', flag: 'w+' });
-			vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
-			
-			getTreeDataProvider().refresh();	
-	
-			vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
-		});
+		getTreeDataProvider().refresh();
 
+		vscode.window.showInformationMessage(vscode.l10n.t('Namespace created!'));
 
 	});
+
 }
 
 /**
  */
-function createNamespace(context, e) {
-	// The code you place here will be executed every time your command is executed
+function createNamespace(context, e, namespaceName = '', namespaceDescription = '') {
 
 	if (!e) {
 		vscode.window.showOpenDialog({
@@ -99,15 +111,17 @@ function createNamespace(context, e) {
 			canSelectFolders: true
 		}).then(fileUri => {
 			if (fileUri && fileUri[0]) {
-				createNamespaceProcess(fileUri[0].path, context);
+				createNamespaceProcess(fileUri[0].path, context, namespaceName, namespaceDescription);
 			}
 		});
 	}
-	else if(e instanceof Data) {
-		createNamespaceProcess(e.data.object.file, context);
+	else if (e instanceof Data) {
+		createNamespaceProcess(e.data.object.file, context, namespaceName, namespaceDescription);
 	}
-	else {
-		createNamespaceProcess(e.fsPath, context);
+	else if (typeof e === 'string') {
+		createNamespaceProcess(e, context, namespaceName, namespaceDescription);
+	} else {
+		createNamespaceProcess(e.fsPath, context, namespaceName, namespaceDescription);
 	}
 }
 
@@ -134,7 +148,7 @@ async function createCompnentProcess(choosedPath, context) {
 		isFile = true;
 	}
 
-	if(choosedPath.indexOf('.Bundle/') === -1 && choosedPath.indexOf('UI/') === -1) {
+	if (choosedPath.indexOf('.Bundle/') === -1 && choosedPath.indexOf('UI/') === -1) {
 		return null
 	}
 
@@ -159,7 +173,7 @@ async function createCompnentProcess(choosedPath, context) {
 	}
 
 	let lastFileData = '';
-	if(firstFile === '.js') {
+	if (firstFile === '.js') {
 		// namespace exists
 		lastFileData = fs.readFileSync(choosedPath + '/' + firstFile, { encoding: 'utf8', flag: 'r' });
 		lastFileData = lastFileData.split(' = class ')[0];
@@ -189,7 +203,7 @@ async function createCompnentProcess(choosedPath, context) {
 		value: className + '.'
 	});
 
-	if(!className) {
+	if (!className) {
 		return null;
 	}
 
@@ -203,7 +217,7 @@ async function createCompnentProcess(choosedPath, context) {
 		value: 'Colibri.UI.'
 	});
 
-	if(!parentClass) {
+	if (!parentClass) {
 		return null;
 	}
 
@@ -213,7 +227,7 @@ async function createCompnentProcess(choosedPath, context) {
 		value: ''
 	});
 
-	if(!parentClass) {
+	if (!parentClass) {
 		return null;
 	}
 
@@ -222,23 +236,23 @@ async function createCompnentProcess(choosedPath, context) {
 
 	let possibleNamespace = replaceAll(className, 'App.Modules.', '');
 	const moduleName = possibleNamespace.split('.').splice(0, 1).pop();
-	if(!fs.existsSync(bundlePath + '.js')) {
+	if (!fs.existsSync(bundlePath + '.js')) {
 		// пишем что модуль не найден
 		vscode.window.showInformationMessage(vscode.l10n.t('Module not found'));
 		return null;
 	}
 
 	const moduleContent = fs.readFileSync(bundlePath + '.js').toString();
-	if(choosedPath.indexOf('UI/') !== -1) {
-			
+	if (choosedPath.indexOf('UI/') !== -1) {
+
 	} else {
-		if(moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
+		if (moduleContent.indexOf('App.Modules.' + moduleName + ' = class extends Colibri.Modules.Module') === -1) {
 			// попытка создать компоненту не в своем модуле;
 			vscode.window.showInformationMessage(vscode.l10n.t('Incorrect module name'));
 			return null;
-		}	
+		}
 	}
-	
+
 	possibleNamespace = replaceAll(possibleNamespace, moduleName + '.', '');
 	const parts2 = possibleNamespace.split('.')
 	parts2.pop();
@@ -249,39 +263,39 @@ async function createCompnentProcess(choosedPath, context) {
 		const dir = fs.opendirSync(path);
 		let item;
 		let ret = [];
-		while(item = dir.readSync()) {
+		while (item = dir.readSync()) {
 			ret.push(item.name);
 		}
 		return ret;
-	} 
-	
+	}
+
 	let possibleNamespacePath = bundlePath;
-	if(fs.existsSync(bundlePath + possibleNamespace)) {
+	if (fs.existsSync(bundlePath + possibleNamespace)) {
 		possibleNamespacePath = bundlePath + possibleNamespace;
 	}
-	
-	for(const name of possibleNamespace.split('/')) {
+
+	for (const name of possibleNamespace.split('/')) {
 		const dirList = listDir(possibleNamespacePath);
-		for(const dirname of dirList) {
-			if(name === dirname || new RegExp('^[0-9]+\.' + name + '$').test(dirname)) {
+		for (const dirname of dirList) {
+			if (name === dirname || new RegExp('^[0-9]+\.' + name + '$').test(dirname)) {
 				possibleNamespacePath = possibleNamespacePath + '/' + dirname;
 				break;
 			}
 		}
-		
+
 	}
 
-	if(!fs.existsSync(possibleNamespacePath + '/.js')) {
+	if (!fs.existsSync(possibleNamespacePath + '/.js')) {
 		// нет такой области
 		vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
 		return null;
 	}
 
 	const namespaceContent = fs.readFileSync(possibleNamespacePath + '/.js').toString();
-	if(choosedPath.indexOf('UI/') !== -1) {
-			
-	} else if(possibleNamespace) {
-		if(namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
+	if (choosedPath.indexOf('UI/') !== -1) {
+
+	} else if (possibleNamespace) {
+		if (namespaceContent.indexOf('App.Modules.' + moduleName + '.' + replaceAll(possibleNamespace, '/', '.') + ' = class ') === -1) {
 			// нет такой области
 			vscode.window.showInformationMessage(vscode.l10n.t('Namespace not found'));
 			return null;
@@ -380,7 +394,7 @@ function createComponent(context, e) {
 			}
 		});
 	}
-	else if(e instanceof Data) {
+	else if (e instanceof Data) {
 		createCompnentProcess(e.data.object.file, context);
 	}
 	else {
@@ -447,7 +461,7 @@ function createComponent(context, e) {
  * @param {vscode.ExtensionContext} context
  * @param {Data} data 
  */
-function openComponent(context, data) {	
+function openComponent(context, data) {
 	openFile(data.data.content && data.data.content.path ? data.data.content.path : data.data.object.file, data.data.content ? data.data.content.line : data.data.object.line);
 }
 

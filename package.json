@@ -179,6 +179,10 @@
         "title": "%extension.download-module.title%"
       },
       {
+        "command": "colibri-ui.create-module",
+        "title": "%extension.create-module.title%"
+      },
+      {
         "command": "colibri-ui.open-component",
         "title": "%extension.open-component.title%"
       },

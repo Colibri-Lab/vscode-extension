@@ -14,6 +14,7 @@
 	"extension.settings-openai-api-key.description": "OpenAI API ключ",
 	"extension.settings-github-api-key.description": "GitHub API ключ",
 	"extension.download-module.title": "Загрузить модуль",
+	"extension.create-module.title": "Создать модуль",
 	"extension.open-component.title": "Открыть компоненту",
 	"extension.open-phpclass.title": "Открыть класс PHP",
 	"extension.create-controller.title": "Создать новый контроллер",

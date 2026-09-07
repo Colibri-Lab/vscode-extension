@@ -37,7 +37,7 @@ const {
 const { Translate } = require('@google-cloud/translate').v2;
 
 const { provideDefinitions, provideDeclarations, provideReferences, provideHover, provideHtmlCompletionItems, provideJavascriptCompletionItems, provideScssCompletionItems } = require('./Completion');
-const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
+const { runModelsGenerator, runMigrationScript, runCreateProject, runDownloadModule, runCreateModule, createController, createControllerAction, openPhpClass, findStorageModels } = require('./php-tools');
 const { createTreeView, getTreeView, getTreeDataProvider, getPHPTreeDataProvider, createPHPTreeView, getPHPTreeView } = require('./tree');
 const { default: axios } = require('axios');
 const { exportTextsAction, exportStoragesTextsAction, importTextsAction, findFilesWithoutLanguage, translateAllTextsFromOneLangToAnother, translateAllWithCopilot, translateText, translateCurrentFileFromOneLangToAnother, importStoragesTextsAction } = require('./texts');
@@ -522,6 +522,7 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (storage) => runModelsGenerator(context, storage)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-module', (e, moduleVendorAndName, moduleDescription, moduleClassName, moduleRepo, projectStartsUp, projectLocalDomain, projectProdDomain, projectTestDomain, modulePath, commitChanges) => runCreateModule(context, moduleVendorAndName, moduleDescription, moduleClassName, moduleRepo, projectStartsUp, projectLocalDomain, projectProdDomain, projectTestDomain, modulePath, commitChanges)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-phpclass', (e) => openPhpClass(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e, controllerName, controllerDescription) => createController(context, e, controllerName, controllerDescription)));

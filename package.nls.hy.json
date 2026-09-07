@@ -14,6 +14,7 @@
 	"extension.settings-openai-api-key.description": "OpenAI API գախտնաբառ",
 	"extension.settings-github-api-key.description": "GitHub API գախտնաբառ",
 	"extension.download-module.title": "Ներբեռնել մոդուլ",
+	"extension.create-module.title": "Ստեղծել մոդուլ",
 	"extension.open-component.title": "Բացել կոմպոնենտը",
 	"extension.open-phpclass.title": "Բացել PHP ֆայլը",
 	"extension.create-controller.title": "Ստեղձել վերահսկիչ",

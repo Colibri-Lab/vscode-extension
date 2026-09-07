@@ -125,7 +125,7 @@ function runDownloadModule(context, e) {
             __log.appendLine('Downloading...');
 
             if (libName === vscode.l10n.t('Create new')) {
-                createNewModule(context);
+                runCreateModule(context);
             }
             else {
 
@@ -212,35 +212,33 @@ function replaceInFiles(startPath, replacements) {
     }
 }
 
-async function createNewModule(context) {
+async function runCreateModule(context, moduleGitFullPath, moduleDescription, moduleClassName, moduleRepo, projectStartsUp, projectLocalDomain, projectProdDomain, projectTestDomain, modulePath, commitChanges) {
 
     const workspacePath = getWorkspacePath();
     const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
 
-    let moduleVendorAndName = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module name:'), placeHolder: vscode.l10n.t('«vendor-name»/«module-name»'), ignoreFocusOut: true });
-    let [moduleVendorName, moduleName] = moduleVendorAndName.split('/');
-    let moduleDescription = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module description:'), placeHolder: vscode.l10n.t('Full description for your module'), ignoreFocusOut: true });
-    let moduleClassName = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module class Name:'), placeHolder: vscode.l10n.t('Without namespace, for example: MyClass, or Example. Please dont use the word «Module» in name...'), ignoreFocusOut: true });
-    let moduleRepo = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the repo url:'), placeHolder: vscode.l10n.t('Full path name, with domain and user'), ignoreFocusOut: true });
-    const result = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Is your module represents a website/application?'), placeHolder: vscode.l10n.t('Choose Yes if you plan to use module as startup for the application or website, No if your module will provide some functionality'), ignoreFocusOut: true });
-    let projectStartsUp = result === vscode.l10n.t('Yes');
+    moduleGitFullPath = moduleGitFullPath || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module name:'), placeHolder: vscode.l10n.t('«vendor-name»/«module-name»'), ignoreFocusOut: true });
+    let [moduleVendorName, moduleName] = moduleGitFullPath.split('/');
+    moduleDescription = moduleDescription || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module description:'), placeHolder: vscode.l10n.t('Full description for your module'), ignoreFocusOut: true });
+    moduleClassName = moduleClassName || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module class Name:'), placeHolder: vscode.l10n.t('Without namespace, for example: MyClass, or Example. Please dont use the word «Module» in name...'), ignoreFocusOut: true });
+    moduleRepo = moduleRepo || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the repo url:'), placeHolder: vscode.l10n.t('Full path name, with domain and user'), ignoreFocusOut: true });
+    projectStartsUp = projectStartsUp || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Is your module represents a website/application?'), placeHolder: vscode.l10n.t('Choose Yes if you plan to use module as startup for the application or website, No if your module will provide some functionality'), ignoreFocusOut: true })  === vscode.l10n.t('Yes');
 
-    let projectProdDomain = '';
-    let projectTestDomain = '';
-    let projectLocalDomain = '';
     if (projectStartsUp) {
         projectLocalDomain = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project local domain:'), placeHolder: vscode.l10n.t('Enter the local domain if the module must be startable'), ignoreFocusOut: true });
         projectProdDomain = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project production domain:'), placeHolder: vscode.l10n.t('Enter the production domain if the module must be startable'), ignoreFocusOut: true });
         projectTestDomain = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project test domain:'), placeHolder: vscode.l10n.t('Enter the test domain if the module must be startable'), ignoreFocusOut: true });
     }
 
-    let path = await vscode.window.showOpenDialog({
-        canSelectFolders: true,
-        canSelectFiles: false,
-        canSelectMany: false,
-        openLabel: vscode.l10n.t('Choose the path where to place the module'),
-    });
-    let modulePath = path.pop().fsPath;
+    if(!modulePath) {
+        let path = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            openLabel: vscode.l10n.t('Choose the path where to place the module'),
+        });
+        modulePath = path.pop().fsPath;
+    }
 
     if (!moduleVendorName || !moduleName || !moduleDescription || !moduleRepo || !moduleClassName || !modulePath) {
         vscode.window.showInformationMessage('Please enter the all properties');
@@ -344,9 +342,8 @@ async function createNewModule(context) {
             __log.appendLine('Changes made to module files.');
         }
 
-        const commitResults = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Commit changes?'), placeHolder: vscode.l10n.t('Do you wish to commit changes now'), ignoreFocusOut: true });
-        let commitResultsBool = commitResults === vscode.l10n.t('Yes');
-        if (commitResultsBool) {
+        commitChanges = commitChanges || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Commit changes?'), placeHolder: vscode.l10n.t('Do you wish to commit changes now'), ignoreFocusOut: true })commitResults === vscode.l10n.t('Yes');
+        if (commitChanges) {
             __log.appendLine(cp.execSync(commandCommit).toString());
         }
 
@@ -727,6 +724,7 @@ module.exports = {
     runModelsGenerator,
     runCreateProject,
     runDownloadModule,
+    runCreateModule,
     createController,
     createControllerAction,
     openPhpClass,

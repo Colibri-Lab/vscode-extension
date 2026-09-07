@@ -522,7 +522,7 @@ function activate(context) {
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.migrate', (e) => runMigrationScript(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.models-generate', (storage) => runModelsGenerator(context, storage)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.download-module', (e) => runDownloadModule(context, e)));
-		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-module', (e, moduleVendorAndName, moduleDescription, moduleClassName, moduleRepo, projectStartsUp, projectLocalDomain, projectProdDomain, projectTestDomain, modulePath, commitChanges) => runCreateModule(context, moduleVendorAndName, moduleDescription, moduleClassName, moduleRepo, projectStartsUp, projectLocalDomain, projectProdDomain, projectTestDomain, modulePath, commitChanges)));
+		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-module', (parameters) => runCreateModule(context, parameters)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-component', (e) => openComponent(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.open-phpclass', (e) => openPhpClass(context, e)));
 		context.subscriptions.push(vscode.commands.registerCommand('colibri-ui.create-controller', (e, controllerName, controllerDescription) => createController(context, e, controllerName, controllerDescription)));

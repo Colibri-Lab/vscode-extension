@@ -34,9 +34,9 @@ function runModelsGenerator(context, storage) {
     const workbenchConfig = vscode.workspace.getConfiguration();
     let command = workbenchConfig.get('colibrilab.models-generate-command');
     command = replaceAll(command, '{app-root}', path);
-    
+
     let promise = null;
-    if(storage) {
+    if (storage) {
         promise = Promise.resolve(storage);
     } else {
         promise = vscode.window.showQuickPick(findStorageNames(path));
@@ -212,25 +212,39 @@ function replaceInFiles(startPath, replacements) {
     }
 }
 
-async function runCreateModule(context, moduleGitFullPath, moduleDescription, moduleClassName, moduleRepo, projectStartsUp, projectLocalDomain, projectProdDomain, projectTestDomain, modulePath, commitChanges) {
+async function runCreateModule(context, parameters) {
 
     const workspacePath = getWorkspacePath();
     const extensionPath = vscode.extensions.getExtension(context.extension.id).extensionUri.path;
 
-    moduleGitFullPath = moduleGitFullPath || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module name:'), placeHolder: vscode.l10n.t('«vendor-name»/«module-name»'), ignoreFocusOut: true });
-    let [moduleVendorName, moduleName] = moduleGitFullPath.split('/');
+    let {
+        moduleRepo,
+        moduleDescription,
+        moduleClassName, 
+        projectStartsUp, 
+        projectLocalDomain, 
+        projectProdDomain, 
+        projectTestDomain, 
+        modulePath, 
+        continueToVars, 
+        commitChanges, 
+        params 
+    } = JSON.parse(parameters);
+
+    moduleRepo = moduleRepo || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the repo url:'), placeHolder: vscode.l10n.t('Full path name, with domain and user'), ignoreFocusOut: true });
+    let [moduleVendorName, moduleName] = moduleRepo.split(':')[1].split('/');
+    moduleName = moduleName.replace('.git', '');
     moduleDescription = moduleDescription || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module description:'), placeHolder: vscode.l10n.t('Full description for your module'), ignoreFocusOut: true });
     moduleClassName = moduleClassName || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the module class Name:'), placeHolder: vscode.l10n.t('Without namespace, for example: MyClass, or Example. Please dont use the word «Module» in name...'), ignoreFocusOut: true });
-    moduleRepo = moduleRepo || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the repo url:'), placeHolder: vscode.l10n.t('Full path name, with domain and user'), ignoreFocusOut: true });
-    projectStartsUp = projectStartsUp || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Is your module represents a website/application?'), placeHolder: vscode.l10n.t('Choose Yes if you plan to use module as startup for the application or website, No if your module will provide some functionality'), ignoreFocusOut: true })  === vscode.l10n.t('Yes');
+    projectStartsUp = projectStartsUp || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Is your module represents a website/application?'), placeHolder: vscode.l10n.t('Choose Yes if you plan to use module as startup for the application or website, No if your module will provide some functionality'), ignoreFocusOut: true }) === vscode.l10n.t('Yes');
 
     if (projectStartsUp) {
-        projectLocalDomain = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project local domain:'), placeHolder: vscode.l10n.t('Enter the local domain if the module must be startable'), ignoreFocusOut: true });
-        projectProdDomain = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project production domain:'), placeHolder: vscode.l10n.t('Enter the production domain if the module must be startable'), ignoreFocusOut: true });
-        projectTestDomain = await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project test domain:'), placeHolder: vscode.l10n.t('Enter the test domain if the module must be startable'), ignoreFocusOut: true });
+        projectLocalDomain = projectLocalDomain || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project local domain:'), placeHolder: vscode.l10n.t('Enter the local domain if the module must be startable'), ignoreFocusOut: true });
+        projectProdDomain = projectProdDomain || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project production domain:'), placeHolder: vscode.l10n.t('Enter the production domain if the module must be startable'), ignoreFocusOut: true });
+        projectTestDomain = projectTestDomain || await vscode.window.showInputBox({ title: vscode.l10n.t('Enter the project test domain:'), placeHolder: vscode.l10n.t('Enter the test domain if the module must be startable'), ignoreFocusOut: true });
     }
 
-    if(!modulePath) {
+    if (!modulePath) {
         let path = await vscode.window.showOpenDialog({
             canSelectFolders: true,
             canSelectFiles: false,
@@ -290,8 +304,11 @@ async function runCreateModule(context, moduleGitFullPath, moduleDescription, mo
         __log.appendLine('Module successfuly created and attached to project...');
         __log.appendLine('See /vendor/' + moduleVendorName + '/' + moduleName + '/');
 
-        const result = await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Let\'s continue?'), placeHolder: vscode.l10n.t('There are a few variables left that can be adjusted'), ignoreFocusOut: true });
-        let continueToVars = result === vscode.l10n.t('Yes');
+        continueToVars = continueToVars || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], {
+            title: vscode.l10n.t('Let\'s continue?'),
+            placeHolder: vscode.l10n.t('There are a few variables left that can be adjusted'),
+            ignoreFocusOut: true
+        }) === vscode.l10n.t('Yes');
         if (continueToVars) {
 
             let vars = {
@@ -311,7 +328,12 @@ async function runCreateModule(context, moduleGitFullPath, moduleDescription, mo
                 '{comet-server-port}': { type: 'text', title: vscode.l10n.t('Port for Colibri comet server, if you not using it, please leave as default'), default: '3005' },
             };
 
-            let data = {};
+            let replacements = {};
+            for (const key of Object.keys(params)) {
+                replacements['{' + key + '}'] = params[key];
+            }
+
+            let data = Object.assign({}, replacements);
             for (const variable of Object.keys(vars)) {
                 const varData = vars[variable];
 
@@ -322,6 +344,10 @@ async function runCreateModule(context, moduleGitFullPath, moduleDescription, mo
 
                 if (!cont) {
                     data[variable] = varData.type === 'yesno' ? false : '';
+                    continue;
+                }
+
+                if(data[variable] !== undefined) {
                     continue;
                 }
 
@@ -342,7 +368,7 @@ async function runCreateModule(context, moduleGitFullPath, moduleDescription, mo
             __log.appendLine('Changes made to module files.');
         }
 
-        commitChanges = commitChanges || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Commit changes?'), placeHolder: vscode.l10n.t('Do you wish to commit changes now'), ignoreFocusOut: true })commitResults === vscode.l10n.t('Yes');
+        commitChanges = commitChanges || await vscode.window.showQuickPick([vscode.l10n.t('Yes'), vscode.l10n.t('No')], { title: vscode.l10n.t('Commit changes?'), placeHolder: vscode.l10n.t('Do you wish to commit changes now'), ignoreFocusOut: true }) === vscode.l10n.t('Yes');
         if (commitChanges) {
             __log.appendLine(cp.execSync(commandCommit).toString());
         }
@@ -436,10 +462,10 @@ async function createControllerAction(context, e, controllerActionName, controll
     if (folderPath.indexOf('/vendor/') !== -1) {
 
         if (!controllerActionName) {
-            controllerActionName = await vscode.window.showInputBox({ 
-                title: vscode.l10n.t('Action name:'), 
-                placeHolder: vscode.l10n.t('Please, enter action name'), 
-                ignoreFocusOut: true 
+            controllerActionName = await vscode.window.showInputBox({
+                title: vscode.l10n.t('Action name:'),
+                placeHolder: vscode.l10n.t('Please, enter action name'),
+                ignoreFocusOut: true
             });
             if (!controllerActionName) {
                 return;
@@ -449,7 +475,7 @@ async function createControllerAction(context, e, controllerActionName, controll
         if (!controllerActionDescription) {
             controllerActionDescription = await vscode.window.showInputBox({
                 title: vscode.l10n.t('Action description:'),
-                placeHolder: vscode.l10n.t('Please, describe your action'), 
+                placeHolder: vscode.l10n.t('Please, describe your action'),
                 ignoreFocusOut: true
             });
         }
